@@ -15,20 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
   sensor_msgs
-  message_generation
-
-)
-add_message_files(
-  FILES
-  relative_coordinate.msg
-)
-
-generate_messages(
-   DEPENDENCIES
-   std_msgs
+  radar_msgs
 )
 catkin_package(
- DEPENDS  message_runtime
+ DEPENDS
 )
 add_definitions(-std=c++11)
 add_definitions(-DAPI_EXPORTS)

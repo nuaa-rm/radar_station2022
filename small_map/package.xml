@@ -36,8 +36,9 @@
   <!--   Note that this is equivalent to the following: -->
     <build_depend>roscpp</build_depend>
     <exec_depend>roscpp</exec_depend>
-    <build_depend>yolo</build_depend>
-    <exec_depend>yolo</exec_depend>
+    <build_depend>radar_msgs</build_depend>
+    <exec_depend>radar_msgs</exec_depend>
+    <exec_depend>message_runtime</exec_depend>
   <!-- Use build_depend for packages you need at compile time: -->
   <!--   <build_depend>message_generation</build_depend> -->
   <!-- Use build_export_depend for packages you need in order to build against this package: -->

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(video_pub)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+ add_compile_options(-std=c++17)
 set(ROS_BUILD_TYPE Release)
 set(CMAKE_BUILD_TYPE Release)
 

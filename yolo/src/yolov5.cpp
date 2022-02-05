@@ -16,7 +16,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
-#include <yolo/relative_coordinate.h>
+#include <radar_msgs/relative_coordinate.h>
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
@@ -34,7 +34,7 @@ const char* INPUT_BLOB_NAME = "data";
 const char* OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
 
-std::vector<yolo::relative_coordinate> car_point(11);//存储车辆坐标rostopic echo /relative_coordinate
+std::vector<radar_msgs::relative_coordinate> car_point(11);//存储车辆坐标rostopic echo /relative_coordinate
 
 static float prob[BATCH_SIZE * OUTPUT_SIZE];
 IExecutionContext* context;
@@ -379,7 +379,7 @@ int main(int argc, char** argv) {
     ros::Subscriber imageSub = n.subscribe("/MVCamera/image_raw", 1, &imageCB);
 
     //发布识别到的目标坐标
-    ros::Publisher relative_coordinate =n.advertise< yolo::relative_coordinate>("relative_coordinate",11);
+    ros::Publisher relative_coordinate =n.advertise< radar_msgs::relative_coordinate>("relative_coordinate",11);
     car_point[10].id=255;
     ros::Rate loop_rate(60);
     while (ros::ok())

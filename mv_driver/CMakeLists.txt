@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(mv_driver)
 
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 message(WARNING, "  Linux, this is your birthday cake, there are butter, egges, water, flour. You TM compile it yourself!")
 #set(ROS_BUILD_TYPE Debug)
 #set(CMAKE_BUILD_TYPE Debug)

@@ -7,14 +7,14 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <yolo/relative_coordinate.h>
+#include <radar_msgs/relative_coordinate.h>
 
 using namespace std;
 cv::Mat img;
 static cv::Point pre_pt = cv::Point(-1,-1);//初始坐标
 static cv::Point cur_pt = cv::Point(-1,-1);//实时坐标
 char temp[16];
-void msgCallback(const yolo::relative_coordinate::ConstPtr &msg)
+void msgCallback(const radar_msgs::relative_coordinate::ConstPtr &msg)
 {
   if(msg->id!=255)
   {
