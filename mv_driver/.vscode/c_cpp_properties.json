@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/src/mv_driver/include/**",
+                "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/src/serial_common/include/**",
+                "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/src/video_pub/include/**",
+                "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/src/windMill/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
