@@ -57,7 +57,9 @@ int main(int argc, char **argv)
   // nh.getParam("/video_source",video_source);
 
   ros::Rate loop_rate(15);
-  //cuda_proc processor(1024,1280);
+  Mat fileimg;
+  
+
   VideoCapture cap(video_source);//open video in the path
   if(!cap.isOpened())
   {
@@ -66,6 +68,8 @@ int main(int argc, char **argv)
   }
   else
     std::cout<<"open video success!"<<std::endl;
+
+
 
   Mat frame,img_show;
   bool isSuccess = true;
@@ -78,6 +82,10 @@ int main(int argc, char **argv)
       std::cout<<"video ends"<<std::endl;
       break;
     }
+
+  // fileimg=cv::imread("/home/chris/radar_station2022/src/sjtu_battlefield.jpg");
+  // fileimg.copyTo(frame);
+
     /// preprocess: cuda version
 
 
