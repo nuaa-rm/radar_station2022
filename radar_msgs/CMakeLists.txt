@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
         FILES
         relative_coordinate.msg
+        point.msg
+        points.msg
 )
 
 ## Generate services in the 'srv' folder
