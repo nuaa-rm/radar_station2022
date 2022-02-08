@@ -6,6 +6,8 @@ from threading import Thread
 import numpy as np
 import sys
 
+import config
+
 
 class RosNode(Thread):
     def __init__(self):
@@ -55,3 +57,8 @@ class RosImageReceiver(BaseImageReceiver):
 
     def callback(self, data, _):
         self.queue.put(self.img_to_cv2(data))
+
+
+receivers = {}
+for cfg in config.cameraConfig:
+    receivers[cfg['topic']] = RosImageReceiver(cfg['topic'])

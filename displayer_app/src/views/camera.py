@@ -1,14 +1,14 @@
 from flask import Blueprint, Response, request, abort
 import time
 
-from rosNode import RosImageReceiver
+from rosNode import receivers
 import config
 
 cameraView = Blueprint('camera', __name__)
 
 
 def getCameraImage(topic):
-    receiver = RosImageReceiver(topic)
+    receiver = receivers[topic]
     while True:
         image = receiver.getImage()
         yield (b'--frame\r\n'
@@ -19,6 +19,6 @@ def getCameraImage(topic):
 @cameraView.route('/')
 def getCamera():
     topic = request.args.get('topic')
-    if topic is None or topic not in config.cameras:
+    if topic is None or topic not in receivers.keys():
         abort(400)
     return Response(getCameraImage(topic), mimetype='multipart/x-mixed-replace; boundary=frame')
