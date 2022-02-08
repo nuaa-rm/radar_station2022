@@ -1,9 +1,18 @@
+const noConnectionImage = require('../assets/test.png')
+
 export default {
   namespace: 'rosModel',
-  state: [],
+  state: {ok: 'loading', cameraOne: noConnectionImage, cameraTwo: noConnectionImage},
   reducers: {
-    'delete'(state, { payload: id }) {
-      return state.filter(item => item.id !== id);
+    'rosConnectChange'(state, { payload: connected }) {
+      return {...state, ok: connected};
     },
+    'rosCameraChange'(state, { payload: { camera, image } }) {
+      if (camera === 'cameraOne') {
+        return {...state, cameraOne: image};
+      } else {
+        return {...state, cameraTwo: image};
+      }
+    }
   },
 };

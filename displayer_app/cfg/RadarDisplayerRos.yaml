@@ -1,0 +1,11 @@
+displayer:
+  camera:
+    fps: 25
+    list:
+      -
+        topic: '/usb_cam/image_raw'
+        shapeTopic: ['/displayer/cameraOne/shape']
+        calibrationTopic: '/displayer/cameraOne/calibration'
+  flask:
+    secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'
+    port: 43624

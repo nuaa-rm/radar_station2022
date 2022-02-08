@@ -1,9 +1,18 @@
 import styles from './index.less';
+import React, {Component} from 'react';
+import { connect } from 'dva';
 
-export default function IndexPage() {
-  return (
-    <div>
-      <h1 className={styles.title}>Page index</h1>
-    </div>
-  );
+@connect(({ rosModel }) => ({
+  rosModel,
+}))
+class Index extends Component {
+  render() {
+    return (
+      <div>
+        <img src={ this.props?.rosModel?.cameraOne } alt="cameraOne"/>
+      </div>
+    );
+  }
 }
+
+export default Index;
