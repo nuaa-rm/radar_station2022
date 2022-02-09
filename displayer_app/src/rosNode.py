@@ -6,6 +6,7 @@
 
 import sys
 
+import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image
@@ -39,13 +40,15 @@ class RosImageSubscriber(BaseImageSubscriber):
     @brief: ros相机订阅者类，继承自BaseImageSubscriber类
     @fn self.img_to_cv2: 通过cv_bridge或者自编解析image消息获取cv2图像
     """
-    def __init__(self, topic):
-        super().__init__()
-        self.topic = topic
+    def __init__(self, cfg: dict):
+        self.topic = cfg['topic']
         self.sub = rospy.Subscriber(self.topic, Image, self.callback, 1)
+        self.size = cfg['size']
+        if len(self.size) == 0:
+            self.size = None
+        super().__init__(self.size)
 
-    @staticmethod
-    def img_to_cv2(img_msg: Image):
+    def img_to_cv2(self, img_msg: Image):
         """
         @param img_msg: ros sensor_msgs/Image消息
         @return: cv2图像
@@ -61,11 +64,14 @@ class RosImageSubscriber(BaseImageSubscriber):
             if img_msg.is_bigendian == (sys.byteorder == 'little'):
                 image_opencv = image_opencv.byteswap().newbyteorder()
             if img_msg.encoding == 'bgr8':
-                return image_opencv
+                pass
             elif img_msg.encoding == 'rgb8':
-                return image_opencv[:, :, [2, 1, 0]]
+                image_opencv = image_opencv[:, :, [2, 1, 0]]
             else:
                 raise ValueError('Unsupported encoding: ' + img_msg.encoding)
+            if self.size is not None:
+                image_opencv = cv2.resize(image_opencv, self.size)
+            return image_opencv
 
     def callback(self, data, _):
         self.queue.put(self.img_to_cv2(data))
@@ -73,4 +79,4 @@ class RosImageSubscriber(BaseImageSubscriber):
 
 imageSubscribers = {}
 for cfg in config.cameraConfig:
-    imageSubscribers[cfg['topic']] = RosImageSubscriber(cfg['topic'])
+    imageSubscribers[cfg['topic']] = RosImageSubscriber(cfg)

@@ -1,13 +1,14 @@
 displayer:
   camera:
-    fps: 25
+    fps: 25   # 限制发送到前端的帧率
     list:
-      -
-        topic: '/usb_cam/image_raw'
-        shapeTopic: ['/displayer/cameraOne/shape']
-        calibrationTopic: '/displayer/cameraOne/calibration'
+      -    # 可添加多个同时显示的相机
+        topic: '/usb_cam/image_raw'                           # 相机图像topic
+        shapeTopic: ['/displayer/cameraOne/shape']            # 发送形状的topic
+        calibrationTopic: '/displayer/cameraOne/calibration'  # 返回标定信息的topic
+        size: [640, 480]                                      # 图像大小，不缩放请设置为空数组
   flask:
-    secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'
-    port: 43624
+    secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'    # Flask的secretKey，请自行随即生成
+    port: 43624                                     # Flask运行端口
   ros:
-    cvBridge: false
+    cvBridge: false   # 是否使用cvBridge解码图像消息
