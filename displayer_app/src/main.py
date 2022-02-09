@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+# @Author : Bismarckkk
+# @Site   : https://github.com/bismarck
+# @File   : main.py
+
 from gevent import monkey
 monkey.patch_all()
+
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
 
 from rosNode import RosNode
 ros = RosNode()

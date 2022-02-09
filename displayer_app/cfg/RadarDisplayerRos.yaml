@@ -9,3 +9,5 @@ displayer:
   flask:
     secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'
     port: 43624
+  ros:
+    cvBridge: false

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+# @Author : Bismarckkk
+# @Site   : https://github.com/bismarck
+# @File   : app.py
+
 from flask import Flask
 from flask_socketio import SocketIO
 import config

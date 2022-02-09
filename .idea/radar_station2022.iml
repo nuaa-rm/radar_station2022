@@ -1,2 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module classpath="CMake" type="CPP_MODULE" version="4" />
+<module classpath="CMake" type="CPP_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Python" name="Python facet">
+      <configuration sdkName="Python 3.10" />
+    </facet>
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="EPYTEXT" />
+    <option name="myDocStringFormat" value="Epytext" />
+  </component>
+  <component name="TemplatesService">
+    <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/displayer_app/src/templates" />
+      </list>
+    </option>
+  </component>
+</module>
