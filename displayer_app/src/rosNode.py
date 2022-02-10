@@ -78,5 +78,5 @@ class RosImageSubscriber(BaseImageSubscriber):
 
 
 imageSubscribers = {}
-for cfg in config.cameraConfig:
-    imageSubscribers[cfg['topic']] = RosImageSubscriber(cfg)
+for cam, cfg in config.cameraConfig.items():
+    imageSubscribers[cam] = RosImageSubscriber(cfg)

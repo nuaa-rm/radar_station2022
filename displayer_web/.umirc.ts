@@ -8,6 +8,6 @@ export default defineConfig({
     { path: '/', component: '@/pages/index' },
   ],
   fastRefresh: {},
-  mfsu: {},
+  mfsu: {mfName: 'mfMain'},
   dva: {},
 });

@@ -2,11 +2,16 @@ displayer:
   camera:
     fps: 25   # 限制发送到前端的帧率
     list:
-      -    # 可添加多个同时显示的相机
+      farCam:    # 可添加多个同时显示的相机(此处自定义相机名称，注意不能重复)
         topic: '/usb_cam/image_raw'                           # 相机图像topic
         shapeTopic: ['/displayer/cameraOne/shape']            # 发送形状的topic
         calibrationTopic: '/displayer/cameraOne/calibration'  # 返回标定信息的topic
+        calibrationDefualt: [[], [], [], [], []]
         size: [640, 480]                                      # 图像大小，不缩放请设置为空数组
+        aspectRatio: 1.333                                    # 该参数将被图像大小覆盖，当不设置图像大小时，必须设置宽高比
+  calibrate:
+    rate: 3             # 标定时放大的倍数(1-5)
+    clipRectRate: 0.5   # 标定时辅助框占图像的比例(0.2-0.5)
   flask:
     secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'    # Flask的secretKey，请自行随即生成
     port: 43624                                     # Flask运行端口

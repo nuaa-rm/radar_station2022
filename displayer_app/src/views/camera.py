@@ -1,4 +1,3 @@
-from flask import Blueprint, Response, request, abort
 # !/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 # @Author : Bismarckkk
@@ -7,18 +6,20 @@ from flask import Blueprint, Response, request, abort
 
 import time
 
+from flask import Blueprint, Response, request, abort
+
 from rosNode import imageSubscribers as subscribers
 import config
 
 cameraView = Blueprint('camera', __name__)
 
 
-def getCameraImage(topic: str):
+def getCameraImage(cam: str):
     """
-    @param topic: 要订阅的topic的名字
+    @param cam: 要订阅的topic的名字
     @return: 逐次返回订阅的图片
     """
-    subscriber = subscribers[topic]
+    subscriber = subscribers[cam]
     while True:
         image = subscriber.getImage()
         yield (b'--frame\r\n'
@@ -31,7 +32,7 @@ def getCamera():
     """
     @brief: 返回一个生成器，实时更新图片
     """
-    topic = request.args.get('topic')
-    if topic is None or topic not in subscribers.keys():
+    cam = request.args.get('cam')
+    if cam is None or cam not in subscribers.keys():
         abort(400)
-    return Response(getCameraImage(topic), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(getCameraImage(cam), mimetype='multipart/x-mixed-replace; boundary=frame')

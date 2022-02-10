@@ -1,0 +1,8 @@
+rospkg
+pywebview
+flask
+flask-socketio
+gevent
+gevent-websocket
+python-opencv
+numpy
