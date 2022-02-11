@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 # @Author : Bismarckkk
-# @Site   : https://github.com/bismarck
+# @Site   : https://github.com/bismarckkk
 # @File   : main.py
 
 from gevent import monkey
@@ -18,7 +18,7 @@ from app import app, socketio
 from views import camera
 import config
 
-app.register_blueprint(camera.cameraView, url_prefix='/camera')
+app.register_blueprint(camera.cameraView, url_prefix='/api/camera')
 
 from flask import render_template
 

@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 # @Author : Bismarckkk
-# @Site   : https://github.com/bismarck
+# @Site   : https://github.com/bismarckkk
 # @File   : camera.py
 
 import time

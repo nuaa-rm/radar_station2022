@@ -21,8 +21,10 @@
   },
   "dependencies": {
     "@ant-design/pro-layout": "^6.5.0",
+    "axios": "^0.25.0",
     "react": "17.x",
     "react-dom": "17.x",
+    "socket.io-client": "^4.4.1",
     "umi": "^3.5.20",
     "zrender": "^5.3.0"
   },
