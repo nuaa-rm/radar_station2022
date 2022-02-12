@@ -1,6 +1,0 @@
-{
-    "python.autoComplete.extraPaths": [
-        "/home/catmult7/RM2020/RM2020_NUAA_VIRSON/devel/lib/python2.7/dist-packages",
-        "/opt/ros/melodic/lib/python2.7/dist-packages"
-    ]
-}
