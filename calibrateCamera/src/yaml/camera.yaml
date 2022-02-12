@@ -1,0 +1,32 @@
+image_width: 1280
+image_height: 720
+camera_name: realsense
+camera_matrix:
+  zerozero: 873.5988408840179
+  zerotwo: 647.346674397689
+  oneone: 872.072385255855
+  onetwo: 365.4837995487199
+  twotwo: 1.0
+distortion_coefficient:
+  zero: 0.1010279553377933
+  one: -0.1896100831040226
+  two: -0.001459416977059877
+  three: -0.002009563177668778
+  four: -0.06522506015361823
+object_points:
+  one:
+    x: 302
+    y: 60
+    z: 230
+  two:
+    x: 130
+    y: 0
+    z: 138
+  three:
+    x: 36
+    y: 296
+    z: 134
+  four:
+    x: 272
+    y: 140
+    z: 60
