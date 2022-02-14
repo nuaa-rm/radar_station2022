@@ -8,3 +8,5 @@ class DisplayerBackend {
     this.io = io(config.data.server);
   }
 }
+
+export const displayerBackend = new DisplayerBackend();
