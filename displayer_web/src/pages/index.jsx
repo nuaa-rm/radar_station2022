@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import { connect } from 'dva';
+import { Select, Button } from 'antd';
 import Calibrator from "../components/calibrator";
-import { Select } from 'antd';
 
 const { Option } = Select;
 

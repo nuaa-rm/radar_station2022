@@ -24,6 +24,10 @@ class DisplayerBackend {
       console.log('backend init')
     }
   }
+
+  emit(event, data) {
+    this.io.emit(event, data);
+  }
 }
 
 export const displayerBackend = new DisplayerBackend();
