@@ -23,14 +23,6 @@ import config
 app.register_blueprint(camera.cameraView, url_prefix='/api/camera')
 app.register_blueprint(httpApi.httpApiView, url_prefix='/api')
 
-from flask import render_template
-
-
-@app.route('/')
-def index():
-    return render_template('test.html')
-
-
 if __name__ == '__main__':
     ros.start()
     logging.info('Initializing Finished')
