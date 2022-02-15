@@ -15,10 +15,17 @@ class Calibrator extends Component {
   clipRectRate = this.props.configProvider.calibrator.clipRectRate;
   path = this.props.configProvider.calibrator.cameras[this.name].path;
   aspectRatio = this.props.configProvider.calibrator.cameras[this.name].aspectRatio;
-  imgUrl = '/api/camera?cam=' + encodeURIComponent(this.name);
   w = 0
   h = 0
-  state = {width: '90%', height: '10%'}
+  state = {width: '90%', height: '10%', imgUrl: '/api/camera?cam=' + encodeURIComponent(this.name)}
+  circle = []
+  polygon = null
+  polyline = null
+  clipRect = null
+  img = null
+  fillRect = null
+  line1 = null
+  line2 = null
 
   componentDidMount() {
     let isMouseDown = false;
@@ -31,25 +38,25 @@ class Calibrator extends Component {
     this.zr.on('mousedown', (e) => {
       isMouseDown = e.target?.id;
       if ((isMouseDown || isMouseDown === 0) && isMouseDown < this.path.length && isMouseDown >= 0) {
-        clipRect.show()
-        img.show()
-        line1.show()
-        line2.show()
-        fillRect.show()
+        this.clipRect.show()
+        this.img.show()
+        this.line1.show()
+        this.line2.show()
+        this.fillRect.show()
       }
     });
     this.zr.on('mouseup', (e) => {
       if ((isMouseDown || isMouseDown === 0) && isMouseDown < this.path.length && isMouseDown >= 0) {
-        mouseMove(circle[isMouseDown])
-        clipRect.hide()
-        img.hide()
-        line1.hide()
-        line2.hide()
-        fillRect.hide()
+        mouseMove(this.circle[isMouseDown])
+        this.clipRect.hide()
+        this.img.hide()
+        this.line1.hide()
+        this.line2.hide()
+        this.fillRect.hide()
       }
       isMouseDown = false;
     });
-    let polygon = new zrender.Polygon(
+    this.polygon = new zrender.Polygon(
       {
         style: {
           fill: '#fff',
@@ -60,7 +67,7 @@ class Calibrator extends Component {
         }
       }
     )
-    let polyline = new zrender.Polyline(
+    this.polyline = new zrender.Polyline(
       {
         style: {
           stroke: '#fff',
@@ -71,9 +78,8 @@ class Calibrator extends Component {
         }
       }
     )
-    let circle = [];
     for (let i = 0 ; i < this.path.length; i++) {
-      circle.push(new zrender.Circle({
+      this.circle.push(new zrender.Circle({
         id: i,
         style: {
           fill: '#fff',
@@ -90,32 +96,31 @@ class Calibrator extends Component {
           mouseMove(e.target)
         }
         let rect = getBox(e.target);
-        console.log(rect)
-        clipRect.setShape({
+        this.clipRect.setShape({
           x: rect.x,
           y: rect.y,
           width: rect.width,
           height: rect.height,
         })
-        fillRect.setShape({
+        this.fillRect.setShape({
           x: rect.x,
           y: rect.y,
           width: rect.width,
           height: rect.height,
         })
-        line1.setShape({
+        this.line1.setShape({
           x1: rect.x,
           y1: rect.y + rect.height / 2,
           x2: rect.x + rect.width,
           y2: rect.y + rect.height / 2,
         })
-        line2.setShape({
+        this.line2.setShape({
           x1: rect.x + rect.width / 2,
           y1: rect.y,
           x2: rect.x + rect.width / 2,
           y2: rect.y + rect.height,
         })
-        img.attr({
+        this.img.attr({
           style: {
             x: rect.imgX,
             y: rect.imgY,
@@ -123,13 +128,13 @@ class Calibrator extends Component {
         })
       }));
     }
-    this.zr.add(polygon);
-    this.zr.add(polyline);
-    for (let i = 0; i < circle.length; i++) {
-      this.zr.add(circle[i]);
+    this.zr.add(this.polygon);
+    this.zr.add(this.polyline);
+    for (let i = 0; i < this.circle.length; i++) {
+      this.zr.add(this.circle[i]);
     }
 
-    let clipRect = new zrender.Rect({
+    this.clipRect = new zrender.Rect({
       style: {
         fill: 'none',
         stroke: '#fff',
@@ -143,11 +148,11 @@ class Calibrator extends Component {
       },
       zlevel: 3
     })
-    clipRect.hide()
+    this.clipRect.hide()
 
-    let img = new zrender.Image({
+    this.img = new zrender.Image({
       style: {
-        image: this.imgUrl,
+        image: this.state.imgUrl,
         x: 0,
         y: 0,
         width: this.w * this.rate,
@@ -155,10 +160,10 @@ class Calibrator extends Component {
       },
       zlevel: 2
     })
-    img.setClipPath(clipRect)
-    img.hide()
+    this.img.setClipPath(this.clipRect)
+    this.img.hide()
 
-    let fillRect = new zrender.Rect({
+    this.fillRect = new zrender.Rect({
       style: {
         fill: '#000',
       },
@@ -170,9 +175,9 @@ class Calibrator extends Component {
       },
       zlevel: 1
     })
-    fillRect.hide()
+    this.fillRect.hide()
 
-    let line1 = new zrender.Line({
+    this.line1 = new zrender.Line({
       style: {
         stroke: '#fff',
         lineWidth: 2,
@@ -185,7 +190,7 @@ class Calibrator extends Component {
       },
       zlevel: 3
     })
-    let line2 = new zrender.Line({
+    this.line2 = new zrender.Line({
       style: {
         stroke: '#fff',
         lineWidth: 2,
@@ -198,21 +203,21 @@ class Calibrator extends Component {
       },
       zlevel: 3
     })
-    line1.hide()
-    line2.hide()
+    this.line1.hide()
+    this.line2.hide()
 
-    this.zr.add(clipRect);
-    this.zr.add(fillRect);
-    this.zr.add(img);
-    this.zr.add(line1);
-    this.zr.add(line2);
+    this.zr.add(this.clipRect);
+    this.zr.add(this.fillRect);
+    this.zr.add(this.img);
+    this.zr.add(this.line1);
+    this.zr.add(this.line2);
 
     function mouseMove(e) {
       that.path[e.id] = [e.x / that.w, e.y / that.h];
-      polygon.setShape({
+      that.polygon.setShape({
         points: that.path.map(convert2Screen),
       });
-      polyline.setShape({
+      that.polyline.setShape({
         points: [...that.path, that.path[0]].map(convert2Screen),
       });
     }
@@ -243,16 +248,16 @@ class Calibrator extends Component {
       that.zr.resize();
       that.w = that.zr.getWidth();
       that.h = that.zr.getHeight();
-      polygon.setShape({
+      that.polygon.setShape({
         points: that.path.map(convert2Screen),
       });
-      polyline.setShape({
+      that.polyline.setShape({
         points: [...that.path, that.path[0]].map(convert2Screen),
       });
-      for(let i = 0; i < circle.length; i++) {
-        circle[i].attr('position', convert2Screen(that.path[i]));
+      for(let i = 0; i < that.circle.length; i++) {
+        that.circle[i].attr('position', convert2Screen(that.path[i]));
       }
-      img.attr({
+      that.img.attr({
         style: {
           width: that.w * that.rate,
           height: that.h * that.rate,
@@ -263,6 +268,42 @@ class Calibrator extends Component {
     window.addEventListener('resize', resize);
   }
 
+  refresh = (name=null) => {
+    if (name) {
+      this.name = name;
+    } else {
+      this.name = this.props.name;
+    }
+    this.path = this.props.configProvider.calibrator.cameras[this.name].path;
+    this.aspectRatio = this.props.configProvider.calibrator.cameras[this.name].aspectRatio;
+    this.setState({
+      imgUrl: '/api/camera?cam=' + encodeURIComponent(this.name)
+    })
+    const that = this;
+    const convert2Screen = p => [p[0] * that.w, p[1] * that.h];
+    this.polygon.setShape({
+      points: this.path.map(convert2Screen),
+    });
+    this.polyline.setShape({
+      points: [...this.path, this.path[0]].map(convert2Screen),
+    });
+    for(let i = 0; i < this.circle.length; i++) {
+      this.circle[i].attr('position', convert2Screen(this.path[i]));
+    }
+    this.img.attr({
+      style: {
+        image: '/api/camera?cam=' + encodeURIComponent(this.name),
+      }
+    })
+  }
+
+  shouldComponentUpdate(nextProps, nextState, nextContext) {
+    if (this.props.name !== nextProps.name) {
+      this.refresh(nextProps.name);
+    }
+    return true;
+  }
+
   render() {
     return (
       <div>
@@ -271,7 +312,7 @@ class Calibrator extends Component {
             <div ref={this.instance} style={{width: '100%', height: '100%'}} />
           </div>
           <div style={{ position: 'absolute', top: '5px', left: '5px', width: '100%', height: '100%', zIndex: 2 }}>
-            <img style={{width: '100%', height: '100%'}} src={ this.imgUrl } alt="cameraOne"/>
+            <img style={{width: '100%', height: '100%'}} src={ this.state.imgUrl } alt="cameraOne"/>
           </div>
         </div>
       </div>

@@ -12,6 +12,16 @@ displayer:
         calibrationDefaultSubrcribe: ''                       # 从该topic接受自动标定结果以在前端手工调整，留空为不自动标定
         size: [640, 480]                                      # 图像大小，不缩放请设置为空数组
         aspectRatio: 1.5                                      # 该参数将被图像大小覆盖，当不设置图像大小时，必须设置宽高比
+      closeCam: # 可添加多个同时显示的相机(此处自定义相机名称，注意不能重复)
+        topic: '/usb_cam/image'                           # 相机图像topic
+        shapeTopic: [ '/displayer/cameraOne/shape' ]            # 发送形状的topic
+        calibrationTopic: '/displayer/cameraOne/calibration'  # 返回标定信息的topic
+        calibrationDefualt: [ # 在前端打开标定时的默认位置，注意必须与实际需要的点数相同
+          [ 0.2, 0.2 ], [ 0.8, 0.2 ], [ 0.8, 0.8 ], [ 0.5, 0.6 ], [ 0.2, 0.8 ]
+        ]
+        calibrationDefaultSubrcribe: ''                       # 从该topic接受自动标定结果以在前端手工调整，留空为不自动标定
+        size: [ 640, 480 ]                                      # 图像大小，不缩放请设置为空数组
+        aspectRatio: 1.5                                      # 该参数将被图像大小覆盖，当不设置图像大小时，必须设置宽高比
   calibrate:
     rate: 3             # 标定时放大的倍数(1-5)
     clipRectRate: 0.5   # 标定时辅助框占图像的比例(0.2-0.5)
