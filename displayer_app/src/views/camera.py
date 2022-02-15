@@ -33,6 +33,8 @@ def getCamera():
     @brief: 返回一个生成器，实时更新图片
     """
     cam = request.args.get('cam')
+    print(cam)
+    print(subscribers.keys())
     if cam is None or cam not in subscribers.keys():
         abort(400)
     return Response(getCameraImage(cam), mimetype='multipart/x-mixed-replace; boundary=frame')

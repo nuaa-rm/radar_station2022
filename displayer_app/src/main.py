@@ -9,16 +9,19 @@ monkey.patch_all()
 
 import os
 import sys
+import logging
 sys.path.append(os.path.dirname(__file__))
 
-from rosNode import RosNode
+from rosNode import RosNode, fixLogging
 ros = RosNode()
+fixLogging(logging.INFO)
 
 from app import app, socketio
-from views import camera
+from views import camera, httpApi
 import config
 
 app.register_blueprint(camera.cameraView, url_prefix='/api/camera')
+app.register_blueprint(httpApi.httpApiView, url_prefix='/api')
 
 from flask import render_template
 
@@ -30,4 +33,5 @@ def index():
 
 if __name__ == '__main__':
     ros.start()
-    socketio.run(app, host='0.0.0.0', port=config.port)
+    logging.info('Initializing Finished')
+    socketio.run(app, host='0.0.0.0', port=config.port, log_output='debug')

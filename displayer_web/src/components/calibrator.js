@@ -8,13 +8,15 @@ import { connect } from 'umi'
 }))
 class Calibrator extends Component {
   instance = createRef();
+  name = this.props.name;
   zr = null;
   rate = this.props.configProvider.calibrator.rate;
   clipRectRate = this.props.configProvider.calibrator.clipRectRate;
-  path = [[150, 50], [400, 50], [500, 400], [300, 300], [100, 400]];
-  imgUrl = require('../assets/test.png')
+  path = this.props.configProvider.calibrator.cameras[this.name].path;
+  imgUrl = '/api/camera?cam=' + encodeURIComponent(this.name);
 
   componentDidMount() {
+    console.log(this.imgUrl)
     let isMouseDown = false;
     this.zr = zrender.init(this.instance.current);
     let w = this.zr.getWidth();

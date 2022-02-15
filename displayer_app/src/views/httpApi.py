@@ -4,11 +4,13 @@
 # @Site   : https://github.com/bismarckkk
 # @File   : httpApi.py
 
+import logging
+
 from flask import Blueprint, request, abort
 try:
     import ujson as json
 except ImportError:
-    print('ujson not found, use json instead')
+    logging.warning('ujson not found, use json instead')
     import json
 
 import config
@@ -16,10 +18,15 @@ import config
 httpApiView = Blueprint('httpApiView', __name__)
 
 
-@httpApiView.route('/api/getConfig')
+@httpApiView.route('/getConfig')
 def getConfig():
     return json.dumps({
-        'cameras': config.cameraConfig,
+        'cameras': {
+            camera: {
+                'aspectRatio': it['aspectRatio'],
+                'path': it['calibrationDefualt'],
+            } for camera, it in config.cameraConfig.items()
+        },
         'calibration': config.calibrationConfig
     })
 

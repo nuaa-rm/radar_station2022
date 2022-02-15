@@ -10,6 +10,11 @@ import rospy
 fps = rospy.get_param('/displayer/camera/fps', 25)
 cameraConfig = rospy.get_param('/displayer/camera/list', {})
 
+# 设置size属性后将覆盖长宽比属性
+for cameraCfg in cameraConfig:
+    if 'size' in cameraCfg.keys() and len(cameraCfg['size']) != 0:
+        cameraCfg['aspectRatio'] = float(cameraCfg['size'][0]) / float(cameraCfg['size'][1])
+
 calibrationConfig = rospy.get_param('/displayer/calibrate', {})
 
 secretKey = rospy.get_param('/displayer/flask/secretKey', 'secret_key')

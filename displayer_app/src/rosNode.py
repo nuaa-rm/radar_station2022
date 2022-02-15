@@ -5,6 +5,7 @@
 # @File   : rosNode.py
 
 import sys
+import logging
 
 import cv2
 import numpy as np
@@ -12,6 +13,7 @@ import rospy
 from sensor_msgs.msg import Image
 
 from base import BaseNode, BaseImageSubscriber
+from app import app
 import config
 
 """
@@ -19,6 +21,7 @@ import config
 """
 if config.isCvBridge:
     import cv_bridge
+
     bridge = cv_bridge.CvBridge()
 
 
@@ -27,19 +30,36 @@ class RosNode(BaseNode):
     @brief: RosNode类，继承自BaseNode类
     @details: 在启动后初始化ros句柄，使用spin()方法运行ros后端
     """
+
     def __init__(self):
         super().__init__()
+        fixLogging(logging.INFO)
         rospy.init_node('displayer')
 
     def run(self):
+        logging.info('RosNode is running...')
         rospy.spin()
+
+
+"""
+@brief: 将被ROS接管的日志系统重新连接到python
+@href: https://github.com/ros/ros_comm/issues/1384
+"""
+def fixLogging(level=logging.WARNING):
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    logging.getLogger('').addHandler(console)
+    formatter = logging.Formatter('%(levelname)-8s:%(name)-12s: %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
 
 
 class RosImageSubscriber(BaseImageSubscriber):
     """
     @brief: ros相机订阅者类，继承自BaseImageSubscriber类
-    @fn self.img_to_cv2: 通过cv_bridge或者自编解析image消息获取cv2图像
+    @fn self.img_to_cv2: 通过cv_bridge或者第三方代码解析image消息获取cv2图像
     """
+
     def __init__(self, cfg: dict):
         self.topic = cfg['topic']
         self.sub = rospy.Subscriber(self.topic, Image, self.callback, 1)
@@ -52,7 +72,8 @@ class RosImageSubscriber(BaseImageSubscriber):
         """
         @param img_msg: ros sensor_msgs/Image消息
         @return: cv2图像
-        @warning: 自编解析代码仅支持bgr8和rgb8编码
+        @warning: 此解析代码仅支持bgr8和rgb8编码
+        @href: https://answers.ros.org/question/350904/cv_bridge-throws-boost-import-error-in-python-3-and-ros-melodic/
         """
         if config.isCvBridge:
             return bridge.imgmsg_to_cv2(img_msg, 'bgr8')
