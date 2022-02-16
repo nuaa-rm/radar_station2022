@@ -1,0 +1,26 @@
+
+.normal {
+  font-family: Georgia, sans-serif;
+  text-align: center;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: normal;
+  letter-spacing: -1px;
+  background: #c0c0c0;
+  padding: .6em 0;
+  color: white;
+  margin: 0;
+}
+.logo {
+  float: left;
+  width: 120px;
+  height: 31px;
+  margin: 16px 24px 16px 0;
+}
+.site-layout-background {
+  background: #fff;
+  padding: 24px 24px 0;
+  min-height: calc(100vh - 300px)
+}

@@ -45,7 +45,7 @@ class Calibrator extends Component {
         this.fillRect.show()
       }
     });
-    this.zr.on('mouseup', (e) => {
+    this.zr.on('mouseup', () => {
       if ((isMouseDown || isMouseDown === 0) && isMouseDown < this.path.length && isMouseDown >= 0) {
         mouseMove(this.circle[isMouseDown])
         this.clipRect.hide()
@@ -240,10 +240,19 @@ class Calibrator extends Component {
     }
 
     function resize() {
-      let targetWidth = that.container.current.parentNode.clientWidth - 10;
+      let targetWidth = that.container?.current?.parentNode?.clientWidth;
+      let clientHeight = that.container?.current?.parentNode?.clientHeight;
+      if (!targetWidth || !clientHeight) {
+        return ;
+      }
+      let targetHeight = Math.round(targetWidth / that.aspectRatio)
+      if (targetHeight > clientHeight) {
+        targetHeight = clientHeight;
+        targetWidth = Math.round(targetHeight * that.aspectRatio);
+      }
       that.setState({
         width: targetWidth.toString() + 'px',
-        height: (Math.round(targetWidth / that.aspectRatio)).toString() + 'px'
+        height: targetHeight.toString() + 'px'
       })
       that.zr.resize();
       that.w = that.zr.getWidth();
@@ -306,12 +315,12 @@ class Calibrator extends Component {
 
   render() {
     return (
-      <div>
-        <div style={{ position: 'relative', width: this.state.width, height: this.state.height, padding: '10px' }} ref={ this.container }>
-          <div style={{ position: 'absolute', top: '5px', left: '5px', width: '100%', height: '100%', zIndex: 3 }}>
+      <div style={{ height: '100%' }}>
+        <div style={{ position: 'relative', width: this.state.width, height: this.state.height }} ref={ this.container }>
+          <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 3 }}>
             <div ref={this.instance} style={{width: '100%', height: '100%'}} />
           </div>
-          <div style={{ position: 'absolute', top: '5px', left: '5px', width: '100%', height: '100%', zIndex: 2 }}>
+          <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 2 }}>
             <img style={{width: '100%', height: '100%'}} src={ this.state.imgUrl } alt="cameraOne"/>
           </div>
         </div>

@@ -4,12 +4,26 @@ export default defineConfig({
   nodeModulesTransform: {
     type: 'none',
   },
-  routes: [
-    { path: '/', component: '@/pages/index' },
-  ],
+  routes: [{
+      path: '/',
+      component: '../layouts/index',
+      title: 'RadarDisplayer',
+      routes: [{
+        path: '/',
+        component: '../pages/index',
+      },
+      {
+        path: '/calibrate',
+        component: '../pages/calibrate',
+      },
+    ],
+  }],
   fastRefresh: {},
   mfsu: {mfName: 'mfMain'},
   dva: {},
+  dynamicImport: {
+    loading: '@/components/pageLoading',
+  },
   proxy: {
     '/api/ws': {
       target: 'ws://127.0.0.1:43624',
