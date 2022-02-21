@@ -4,5 +4,5 @@ flask
 flask-socketio
 gevent
 gevent-websocket
-python-opencv
+opencv-python
 numpy
