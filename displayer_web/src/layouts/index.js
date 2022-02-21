@@ -69,6 +69,7 @@ class Index extends Component {
   }
 
   render() {
+    console.log(this.props.children)
     const fullButton = (
       <Button type='link' onClick={() => this.fullScreen()} size={'large'}>
         <FullscreenOutlined style={{ color: 'black' }} />
@@ -112,11 +113,11 @@ class Index extends Component {
           </Header>
           <Content className='site-layout' style={{ marginTop: 20 }}>
             <div className='site-layout-background'
-                 style={{ padding: 24, paddingTop: 48, paddingBottom: 0, height: 'calc(100vh - 90px)', overflow: 'hidden' }}>
+                 style={{ padding: 12, paddingTop: 48, paddingBottom: 0, height: 'calc(100vh - 73px)', overflow: 'hidden' }}>
               {this.props.children}
             </div>
           </Content>
-          <Footer style={{ textAlign: 'center' }}>Radar Displayer ©2022 Created by <a
+          <Footer style={{ textAlign: 'center', paddingTop: '10px', paddingBottom: '20px' }}>Radar Displayer ©2022 Created by <a
             href={'https://github.com/bismarckkk'}>Bismarckkk</a></Footer>
         </Layout>
       </div>

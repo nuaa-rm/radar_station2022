@@ -313,6 +313,16 @@ class Calibrator extends Component {
     return true;
   }
 
+  getPath() {
+    return this.path;
+  }
+
+  reset() {
+    this.path = this.props.configProvider.calibrator.cameras[this.name].path;
+    this.resize()
+  }
+
+  // TODO: 使用transform实现img移动，优化渲染效率
   render() {
     return (
       <div style={{ height: '100%' }}>

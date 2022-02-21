@@ -11,6 +11,7 @@ const { Option } = Select;
 class Calibrate extends Component {
   state = { camera: '', height: 600 }
   container = createRef();
+  calibratorDiv = createRef();
   calibrator = createRef();
 
   handleChange(e) {
@@ -46,10 +47,10 @@ class Calibrate extends Component {
         <Select style={{ width: 200, paddingBottom: 10, paddingTop: 10 }} onChange={(e)=>this.handleChange(e)}>
           {options}
         </Select>
-        <div style={{ height: this.state.height }} ref={this.calibrator}>
+        <div style={{ height: this.state.height }} ref={this.calibratorDiv}>
           {
             this.state.camera ?
-              <Calibrator name={ this.state.camera } /> :
+              <Calibrator name={ this.state.camera } ref={this.calibrator} /> :
               <p>No camera selected</p>
           }
         </div>
