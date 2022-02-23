@@ -67,7 +67,7 @@ class Calibrate extends Component {
           {
             this.state.camera ?
               <Calibrator name={ this.state.camera } ref={this.calibrator} /> :
-              <p>No camera selected</p>
+              <img src={require('../assets/noCamera.png')} alt="noCameraSelect" style={{maxWidth: '100%', maxHeight: '100%'}} />
           }
         </div>
       </div>
