@@ -10,6 +10,8 @@ import os
 
 import cv2
 
+from app import socketio
+
 
 class BaseNode(Thread):
     """
@@ -48,6 +50,17 @@ class BaseImageSubscriber:
         return self.image
 
 
-class BasePathPublisher:
+class BasePathHandler:
+    """
+    @brief: 标定器初值与处理器基类
+    @fn publish: 将标定器结果传给标定程序
+    @fn setPath: 将指定的path设置为标定器初值
+    """
+    def __init__(self, cfg):
+        self.cfg = cfg
+
     def publish(self, path: list):
         raise NotImplementedError('Please override this method')
+
+    def setPath(self, path: list):
+        socketio.emit('setPath', {'camera': self.cfg.name, 'path': path}, namespace='/api/ws')

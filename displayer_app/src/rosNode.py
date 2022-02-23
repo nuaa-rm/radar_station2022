@@ -14,7 +14,7 @@ from sensor_msgs.msg import Image
 
 from radar_msgs.msg import points, point
 
-from base import BaseNode, BaseImageSubscriber, BasePathPublisher
+from base import BaseNode, BaseImageSubscriber, BasePathHandler
 import config
 
 """
@@ -99,10 +99,13 @@ class RosImageSubscriber(BaseImageSubscriber):
         self.queue.put(self.img_to_cv2(data))
 
 
-class RosPathPublisher(BasePathPublisher):
-    def __init__(self, cfg: dict):
+class RosPathHandler(BasePathHandler):
+    def __init__(self, cfg: dict, name: str):
+        cfg['name'] = name
         self.pub = rospy.Publisher(cfg['calibrationTopic'], points, queue_size=1)
-        super().__init__()
+        if cfg['calibrationDefaultSubscribe'] and cfg['calibrationDefaultSubscribe'] != '':
+            self.sub = rospy.Subscriber(cfg['calibrationDefaultSubscribe'], points, self.callback, queue_size=1)
+        super().__init__(cfg)
 
     def publish(self, data: list[list]):
         msg = points()
@@ -118,12 +121,16 @@ class RosPathPublisher(BasePathPublisher):
         msg.data = res
         self.pub.publish(msg)
 
+    def callback(self, msg):
+        data = [[p.x, p.y] for p in msg.data]
+        self.setPath(data)
+
 
 imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
 
-calibratePublishers = {}
+calibrateHandler = {}
 for cam, cfg in config.cameraConfig.items():
     if cfg['calibrationTopic'] != '':
-        calibratePublishers[cam] = RosPathPublisher(cfg)
+        calibrateHandler[cam] = RosPathHandler(cfg, cam)

@@ -36,7 +36,12 @@ class DisplayerBackend {
       this.io.on('connect_error', () => {
         message.error('连接后端服务器出错，稍后将自动重试')
       });
-
+      this.io.on('setPath', (msg) => {
+        this.dispatch({
+          type: 'configProvider/setPath',
+          payload: msg
+        })
+      })
     }
   }
 
