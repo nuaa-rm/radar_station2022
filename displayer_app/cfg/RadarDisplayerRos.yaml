@@ -6,7 +6,7 @@ displayer:
         topic: '/MVCamera/image_raw/'                           # 相机图像topic
         shapeTopic: ['/displayer/cameraOne/shape']            # 发送形状的topic
         calibrationTopic: '/displayer/cameraOne/calibration'  # 返回标定信息的topic
-        calibrationDefualt: [                                 # 在前端打开标定时的默认位置，注意必须与实际需要的点数相同
+        calibrationDefault: [                                 # 在前端打开标定时的默认位置，注意必须与实际需要的点数相同
           [0.2, 0.2], [0.8, 0.2], [0.8, 0.8], [0.5, 0.6], [0.2, 0.8]
         ]
         calibrationDefaultSubrcribe: ''                       # 从该topic接受自动标定结果以在前端手工调整，留空为不自动标定

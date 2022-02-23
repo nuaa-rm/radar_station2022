@@ -17,7 +17,7 @@ ros = RosNode()
 fixLogging(logging.INFO)
 
 from app import app, socketio
-from views import camera, httpApi
+from views import camera, httpApi, wsApi
 import config
 
 app.register_blueprint(camera.cameraView, url_prefix='/api/camera')

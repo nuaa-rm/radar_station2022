@@ -12,8 +12,9 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import Image
 
-from base import BaseNode, BaseImageSubscriber
-from app import app
+from radar_msgs.msg import points, point
+
+from base import BaseNode, BaseImageSubscriber, BasePathPublisher
 import config
 
 """
@@ -98,6 +99,31 @@ class RosImageSubscriber(BaseImageSubscriber):
         self.queue.put(self.img_to_cv2(data))
 
 
+class RosPathPublisher(BasePathPublisher):
+    def __init__(self, cfg: dict):
+        self.pub = rospy.Publisher(cfg['calibrationTopic'], points, queue_size=1)
+        super().__init__()
+
+    def publish(self, data: list[list]):
+        msg = points()
+        res = []
+        i = 0
+        for it in data:
+            p = point()
+            p.x = it[0]
+            p.y = it[1]
+            p.id = i
+            res.append(p)
+            i += 1
+        msg.data = res
+        self.pub.publish(msg)
+
+
 imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
+
+calibratePublishers = {}
+for cam, cfg in config.cameraConfig.items():
+    if cfg['calibrationTopic'] != '':
+        calibratePublishers[cam] = RosPathPublisher(cfg)

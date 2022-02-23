@@ -24,7 +24,8 @@ def getConfig():
         'cameras': {
             camera: {
                 'aspectRatio': it['aspectRatio'],
-                'path': it['calibrationDefualt'],
+                'path': it['calibrationDefault'],
+                'isCalibrated': it['calibrationTopic'] != '',
             } for camera, it in config.cameraConfig.items()
         },
         'calibration': config.calibrationConfig

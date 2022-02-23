@@ -46,3 +46,8 @@ class BaseImageSubscriber:
         if self.image is None:
             return self.noImage
         return self.image
+
+
+class BasePathPublisher:
+    def publish(self, path: list):
+        raise NotImplementedError('Please override this method')

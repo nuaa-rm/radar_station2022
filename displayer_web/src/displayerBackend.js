@@ -40,8 +40,8 @@ class DisplayerBackend {
     }
   }
 
-  emit(event, data) {
-    this.io.emit(event, data);
+  saveCalibrate(camera, path) {
+    this.io.emit('cameraCalibrate', { camera, path })
   }
 }
 

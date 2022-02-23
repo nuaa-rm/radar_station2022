@@ -2,10 +2,11 @@ import React, {Component, createRef} from 'react';
 import * as zrender from 'zrender'
 import { connect } from 'umi'
 
+const copyArr = (arr) => arr.map(item => ([...item]))
 
 @connect(({ configProvider }) => ({
   configProvider
-}))
+}), null, null, { forwardRef: true })
 class Calibrator extends Component {
   instance = createRef();
   container = createRef();
@@ -13,7 +14,7 @@ class Calibrator extends Component {
   zr = null;
   rate = this.props.configProvider.calibrator.rate;
   clipRectRate = this.props.configProvider.calibrator.clipRectRate;
-  path = this.props.configProvider.calibrator.cameras[this.name].path;
+  path = copyArr(this.props.configProvider.calibrator.cameras[this.name].path);
   aspectRatio = this.props.configProvider.calibrator.cameras[this.name].aspectRatio;
   w = 0
   h = 0
@@ -283,7 +284,7 @@ class Calibrator extends Component {
     } else {
       this.name = this.props.name;
     }
-    this.path = this.props.configProvider.calibrator.cameras[this.name].path;
+    this.path = copyArr(this.props.configProvider.calibrator.cameras[this.name].path);
     this.aspectRatio = this.props.configProvider.calibrator.cameras[this.name].aspectRatio;
     this.setState({
       imgUrl: '/api/camera?cam=' + encodeURIComponent(this.name)
@@ -315,11 +316,6 @@ class Calibrator extends Component {
 
   getPath() {
     return this.path;
-  }
-
-  reset() {
-    this.path = this.props.configProvider.calibrator.cameras[this.name].path;
-    this.resize()
   }
 
   // TODO: 使用transform实现img移动，优化渲染效率
