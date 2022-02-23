@@ -2,5 +2,6 @@
 <launch>
     <include file="$(find realsense2_camera)/launch/rs_camera.launch" />
     <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
-    <node pkg="poseEstimation" type="poseEstimation_node" name="poseEstimation_node" output="screen" respawn="false" />
+    <rosparam command="load" file="$(find calibrateCamera)/src/yaml/calibrate.yaml" />
+    <node pkg="calibrateCamera" type="calibrateCamera_node" name="calibrateCamera_node" output="screen" respawn="false" />
 </launch>

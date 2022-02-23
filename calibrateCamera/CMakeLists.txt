@@ -12,8 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   cv_bridge
+  sensor_msgs
 )
-
+find_package(PCL 1.2 REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -127,7 +128,8 @@ include_directories(OpenCV_INCLUDE_DIRS)
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/calibrateCamera.cpp
 # )
-
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -152,6 +154,7 @@ include_directories(OpenCV_INCLUDE_DIRS)
  target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
  )
 
 #############
