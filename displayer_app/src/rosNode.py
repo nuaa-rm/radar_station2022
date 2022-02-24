@@ -13,8 +13,9 @@ import rospy
 from sensor_msgs.msg import Image
 
 from radar_msgs.msg import points, point
+from hp_limit_helper.msg import RobotHP, RobotsHP
 
-from base import BaseNode, BaseImageSubscriber, BasePathHandler
+from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler
 import config
 
 """
@@ -22,8 +23,9 @@ import config
 """
 if config.isCvBridge:
     import cv_bridge
-
     bridge = cv_bridge.CvBridge()
+
+id2RobotType = ['', 'Hero', 'Engineer', 'Infantry1', 'Infantry2', 'Infantry3', '', 'Sentry', 'Outpost', 'Base']
 
 
 class RosNode(BaseNode):
@@ -126,6 +128,38 @@ class RosPathHandler(BasePathHandler):
         self.setPath(data)
 
 
+class RosHpHandler(BaseHpHandler):
+    def __init__(self, cfg: dict):
+        self.hpSubscriber = rospy.Subscriber(cfg['hpSubscribe'], RobotsHP, self.hpSubscribe, queue_size=1)
+        self.hpLimitSubscriber = rospy.Subscriber(cfg['hpLimitSubscribe'], RobotsHP, self.hpLimitSubscribe, queue_size=1)
+
+    def hpSubscribe(self, msg: RobotsHP):
+        for it in msg.data:
+            if it.team == 0:
+                info = self.data['red']
+            else:
+                info = self.data['blue']
+            robotType = id2RobotType[it.number]
+            if robotType in info.keys():
+                info[robotType]['hp'] = it.hp
+            else:
+                info[robotType] = {'hp': it.hp, 'hpLimit': it.hp}
+        self.sendInfo()
+
+    def hpLimitSubscribe(self, msg: RobotsHP):
+        for it in msg.data:
+            if it.team == 0:
+                info = self.data['red']
+            else:
+                info = self.data['blue']
+            robotType = id2RobotType[it.number]
+            if robotType in info.keys():
+                info[robotType]['hpLimit'] = it.hp
+            else:
+                info[robotType] = {'hp': it.hp, 'hpLimit': it.hp}
+        self.sendInfo()
+
+
 imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
@@ -134,3 +168,5 @@ calibrateHandler = {}
 for cam, cfg in config.cameraConfig.items():
     if cfg['calibrationTopic'] != '':
         calibrateHandler[cam] = RosPathHandler(cfg, cam)
+
+rosHpHandler = RosHpHandler(config.judgeSystem)

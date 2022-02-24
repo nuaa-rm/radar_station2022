@@ -63,3 +63,10 @@ class BasePathHandler:
 
     def setPath(self, path: list):
         socketio.emit('setPath', {'camera': self.cfg.name, 'path': path}, namespace='/api/ws')
+
+
+class BaseHpHandler:
+    data = {'red': {}, 'blue': {}}
+
+    def sendInfo(self):
+        socketio.emit('hpInfo', {'data': self.data}, namespace='/api/ws')

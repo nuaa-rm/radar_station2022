@@ -20,4 +20,6 @@ calibrationConfig = rospy.get_param('/displayer/calibrate', {})
 secretKey = rospy.get_param('/displayer/flask/secretKey', 'secret_key')
 port = rospy.get_param('/displayer/flask/httpPort', 43624)
 
+judgeSystem = rospy.get_param('/displayer/judgeSystem', {'hpSubscribe': '', 'hpLimitSubscribe': ''})
+
 isCvBridge = rospy.get_param('/displayer/ros/cvBridge', False)

@@ -42,6 +42,12 @@ class DisplayerBackend {
           payload: msg
         })
       })
+      this.io.on('hpInfo', msg => {
+        this.dispatch({
+          type: 'robotStatus/refresh',
+          payload: msg.data
+        })
+      })
     }
   }
 

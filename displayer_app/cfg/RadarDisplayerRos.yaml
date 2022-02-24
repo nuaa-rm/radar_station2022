@@ -18,5 +18,8 @@ displayer:
   flask:
     secretKey: 'ghwerouhgt3o2hogw8ehtg9i31huo3h'    # Flask的secretKey，请自行随即生成
     port: 43624                                     # Flask运行端口
+  judgeSystem:
+    hpSubscribe: '/judgeSystem/hp'                  # 返回HP的topic
+    hpLimitSubscribe: '/judgeSystem/hpLimit'        # 返回HP的topic
   ros:
     cvBridge: false   # 是否使用cvBridge解码图像消息

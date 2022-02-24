@@ -6,7 +6,7 @@ typedef unsigned char uint8;
 typedef unsigned short uint16;
 
 enum class RobotType {
-    hero,
+    hero = 1,
     engineer,
     infantry1,
     infantry2,
@@ -16,7 +16,7 @@ enum class RobotType {
     base
 };
 
-inline uint8 getUid(uint8 team, uint8 type);
+uint8 getUid(uint8 team, uint8 type);
 
 class Robot {
 public:
