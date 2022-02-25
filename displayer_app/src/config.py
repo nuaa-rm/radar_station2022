@@ -22,4 +22,6 @@ port = rospy.get_param('/displayer/flask/httpPort', 43624)
 
 judgeSystem = rospy.get_param('/displayer/judgeSystem', {'hpSubscribe': '', 'hpLimitSubscribe': ''})
 
+minimapTopic = rospy.get_param('/displayer/minimap/subscribeTopic', None)
+
 isCvBridge = rospy.get_param('/displayer/ros/cvBridge', False)

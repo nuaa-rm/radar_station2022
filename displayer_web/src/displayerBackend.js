@@ -4,6 +4,8 @@ import {getDvaApp} from "umi";
 import {message, Modal} from "antd";
 
 class DisplayerBackend {
+  updateMinimap = () => {console.error("Didn't bind minimap update function")}
+
   constructor() {
     const that = this;
     this.timer = setInterval(() => {
@@ -49,10 +51,17 @@ class DisplayerBackend {
         })
       })
     }
+    this.io.on('minimapShape', (msg)=>{
+      this.updateMinimap(msg)
+    })
   }
 
   saveCalibrate(camera, path) {
     this.io.emit('cameraCalibrate', { camera, path })
+  }
+
+  onMinimapUpdate(fun) {
+    this.updateMinimap = fun
   }
 }
 

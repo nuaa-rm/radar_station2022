@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Canvas, Circle, Image, Polygon, Text} from '@antv/g';
 import {Renderer as WebGLRenderer} from '@antv/g-webgl';
+import {displayerBackend} from "../displayerBackend";
 
 class Minimap extends Component {
   renderer = new WebGLRenderer();
@@ -26,14 +27,7 @@ class Minimap extends Component {
       },
     })
     this.canvas.appendChild(this.image);
-    const that = this
-    setTimeout(()=>{
-      that.updateShapes({
-        test1: {color: 'red', id: 'test1', text: 'test', data: [[0.2, 0.5], [0.6, 0.7], [0.2, 0.7]], shapeType: 'polygon'},
-        test2: {color: 'green', data: [[0.3, 0.5]], text: '1', shapeType: 'point', id: 'test2'}
-      })
-
-    }, 5000)
+    displayerBackend.onMinimapUpdate(this.updateShapes)
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -64,8 +58,9 @@ class Minimap extends Component {
   updateShapes = (shapes) => {
     const width = this.props.width;
     const height = this.props.height;
-    for (let i = 0; i < Object.keys(shapes).length; i++) {
-      const shape = shapes[Object.keys(shapes)[i]];
+    let reload = false;
+    for (let i = 0; i < shapes.length; i++) {
+      const shape = shapes[i];
       if (this.shapes[shape.id]) {
         if (shape.data.length === 0) {
           this.canvas.removeChild(this.shapes[shape.id].main);
@@ -75,11 +70,11 @@ class Minimap extends Component {
             this.shapes[shape.id].text = null;
           }
         } else {
-          if (shape.shapeType === 'point') {
+          if (this.shapes[shape.id].shapeType === 'point') {
             if (this.shapes[shape.id].text) {
               if (shape.text) {
-                this.shapes[shape.id].text.style.x = shape.data[0].x;
-                this.shapes[shape.id].text.style.y = shape.data[0].y;
+                this.shapes[shape.id].text.style.x = shape.data[0][0] * width - 1;
+                this.shapes[shape.id].text.style.y = shape.data[0][1] * height;
                 this.shapes[shape.id].text.style.text = shape.text;
               } else {
                 this.canvas.removeChild(this.shapes[shape.id].text);
@@ -107,7 +102,7 @@ class Minimap extends Component {
             this.shapes[shape.id].main.style.x = shape.data[0][0] * width;
             this.shapes[shape.id].main.style.y = shape.data[0][1] * height;
             this.shapes[shape.id].main.style.fill = shape.color;
-          } else if (shape.shapeType === 'polygon') {
+          } else if (this.shapes[shape.id].shapeType === 'polygon') {
             let x = width;
             let y = height;
             for (let j = 0; j < shape.data.length; j++) {
@@ -155,6 +150,11 @@ class Minimap extends Component {
         }
       } else {
         this.shapes[shape.id] = {};
+        if (shape.data.length === 1) {
+          shape.shapeType = 'point'
+        } else if (shape.data.length > 1) {
+          shape.shapeType = 'polygon'
+        }
         if (shape.shapeType === 'point') {
           if (shape.text) {
             this.shapes[shape.id].text = new Text({
@@ -227,6 +227,13 @@ class Minimap extends Component {
           this.canvas.appendChild(this.shapes[shape.id].main);
           this.shapes[shape.id].shapeType = 'polygon';
         }
+        reload = true
+      }
+      if (reload) {
+        const that = this;
+        setTimeout(()=>{
+          that.updateShapes(shapes)
+        }, 100)
       }
     }
   }

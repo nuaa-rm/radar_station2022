@@ -15,7 +15,7 @@ from sensor_msgs.msg import Image
 from radar_msgs.msg import points, point
 from hp_limit_helper.msg import RobotHP, RobotsHP
 
-from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler
+from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscribe
 import config
 
 """
@@ -160,6 +160,21 @@ class RosHpHandler(BaseHpHandler):
         self.sendInfo()
 
 
+class RosMinimapShapeSubscribe(BaseMinimapShapeSubscribe):
+    def __init__(self, cfg):
+        if cfg.minimapTopic is not None:
+            self.subscriber = rospy.Subscriber(cfg.minimapTopic, points, self.callback, queue_size=1)
+
+    def callback(self, msg: points):
+        data = [{
+            'id': msg.id,
+            'color': msg.color,
+            'text': msg.text,
+            'data': [[p.x, p.y] for p in msg.data]
+        }]
+        self.sendInfo(data)
+
+
 imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
@@ -170,3 +185,4 @@ for cam, cfg in config.cameraConfig.items():
         calibrateHandler[cam] = RosPathHandler(cfg, cam)
 
 rosHpHandler = RosHpHandler(config.judgeSystem)
+rosMinimapShapeSubscriber = RosMinimapShapeSubscribe(config)
