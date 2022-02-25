@@ -78,6 +78,13 @@ class BaseHpHandler:
         socketio.emit('hpInfo', {'data': self.data}, namespace='/api/ws')
 
 
-class BaseMinimapShapeSubscribe:
+class BaseMinimapShapeSubscriber:
     def sendInfo(self, data):
         socketio.emit('minimapShape', data, namespace='/api/ws')
+
+
+class BaseCameraShapeSubscriber:
+    camera = ''
+
+    def sendInfo(self, data):
+        socketio.emit('cameraShape', {'data': data, 'camera': self.camera}, namespace='/api/ws')

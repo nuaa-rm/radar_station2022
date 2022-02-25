@@ -5,6 +5,8 @@ import {message, Modal} from "antd";
 
 class DisplayerBackend {
   updateMinimap = () => {console.error("Didn't bind minimap update function")}
+  updateCameraShape = () => {console.error("Didn't bind minimap update function")}
+  camera = ""
 
   constructor() {
     const that = this;
@@ -54,6 +56,12 @@ class DisplayerBackend {
     this.io.on('minimapShape', (msg)=>{
       this.updateMinimap(msg)
     })
+    this.io.on('cameraShape', (msg)=>{
+      console.log(msg.camera, this.camera)
+      if (msg.camera === this.camera) {
+        this.updateCameraShape(msg.data)
+      }
+    })
   }
 
   saveCalibrate(camera, path) {
@@ -62,6 +70,14 @@ class DisplayerBackend {
 
   onMinimapUpdate(fun) {
     this.updateMinimap = fun
+  }
+
+  onCameraShapeUpdate(fun) {
+    this.updateCameraShape = fun
+  }
+
+  cameraSelect(camera) {
+    this.camera = camera
   }
 }
 

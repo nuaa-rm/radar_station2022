@@ -15,7 +15,7 @@ from sensor_msgs.msg import Image
 from radar_msgs.msg import points, point
 from hp_limit_helper.msg import RobotHP, RobotsHP
 
-from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscribe
+from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscriber, BaseCameraShapeSubscriber
 import config
 
 """
@@ -160,10 +160,26 @@ class RosHpHandler(BaseHpHandler):
         self.sendInfo()
 
 
-class RosMinimapShapeSubscribe(BaseMinimapShapeSubscribe):
+class RosMinimapShapeSubscriber(BaseMinimapShapeSubscriber):
     def __init__(self, cfg):
         if cfg.minimapTopic is not None:
             self.subscriber = rospy.Subscriber(cfg.minimapTopic, points, self.callback, queue_size=1)
+
+    def callback(self, msg: points):
+        data = [{
+            'id': msg.id,
+            'color': msg.color,
+            'text': msg.text,
+            'data': [[p.x, p.y] for p in msg.data]
+        }]
+        self.sendInfo(data)
+
+
+class RosCameraShapeSubscriber(BaseCameraShapeSubscriber):
+    def __init__(self, cfg, cam):
+        if cfg['shapeTopic'] is not None:
+            self.camera = cam
+            self.subscriber = rospy.Subscriber(cfg['shapeTopic'], points, self.callback, queue_size=1)
 
     def callback(self, msg: points):
         data = [{
@@ -179,10 +195,15 @@ imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
 
-calibrateHandler = {}
+calibrateHandlers = {}
 for cam, cfg in config.cameraConfig.items():
     if cfg['calibrationTopic'] != '':
-        calibrateHandler[cam] = RosPathHandler(cfg, cam)
+        calibrateHandlers[cam] = RosPathHandler(cfg, cam)
+
+rosCameraShapeSubscribers = {}
+for cam, cfg in config.cameraConfig.items():
+    if cfg['shapeTopic'] != '':
+        rosCameraShapeSubscribers[cam] = RosCameraShapeSubscriber(cfg, cam)
 
 rosHpHandler = RosHpHandler(config.judgeSystem)
-rosMinimapShapeSubscriber = RosMinimapShapeSubscribe(config)
+rosMinimapShapeSubscriber = RosMinimapShapeSubscriber(config)
