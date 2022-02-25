@@ -2,6 +2,7 @@ import React, { Component, createRef } from 'react';
 import { connect } from 'dva';
 import CameraView from '../components/cameraView';
 import Hp from "../components/hp";
+import Minimap from "../components/minimap";
 
 @connect(({ configProvider }) => ({
   configProvider,
@@ -33,11 +34,9 @@ class Index extends Component {
 
     return (
       <div ref={this.container} style={{ height: '100%', width: '100%' }}>
-        <img
-          src={require('../assets/minimap.png')}
-          style={{ height: this.state.height, width: this.state.height / 1.8, marginTop: 10, float: 'right', display: 'inline' }}
-          alt="minimap"
-        />
+        <div style={{ marginTop: 10, float: 'right', display: 'inline' }}>
+          <Minimap height={this.state.height} width={this.state.height / 1.8} />
+        </div>
         <div style={{ height: this.state.height, width: this.state.height * 0.35, marginTop: 10, float: 'right', display: 'inline', marginRight: 10 }}>
           <Hp />
         </div>
