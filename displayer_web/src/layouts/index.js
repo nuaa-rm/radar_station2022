@@ -95,7 +95,7 @@ class Index extends Component {
                   <h3>Radar Displayer</h3>
                 </div>
               </Col>
-              <Col lg={17} md={16} sm={13} xs={3}>
+              <Col lg={16} md={15} sm={12} xs={3}>
                 <Menu theme='light' mode='horizontal' selectedKeys={[window.location.pathname]}>
                   <Menu.Item key='/'>
                     <Link to='/'>status</Link>
@@ -105,7 +105,7 @@ class Index extends Component {
                   </Menu.Item>
                 </Menu>
               </Col>
-              <Col md={3} sm={4} xs={7}>
+              <Col md={4} sm={5} xs={7}>
                 <div style={{ alignItems: 'right', float: 'right', marginRight: '5%' }}>
                   <Button type='link' onClick={() => this.refreshBackend()} size={'large'}>
                     <SyncOutlined style={{ color: 'black' }} />

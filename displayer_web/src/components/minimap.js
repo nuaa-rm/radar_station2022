@@ -1,42 +1,176 @@
 import React, {Component} from 'react';
-import { Canvas, Circle, Polygon, Image, Text } from '@antv/react-g';
+import { Canvas, Circle, Polygon, Image, Text } from '@antv/g';
 import { Renderer as WebGLRenderer } from '@antv/g-webgl';
-import { connect } from 'umi';
+import { Renderer as CanvasRenderer } from '@antv/g-canvas';
 
-@connect(({ minimap }) => ({
-  minimap,
-}))
 class Minimap extends Component {
   renderer = new WebGLRenderer();
+  canvas = null
+  image = null
+  shapes = {}
 
-  render() {
-    const height = this.props.height
-    const width = this.props.width
-    const draw = [(
-      <Image img={require('../assets/minimap.png')} x={0} y={0} height={height} width={width} zIndex={0} key="image" />
-    )]
-    const info = this.props.minimap
-    const infoKeys = Object.keys(info)
-    for (let i = 0; i < infoKeys.length; i++) {
-      const it = info[infoKeys[i]]
-      if (it.data.length === 0) {
+  componentDidMount() {
+    this.canvas = new Canvas({
+      container: 'minimap',
+      width: this.props.width,
+      height: this.props.height,
+      renderer: this.renderer,
+    });
+    this.image = new Image({
+      style: {
+        width: this.props.width,
+        height: this.props.height,
+        x: 0,
+        y: 0,
+        zIndex: 0,
+        img: require('../assets/minimap.png')
+      },
+    })
+    this.canvas.appendChild(this.image);
+    const that = this
+    setTimeout(()=>{
+      that.updateShapes({
+        test1: {color: 'red', id: 'test1', text: 'test', data: [[0.2, 0.5], [0.6, 0.7], [0.2, 0.7]], shapeType: 'polygon'},
+        test2: {color: 'green', data: [[0.3, 0.5]], text: '1', shapeType: 'point', id: 'test2'}
+      })
 
-      } else if (it.data.length > 1) {
-        draw.push(<Polygon
-          key={infoKeys[i]}
-          fillOpacity={0.3}
-          fill={it.color}
-          stroke={it.color}
-          lineWidth={2}
-          points={it.data.map(p => [p[0] * width, p[1] * height])}
-          zIndex={1}
-        />)
-        if (it.text) {
+    }, 5000)
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    this.canvas.resize(this.props.width, this.props.height);
+    this.image.style.height = this.props.height;
+    this.image.style.width = this.props.width;
+  }
+
+  updateShapes = (shapes) => {
+    const width = this.props.width;
+    const height = this.props.height;
+    for (let i = 0; i < Object.keys(shapes).length; i++) {
+      const shape = shapes[Object.keys(shapes)[i]];
+      if (this.shapes[shape.id]) {
+        if (shape.data.length === 0) {
+          this.canvas.removeChild(this.shapes[shape.id].main);
+          this.shapes[shape.id].main = null;
+          if (this.shapes[shape.id].text) {
+            this.canvas.removeChild(this.shapes[shape.id].text);
+            this.shapes[shape.id].text = null;
+          }
+        } else {
+          if (shape.shapeType === 'point') {
+            if (this.shapes[shape.id].text) {
+              if (shape.text) {
+                this.shapes[shape.id].text.style.x = shape.data[0].x;
+                this.shapes[shape.id].text.style.y = shape.data[0].y;
+                this.shapes[shape.id].text.style.text = shape.text;
+              } else {
+                this.canvas.removeChild(this.shapes[shape.id].text);
+                this.shapes[shape.id].text = null;
+              }
+            } else {
+              if (shape.text) {
+                this.shapes[shape.id].text = new Text({
+                  style: {
+                    x: shape.data[0][0] * width - 1,
+                    y: shape.data[0][1] * height,
+                    text: shape.text,
+                    fontSize: 12,
+                    fontFamily: 'Microsoft YaHei',
+                    fontWeight: 'bold',
+                    textAlign: "center",
+                    textBaseline: "middle",
+                    fill: "#fff",
+                    zIndex: 3
+                  },
+                });
+                this.canvas.appendChild(this.shapes[shape.id].text);
+              }
+            }
+            this.shapes[shape.id].main.style.x = shape.data[0][0] * width;
+            this.shapes[shape.id].main.style.y = shape.data[0][1] * height;
+            this.shapes[shape.id].main.style.fill = shape.color;
+          } else if (shape.shapeType === 'polygon') {
+            let x = width;
+            let y = height;
+            for (let j = 0; j < shape.data.length; j++) {
+              const bx = shape.data[j][0] * width
+              const by = shape.data[j][1] * height
+              if (bx < x) {
+                x = bx
+              }
+              if (by < y) {
+                y = by
+              }
+            }
+            if (this.shapes[shape.id].text) {
+              if (shape.text) {
+                this.shapes[shape.id].text.style.x = x;
+                this.shapes[shape.id].text.style.y = y;
+                this.shapes[shape.id].text.style.text = shape.text;
+              } else {
+                this.canvas.removeChild(this.shapes[shape.id].text);
+                this.shapes[shape.id].text = null;
+              }
+            } else {
+              if (shape.text) {
+                this.shapes[shape.id].text = new Text({
+                  style: {
+                    x: x - 4,
+                    y: y - 4,
+                    text: shape.text,
+                    fontSize: 16,
+                    fontFamily: 'Microsoft YaHei',
+                    fontWeight: 'bold',
+                    textBaseline: "bottom",
+                    fill: "#fff",
+                    stroke: "#000",
+                    zIndex: 3
+                  },
+                });
+                this.canvas.appendChild(this.shapes[shape.id].text);
+              }
+            }
+            this.shapes[shape.id].main.style.points = shape.data.map(item => [item[0] * width, item[1] * height]);
+            this.shapes[shape.id].main.style.fill = shape.color;
+            this.shapes[shape.id].main.style.stroke = shape.color;
+          }
+        }
+      } else {
+        this.shapes[shape.id] = {};
+        if (shape.shapeType === 'point') {
+          if (shape.text) {
+            this.shapes[shape.id].text = new Text({
+              style: {
+                x: shape.data[0][0] * width - 1,
+                y: shape.data[0][1] * height,
+                text: shape.text,
+                fontSize: 12,
+                fontFamily: 'Microsoft YaHei',
+                fontWeight: 'bold',
+                textAlign: "center",
+                textBaseline: "middle",
+                fill: "#fff",
+                zIndex: 3
+              },
+            });
+            this.canvas.appendChild(this.shapes[shape.id].text);
+          }
+          this.shapes[shape.id].main = new Circle({
+            style: {
+              x: shape.data[0][0] * width,
+              y: shape.data[0][1] * height,
+              r: 8,
+              fill: shape.color,
+              zIndex: 2
+            },
+          });
+          this.canvas.appendChild(this.shapes[shape.id].main);
+        } else if (shape.shapeType === 'polygon') {
           let x = width;
           let y = height;
-          for (let j = 0; j < it.data.length; j++) {
-            const bx = it.data[j][0] * width
-            const by = it.data[j][1] * height
+          for (let j = 0; j < shape.data.length; j++) {
+            const bx = shape.data[j][0] * width
+            const by = shape.data[j][1] * height
             if (bx < x) {
               x = bx
             }
@@ -44,57 +178,121 @@ class Minimap extends Component {
               y = by
             }
           }
-          draw.push(
-            <Text
-              key={infoKeys[i] + '-text'}
-              x={x - 4}
-              y={y - 4}
-              text={it.text}
-              fontSize={16}
-              fontFamily={'Microsoft YaHei'}
-              fontWeight={'bold'}
-              textBaseline="bottom"
-              stroke="#000"
-              fill="#fff"
-              zIndex={3}
-            />
-          )
-        }
-      } else {
-        draw.push(
-          <Circle
-            key={infoKeys[i]}
-            fill={it.color}
-            stroke={it.color}
-            r={8}
-            x={it.data[0][0] * width}
-            y={it.data[0][1] * height}
-            zIndex={2}
-          />
-        )
-        if (it.text) {
-          draw.push(
-            <Text
-              key={infoKeys[i] + '-text'}
-              x={it.data[0][0] * width - 1}
-              y={it.data[0][1] * height}
-              text={it.text}
-              fontSize={12}
-              fontFamily={'Microsoft YaHei'}
-              fontWeight={'bold'}
-              textAlign="center"
-              textBaseline="middle"
-              fill="#fff"
-              zIndex={3}
-            />
-          )
+          if (shape.text) {
+            this.shapes[shape.id].text = new Text({
+              style: {
+                x: x - 4,
+                y: y - 4,
+                text: shape.text,
+                fontSize: 16,
+                fontFamily: 'Microsoft YaHei',
+                fontWeight: 'bold',
+                textBaseline: "bottom",
+                fill: "#fff",
+                stroke: "#000",
+                zIndex: 3
+              },
+            });
+            this.canvas.appendChild(this.shapes[shape.id].text);
+          }
+          this.shapes[shape.id].main = new Polygon({
+            style: {
+              points: shape.data.map(item => [item[0] * width, item[1] * height]),
+              fill: shape.color,
+              fillOpacity: 0.3,
+              stroke: shape.color,
+              lineWidth: 2,
+              zIndex: 2
+            },
+          });
+          this.canvas.appendChild(this.shapes[shape.id].main);
         }
       }
     }
+  }
+
+  render() {
+    // const draw = [(
+    //   <Image img={require('../assets/minimap.png')} x={0} y={0} height={height} width={width} zIndex={0} key="image" />
+    // )]
+    // const info = this.props.minimap
+    // const infoKeys = Object.keys(info)
+    // for (let i = 0; i < infoKeys.length; i++) {
+    //   const it = info[infoKeys[i]]
+    //   if (it.data.length === 0) {
+    //
+    //   } else if (it.data.length > 1) {
+    //     draw.push(<Polygon
+    //       key={infoKeys[i]}
+    //       fillOpacity={0.3}
+    //       fill={it.color}
+    //       stroke={it.color}
+    //       lineWidth={2}
+    //       points={it.data.map(p => [p[0] * width, p[1] * height])}
+    //       zIndex={1}
+    //     />)
+    //     if (it.text) {
+    //       let x = width;
+    //       let y = height;
+    //       for (let j = 0; j < it.data.length; j++) {
+    //         const bx = it.data[j][0] * width
+    //         const by = it.data[j][1] * height
+    //         if (bx < x) {
+    //           x = bx
+    //         }
+    //         if (by < y) {
+    //           y = by
+    //         }
+    //       }
+    //       draw.push(
+    //         <Text
+    //           key={infoKeys[i] + '-text'}
+    //           x={x - 4}
+    //           y={y - 4}
+    //           text={it.text}
+    //           fontSize={16}
+    //           fontFamily={'Microsoft YaHei'}
+    //           fontWeight={'bold'}
+    //           textBaseline="bottom"
+    //           stroke="#000"
+    //           fill="#fff"
+    //           zIndex={3}
+    //         />
+    //       )
+    //     }
+    //   } else {
+    //     draw.push(
+    //       <Circle
+    //         key={infoKeys[i]}
+    //         fill={it.color}
+    //         stroke={it.color}
+    //         r={8}
+    //         x={it.data[0][0] * width}
+    //         y={it.data[0][1] * height}
+    //         zIndex={2}
+    //       />
+    //     )
+    //     if (it.text) {
+    //       draw.push(
+    //         <Text
+    //           key={infoKeys[i] + '-text'}
+    //           x={it.data[0][0] * width - 1}
+    //           y={it.data[0][1] * height}
+    //           text={it.text}
+    //           fontSize={12}
+    //           fontFamily={'Microsoft YaHei'}
+    //           fontWeight={'bold'}
+    //           textAlign="center"
+    //           textBaseline="middle"
+    //           fill="#fff"
+    //           zIndex={3}
+    //         />
+    //       )
+    //     }
+    //   }
+    // }
     return (
-      <Canvas height={this.props.height} width={this.props.height / 1.8} renderer={this.renderer}>
-        {draw}
-      </Canvas>
+      <div id="minimap" />
     );
   }
 }
