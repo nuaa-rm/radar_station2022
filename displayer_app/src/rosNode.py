@@ -109,7 +109,7 @@ class RosPathHandler(BasePathHandler):
             self.sub = rospy.Subscriber(cfg['calibrationDefaultSubscribe'], points, self.callback, queue_size=1)
         super().__init__(cfg)
 
-    def publish(self, data: list[list]):
+    def publish(self, data):
         msg = points()
         res = []
         i = 0

@@ -2,7 +2,7 @@
 基于react的RoboMaster雷达站前端项目  
 南京航空航天大学长空御风战队开源
 ## 主要技术框架
-前端: react, umijs, dvajs, ant design, zrender  
+前端: react, umijs, dvajs, ant design, zrender, antv
 后端: flask, rospy  
 GUI: pywebview
 ## 项目特点

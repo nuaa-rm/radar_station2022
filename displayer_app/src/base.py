@@ -79,11 +79,20 @@ class BaseHpHandler:
 
 
 class BaseMinimapShapeSubscriber:
+    """
+    @brief: 小地图信息订阅器基类
+    @fn sendInfo: 将小地图信息发送给前端
+    """
     def sendInfo(self, data):
         socketio.emit('minimapShape', data, namespace='/api/ws')
 
 
 class BaseCameraShapeSubscriber:
+    """
+    @brief: 相机界面多边形订阅器基类
+    @var: self.camera: 本订阅器对应的相机的名称
+    @fn sendInfo: 将相机界面多边形发送给前端
+    """
     camera = ''
 
     def sendInfo(self, data):
