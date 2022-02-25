@@ -46,7 +46,7 @@ class Index extends Component {
           width: (this.state.width - this.state.height / 1.1).toString() + 'px',
           paddingTop: 10,
         }}>
-          <CameraView />
+          <CameraView height={this.state.height} width={this.state.width - this.state.height / 1.1} />
         </div>
 
       </div>

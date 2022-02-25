@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Progress } from 'antd'
+import { Progress, Empty } from 'antd'
 import { connect } from 'umi'
 
 @connect(({ robotStatus }) => ({
@@ -19,20 +19,25 @@ class Hp extends Component {
           <div style={{width: '100%'}}>
             <div style={{width: 40}}>{robots[j]}</div>
             <div style={{width: '88%'}}>
-              <Progress percent={teamInfo[robots[j]].hp / teamInfo[robots[j]].hpLimit * 100} strokeColor={color[i]} status="normal"
-                        format={()=>(teamInfo[robots[j]].hp.toString()+"/"+teamInfo[robots[j]].hpLimit.toString())}
-                        key={teams[i] + '-' + robots[j]}
+              <Progress
+                percent={teamInfo[robots[j]].hp / teamInfo[robots[j]].hpLimit * 100} strokeColor={color[i]} status="normal"
+                format={()=>(teamInfo[robots[j]].hp.toString() + "/" + teamInfo[robots[j]].hpLimit.toString())}
+                key={teams[i] + '-' + robots[j]}
               />
             </div>
           </div>
         )
       }
-      hpInfo.push(<br />)
+      hpInfo.push(<br key={teams[i] + '-br'} />)
     }
     return (
       <div style={{width: '100%', height: '100%', background: '#fff', padding: '10px'}}>
         <h2>HP Info</h2>
-        {hpInfo}
+        {
+          hpInfo.length > teams.length ?
+            hpInfo :
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        }
       </div>
     );
   }

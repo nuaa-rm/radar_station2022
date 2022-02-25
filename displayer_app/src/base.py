@@ -66,6 +66,12 @@ class BasePathHandler:
 
 
 class BaseHpHandler:
+    """
+    @brief: 机器人血量体系维护器基类
+    @detail: 需要自行实现方法，更新机器人血量并放入self.data中
+    @fn sendInfo: 将机器人血量信息发送给前端
+    @var self.data: 包含red和blue两个值的字典，字典的key为机器人名称，value为{hp: int, hpLimit: int}
+    """
     data = {'red': {}, 'blue': {}}
 
     def sendInfo(self):
