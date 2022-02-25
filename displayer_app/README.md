@@ -43,3 +43,8 @@ baseNode为后端接口维护线程，将在完成gevent patch以后被导入，
 而cv_bridge需要自行重新编译（参考文章），为了降低使用难度，我们在代码中编写了
 部分编码的sensor_msgs/Image消息解析（该功能默认开启），但仅支持bgr8和rgb8编码，
 如需使用其他编码进行传输请自行编译python3适用的cv_bridge并在配置文件中开启cv_bridge支持
+## 例子
+* 发送多边形绘图  
+```bash
+rostopic pub /displayer/cameraOne/shape radar_msgs/points "{'id':3, 'color':'green', 'text':'test', 'data':[{'x':0.4,'y':0.4},{'x':0.8,'y':0.8},{'x':0.2,'y':0.7}]}"
+```
