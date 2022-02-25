@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
-import { Canvas, Circle, Polygon, Image, Text } from '@antv/g';
-import { Renderer as WebGLRenderer } from '@antv/g-webgl';
-import { Renderer as CanvasRenderer } from '@antv/g-canvas';
+import {Canvas, Circle, Image, Polygon, Text} from '@antv/g';
+import {Renderer as WebGLRenderer} from '@antv/g-webgl';
 
 class Minimap extends Component {
   renderer = new WebGLRenderer();
@@ -41,6 +40,25 @@ class Minimap extends Component {
     this.canvas.resize(this.props.width, this.props.height);
     this.image.style.height = this.props.height;
     this.image.style.width = this.props.width;
+    const shapeKeys = Object.keys(this.shapes)
+    for (let i = 0; i < shapeKeys.length; i++) {
+      const shape = this.shapes[shapeKeys[i]]
+      if (shape.main) {
+        if (shape.shapeType === 'point') {
+          shape.main.style.x *= this.props.width / prevProps.width;
+          shape.main.style.y *= this.props.height / prevProps.height;
+        } else if (shape.shapeType === 'polygon') {
+          shape.main.style.points = shape.main.style.points.map(p => [
+            p[0] * this.props.width / prevProps.width,
+            p[1] * this.props.height / prevProps.height
+          ])
+        }
+      }
+      if (shape.text) {
+        shape.text.style.x *= this.props.width / prevProps.width;
+        shape.text.style.y *= this.props.height / prevProps.height;
+      }
+    }
   }
 
   updateShapes = (shapes) => {
@@ -165,6 +183,7 @@ class Minimap extends Component {
             },
           });
           this.canvas.appendChild(this.shapes[shape.id].main);
+          this.shapes[shape.id].shapeType = 'point';
         } else if (shape.shapeType === 'polygon') {
           let x = width;
           let y = height;
@@ -206,6 +225,7 @@ class Minimap extends Component {
             },
           });
           this.canvas.appendChild(this.shapes[shape.id].main);
+          this.shapes[shape.id].shapeType = 'polygon';
         }
       }
     }
