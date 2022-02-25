@@ -1,7 +1,8 @@
-import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { FullscreenOutlined, FullscreenExitOutlined, SyncOutlined } from '@ant-design/icons';
 import { Layout, Row, Col, Menu, Button, Modal } from 'antd';
 import { Link } from 'umi';
 import React, { Component } from 'react';
+import { displayerBackend } from "../displayerBackend";
 
 const { Header, Content, Footer } = Layout;
 
@@ -68,6 +69,10 @@ class Index extends Component {
     });
   }
 
+  async refreshBackend() {
+    await displayerBackend.init();
+  }
+
   render() {
     console.log(this.props.children)
     const fullButton = (
@@ -102,6 +107,9 @@ class Index extends Component {
               </Col>
               <Col md={3} sm={4} xs={7}>
                 <div style={{ alignItems: 'right', float: 'right', marginRight: '5%' }}>
+                  <Button type='link' onClick={() => this.refreshBackend()} size={'large'}>
+                    <SyncOutlined style={{ color: 'black' }} />
+                  </Button>
                   {
                     this.state.fullscreen ?
                       unFullButton :

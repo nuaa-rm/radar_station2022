@@ -19,7 +19,9 @@ class Minimap extends Component {
     const infoKeys = Object.keys(info)
     for (let i = 0; i < infoKeys.length; i++) {
       const it = info[infoKeys[i]]
-      if (it.data.length > 1) {
+      if (it.data.length === 0) {
+
+      } else if (it.data.length > 1) {
         draw.push(<Polygon
           key={infoKeys[i]}
           fillOpacity={0.3}
