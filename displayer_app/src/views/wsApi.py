@@ -6,7 +6,7 @@
 
 from app import socketio
 
-from rosNode import calibrateHandler
+from rosNode import calibrateHandlers
 
 
 @socketio.on('connect')
@@ -16,5 +16,5 @@ def connect():
 
 @socketio.on('cameraCalibrate', namespace='/api/ws')
 def cameraCalibrate(data):
-    if data['camera'] in calibrateHandler.keys():
-        calibrateHandler[data['camera']].publish(data['path'])
+    if data['camera'] in calibrateHandlers.keys():
+        calibrateHandlers[data['camera']].publish(data['path'])
