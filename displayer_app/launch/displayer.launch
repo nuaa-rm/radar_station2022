@@ -1,0 +1,4 @@
+<launch>
+  <rosparam command="load" file="$(find displayer_app)/cfg/RadarDisplayerRos.yaml" />
+  <node name="displayer_app" pkg="displayer_app" type="main.py" />
+</launch>
