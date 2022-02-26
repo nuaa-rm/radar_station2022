@@ -24,7 +24,7 @@ struct callback_args
     PointCloudT::Ptr clicked_points_3d;
     pcl::visualization::PCLVisualizer::Ptr viewerPtr;
 };
-int mode = 0;//0：相机标定 1：点云获取 2：图片角点获取 3：联合标定
+int mode = 0;//0：相机标定 1：点云获取 2：图片角点获取 3：联合标定 4:显示
 bool flag = true;
 boost::mutex cloud_mutex;
 vector<Point3f> cloudPoints;
@@ -194,6 +194,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     }
     else if(mode == 3)
     {
+        circle(img, imgPoints[0], 5, Scalar(0, 255, 0), 2);
+        circle(img, imgPoints[1], 5, Scalar(0, 255, 0), 2);
+        circle(img, imgPoints[2], 5, Scalar(0, 255, 0), 2);
+        circle(img, imgPoints[3], 5, Scalar(0, 255, 0), 2);
+        circle(img, imgPoints[4], 5, Scalar(0, 255, 0), 2);
+        circle(img, imgPoints[5], 5, Scalar(0, 255, 0), 2);
         imshow("realsense", img);
         int k = waitKey(30);
         if(k == 'p' && !img.empty())
@@ -205,7 +211,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             img.copyTo(img2);
 
             Mat rvec, tvec; //旋转向量和平移向量
-            solvePnPRansac(cloudPoints, imgPoints, camera_matrix, distortion_coefficient, rvec, tvec, SOLVEPNP_EPNP);
+            solvePnPRansac(cloudPoints, imgPoints, camera_matrix, distortion_coefficient, rvec, tvec, SOLVEPNP_AP3P);
             Mat RRansac;
 
             Rodrigues(rvec, RRansac);
@@ -215,16 +221,14 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
             //测试
             getTestPoints();
             vector<Point2f> imagePointsForTest;
-            projectPoints(testPoints, rvec, tvec, camera_matrix, distortion_coefficient, imagePointsForTest);
+            projectPoints(cloudPoints, rvec, tvec, camera_matrix, distortion_coefficient, imagePointsForTest);
             circle(img2, imagePointsForTest[0], 5, Scalar(0, 0, 255), 2);
             circle(img2, imagePointsForTest[1], 5, Scalar(0, 0, 255), 2);
             circle(img2, imagePointsForTest[2], 5, Scalar(0, 0, 255), 2);
             circle(img2, imagePointsForTest[3], 5, Scalar(0, 0, 255), 2);
+            circle(img2, imagePointsForTest[4], 5, Scalar(0, 0, 255), 2);
+            circle(img2, imagePointsForTest[5], 5, Scalar(0, 0, 255), 2);
 
-            circle(img2, imgPoints[0], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imgPoints[1], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imgPoints[2], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imgPoints[3], 5, Scalar(0, 0, 255), 2);
 
             imshow("image", img2);
 
@@ -307,7 +311,7 @@ int main(int argc, char **argv)
     cout << distortion_coefficient << endl;
 
     Point3f cloudPoint;
-    ros::param::get("/cloue_points/one/x", cloudPoint.x);
+    ros::param::get("/cloud_points/one/x", cloudPoint.x);
     ros::param::get("/cloud_points/one/y", cloudPoint.y);
     ros::param::get("/cloud_points/one/z", cloudPoint.z);
     cloudPoints.push_back(cloudPoint);
@@ -323,25 +327,15 @@ int main(int argc, char **argv)
     ros::param::get("/cloud_points/four/y", cloudPoint.y);
     ros::param::get("/cloud_points/four/z", cloudPoint.z);
     cloudPoints.push_back(cloudPoint);
+    ros::param::get("/cloud_points/five/x", cloudPoint.x);
+    ros::param::get("/cloud_points/five/y", cloudPoint.y);
+    ros::param::get("/cloud_points/five/z", cloudPoint.z);
+    cloudPoints.push_back(cloudPoint);
+    ros::param::get("/cloud_points/six/x", cloudPoint.x);
+    ros::param::get("/cloud_points/six/y", cloudPoint.y);
+    ros::param::get("/cloud_points/six/z", cloudPoint.z);
+    cloudPoints.push_back(cloudPoint);
     cout << "Cloud points load done!" << endl;
-
-    /*Point3f cloudPoint;
-    cloudPoint.x = -15.3463;
-    cloudPoint.y = 1.55666;
-    cloudPoint.z = 53.7;
-    cloudPoints.push_back(cloudPoint);
-    cloudPoint.x = 12.6302;
-    cloudPoint.y = 0.818345;
-    cloudPoint.z = 55.2;
-    cloudPoints.push_back(cloudPoint);
-    cloudPoint.x = 13.3123;
-    cloudPoint.y = 18.4942;
-    cloudPoint.z = 49.5;
-    cloudPoints.push_back(cloudPoint);
-    cloudPoint.x = -14.7457;
-    cloudPoint.y = 18.1974;
-    cloudPoint.z = 48.4;
-    cloudPoints.push_back(cloudPoint);*/
 
     Point imgPoint;
     ros::param::get("/img_points/one/x", imgPoint.x);
@@ -356,36 +350,39 @@ int main(int argc, char **argv)
     ros::param::get("/img_points/four/x", imgPoint.x);
     ros::param::get("/img_points/four/y", imgPoint.y);
     imgPoints.push_back(imgPoint);
+    ros::param::get("/img_points/five/x", imgPoint.x);
+    ros::param::get("/img_points/five/y", imgPoint.y);
+    imgPoints.push_back(imgPoint);
+    ros::param::get("/img_points/six/x", imgPoint.x);
+    ros::param::get("/img_points/six/y", imgPoint.y);
+    imgPoints.push_back(imgPoint);
     cout << "Image points load done!" << endl;
 
-    /*imgPoint.x = 426;
-    imgPoint.y = 385;
-    imgPoints.push_back(imgPoint);
-    imgPoint.x = 885;
-    imgPoint.y = 379;
-    imgPoints.push_back(imgPoint);
-    imgPoint.x = 920;
-    imgPoint.y = 706;
-    imgPoints.push_back(imgPoint);
-    imgPoint.x = 406;
-    imgPoint.y = 717;
-    imgPoints.push_back(imgPoint);*/
     ros::Subscriber sub;
     if(mode == 1)//点云获取
     {
         sub = n.subscribe ("/camera/depth/color/points", 1, &pointCloudCallback);
     }
-    else
+    else if(mode == 0 || mode == 2 || mode == 3)
     {
         sub = n.subscribe("/camera/color/image_raw", 1, &imageCallback);
     }
-    ros::Rate loop_rate(30);
+    else if(mode == 4)
+    {
+        cout << "done;";
+        boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("realtime pcl"));
+        viewer->setBackgroundColor (0, 0, 0);
+        pcl::PointXYZ test(100, 100, 100), test2(0 ,0 ,0 );
+        viewer->addLine<pcl::PointXYZ> (test, test2, "realtime pcl");
+    }
+
+    /*ros::Rate loop_rate(30);
     while (ros::ok())
     {
         ros::spinOnce();
         loop_rate.sleep();
-    }
+    }*/
 
-    //ros::spin();
+    ros::spin();
     return 0;
 }
