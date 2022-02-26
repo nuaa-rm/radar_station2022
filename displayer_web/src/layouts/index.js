@@ -74,7 +74,6 @@ class Index extends Component {
   }
 
   render() {
-    console.log(this.props.children)
     const fullButton = (
       <Button type='link' onClick={() => this.fullScreen()} size={'large'}>
         <FullscreenOutlined style={{ color: 'black' }} />

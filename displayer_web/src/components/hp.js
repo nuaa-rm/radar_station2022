@@ -9,7 +9,6 @@ import HealthBar from "./healthBar";
 }))
 class Hp extends Component {
   render() {
-    console.log(this.props.robotStatus)
     let hpInfo = []
     const teams = ['red', 'blue']
     for (let i = 0; i < teams.length; i++) {

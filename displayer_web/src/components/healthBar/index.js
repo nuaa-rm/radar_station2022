@@ -34,7 +34,6 @@ class Index extends Component {
         <Progress width={width} progress={prog} team={this.props.team} key={this.props.id + i.toString()} />
       )
     }
-    console.log(`scaleX:(${scale})`)
     return (
       <div style={{width: this.props.width, height: 25, padding: 5, background: '#f0f2f5'}}>
         <div style={{width: totalWidth, height: '100%', transform: `scaleX(${scale})`, transformOrigin: '0% 50%'}}>
