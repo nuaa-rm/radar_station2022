@@ -4,20 +4,17 @@ export default defineConfig({
   nodeModulesTransform: {
     type: 'none',
   },
-  base: '/static',
-  targets: {
-    ie: 10
-  },
-  history: {type: 'hash'},
+  exportStatic: {},
   publicPath: '/static/',
   routes: [{
     path: '/',
     component: '../layouts/index',
     title: 'RadarDisplayer',
-    routes: [{
-      path: '/',
-      component: '../pages/index',
-    },
+    routes: [
+      {
+        path: '/',
+        component: '../pages/index',
+      },
       {
         path: '/calibrate',
         component: '../pages/calibrate',

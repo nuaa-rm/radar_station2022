@@ -1,10 +1,7 @@
 rospkg
-pywebview
 flask
 flask-socketio
 gevent
 gevent-websocket
 opencv-python
 numpy
-pyqt5
-PyQtWebEngine

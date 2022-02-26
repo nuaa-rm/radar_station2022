@@ -1,5 +1,6 @@
-import { FullscreenOutlined, FullscreenExitOutlined, SyncOutlined } from '@ant-design/icons';
-import { Layout, Row, Col, Menu, Button, Modal } from 'antd';
+import { FullscreenOutlined, FullscreenExitOutlined, SyncOutlined, QrcodeOutlined } from '@ant-design/icons';
+import { Layout, Row, Col, Menu, Button, Modal, Popover } from 'antd';
+import QRCode from 'qrcode.react';
 import { Link } from 'umi';
 import React, { Component } from 'react';
 import { displayerBackend } from "../displayerBackend";
@@ -84,17 +85,22 @@ class Index extends Component {
         <FullscreenExitOutlined style={{ color: 'black' }} />
       </Button>
     );
+    const qrcode = (
+      <div style={{margin: 10}}>
+        <QRCode value={window.location.origin} />
+      </div>
+    )
     return (
       <div>
         <Layout>
           <Header style={{ position: 'fixed', zIndex: 6, width: '100%', background: '#fff', paddingRight: 10 }}>
             <Row>
-              <Col lg={4} md={5} sm={7} xs={14}>
+              <Col lg={4} md={5} sm={7} xs={12}>
                 <div>
                   <h3>Radar Displayer</h3>
                 </div>
               </Col>
-              <Col lg={16} md={15} sm={12} xs={3}>
+              <Col lg={15} md={14} sm={10} xs={3}>
                 <Menu theme='light' mode='horizontal' selectedKeys={[window.location.pathname]}>
                   <Menu.Item key='/'>
                     <Link to='/'>status</Link>
@@ -104,11 +110,16 @@ class Index extends Component {
                   </Menu.Item>
                 </Menu>
               </Col>
-              <Col md={4} sm={5} xs={7}>
+              <Col md={5} sm={7} xs={9}>
                 <div style={{ alignItems: 'right', float: 'right', marginRight: '5%' }}>
                   <Button type='link' onClick={() => this.refreshBackend()} size={'large'}>
                     <SyncOutlined style={{ color: 'black' }} />
                   </Button>
+                  <Popover content={qrcode}>
+                    <Button type='link' size={'large'}>
+                      <QrcodeOutlined style={{ color: 'black' }} />
+                    </Button>
+                  </Popover>
                   {
                     this.state.fullscreen ?
                       unFullButton :
