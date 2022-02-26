@@ -1,11 +1,14 @@
 #include <ros/ros.h>
+#include <ros/console.h>
 #include <map>
+#include <string>
 #include "hp_limit_helper/robot.h"
 #include "hp_limit_helper/RobotHP.h"
 #include "hp_limit_helper/RobotsHP.h"
 
 using std::map;
 using std::pair;
+using std::string;
 using ros::Publisher;
 using ros::Subscriber;
 using ros::NodeHandle;
@@ -45,10 +48,18 @@ void robotHpCallback(const RobotsHP::ConstPtr &msg) {
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+    ros::init(argc, argv, "hp_limit_helper");
     NodeHandle nh;
-    hpLimitsPublisher = nh.advertise<RobotsHP>("hp_limits", 1);
-    Subscriber robotHpSubscriber = nh.subscribe("now_hp", 1, robotHpCallback);
+    string hpLimitsPublishTopic, robotHpSubscribeTopic;
+    ros::param::param<std::string>("/displayer/judgeSystem/hpLimitSubscribe", hpLimitsPublishTopic, "");
+    ros::param::param<std::string>("/displayer/judgeSystem/hpSubscribe", robotHpSubscribeTopic, "");
+    if (hpLimitsPublishTopic.empty() || robotHpSubscribeTopic.empty()) {
+        ROS_FATAL("Doesn't find hpLimitSubscribe or hpSubscribe config, hpLimitHelper will exit!");
+        return 1;
+    }
+    hpLimitsPublisher = nh.advertise<RobotsHP>("/judgeSystem/hpLimit", 1);
+    Subscriber robotHpSubscriber = nh.subscribe("/judgeSystem/hp", 1, robotHpCallback);
     Rate rate(10);
     while (ros::ok()) {
         spinOnce();

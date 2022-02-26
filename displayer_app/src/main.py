@@ -17,11 +17,13 @@ ros = RosNode()
 fixLogging(logging.INFO)
 
 from app import app, socketio
-from views import camera, httpApi, wsApi
+from views import camera, httpApi, wsApi, webView
 import config
 
 app.register_blueprint(camera.cameraView, url_prefix='/api/camera')
 app.register_blueprint(httpApi.httpApiView, url_prefix='/api')
+app.register_blueprint(webView.webView)
+
 
 if __name__ == '__main__':
     ros.start()

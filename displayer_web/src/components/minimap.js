@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import {Canvas, Circle, Image, Polygon, Text} from '@antv/g';
 import {Renderer as WebGLRenderer} from '@antv/g-webgl';
+import {Renderer as CanvasRenderer} from '@antv/g-canvas';
 import {displayerBackend} from "../displayerBackend";
 
 class Minimap extends Component {
-  renderer = new WebGLRenderer();
+  renderer = new CanvasRenderer();
   canvas = null
   image = null
   shapes = {}

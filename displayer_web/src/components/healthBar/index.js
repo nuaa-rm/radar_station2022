@@ -15,7 +15,7 @@ class Index extends Component {
     const fullGrid = Math.floor(hpGrid)
     let lastHp = hpGrid - fullGrid
     if (lastGrid && fullGrid === wholeGrid) {
-      lastHp *= lastGrid
+      lastHp /= lastGrid
     }
     let progresses = []
     wholeGrid = Math.ceil(wholeGrid)

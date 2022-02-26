@@ -6,7 +6,9 @@
     "postinstall": "umi generate tmp",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
     "test": "umi-test",
-    "test:coverage": "umi-test --coverage"
+    "test:coverage": "umi-test --coverage",
+    "prebuild": "find ../displayer_app/src/static/*|grep -v noImage.png|xargs rm -rf",
+    "postbuild": "cp -r ./dist/* ../displayer_app/src/static/"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"

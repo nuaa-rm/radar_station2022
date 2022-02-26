@@ -32,6 +32,7 @@ void Robot::update(uint16 hp) {
             }
         }
     }
+    hpNow = hp;
 }
 
 uint8 Robot::getUid() {

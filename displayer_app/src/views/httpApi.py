@@ -6,7 +6,7 @@
 
 import logging
 
-from flask import Blueprint, request, abort
+from flask import Blueprint
 try:
     import ujson as json
 except ImportError:
