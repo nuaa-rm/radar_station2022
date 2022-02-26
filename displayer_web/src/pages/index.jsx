@@ -38,7 +38,7 @@ class Index extends Component {
           <Minimap height={this.state.height} width={this.state.height / 1.8} />
         </div>
         <div style={{ height: this.state.height, width: this.state.height * 0.35, marginTop: 10, float: 'right', display: 'inline', marginRight: 10 }}>
-          <Hp />
+          <Hp height={this.state.height} width={this.state.height * 0.35} />
         </div>
         <div style={{
           height: this.state.height.toString() + 'px',

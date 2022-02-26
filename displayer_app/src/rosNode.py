@@ -69,6 +69,8 @@ class RosImageSubscriber(BaseImageSubscriber):
         self.size = cfg['size']
         if len(self.size) == 0:
             self.size = None
+        else:
+            self.size = tuple(self.size)
         super().__init__(self.size)
 
     def img_to_cv2(self, img_msg: Image):
