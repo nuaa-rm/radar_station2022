@@ -10,7 +10,7 @@ import os
 
 import cv2
 
-from app import socketio
+from app import socketio, staticDir
 
 
 class BaseNode(Thread):
@@ -32,7 +32,7 @@ class BaseImageSubscriber:
     @var self.queue: 先进后出队列，长度为2，请自行实现方法，将获得的图像放入队列中
     @fn getImage: 从队列中获取图像并编码为jpg格式
     """
-    noImage = cv2.imread(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/noImage.png'))
+    noImage = cv2.imread(os.path.join(staticDir, 'noImage.png'))
 
     def __init__(self, size):
         self.image = None

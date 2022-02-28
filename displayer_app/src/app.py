@@ -4,10 +4,14 @@
 # @Site   : https://github.com/bismarckkk
 # @File   : app.py
 
+import os
+
 from flask import Flask
 from flask_socketio import SocketIO
+
 import config
 
-app = Flask('displayer_app')
+staticDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+app = Flask('displayer_app', static_folder=staticDir)
 app.config['SECRET_KEY'] = config.secretKey
 socketio = SocketIO(app, async_mode='gevent', logger=True, engineio_logger=True, cors_allowed_origins='*')

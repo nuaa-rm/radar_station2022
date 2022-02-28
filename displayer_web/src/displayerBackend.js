@@ -20,7 +20,6 @@ class DisplayerBackend {
       clearInterval(this.timer);
       this.dispatch = getDvaApp()._store.dispatch;
       const config = await axois.get('/api/getConfig');
-      console.log(config)
       this.dispatch({
         type: 'configProvider/init',
         payload: config.data
@@ -57,7 +56,6 @@ class DisplayerBackend {
       this.updateMinimap(msg)
     })
     this.io.on('cameraShape', (msg)=>{
-      console.log(msg.camera, this.camera)
       if (msg.camera === this.camera) {
         this.updateCameraShape(msg.data)
       }

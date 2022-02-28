@@ -7,7 +7,7 @@
 GUI: pywebview
 ## 项目特点
 * 前后端分离设计，前后端通过websocket进行通信（不可用时降级为长轮询）
-* 使用pywebview提供桌面GUI，同时保留浏览器接口，可通过手机等设备远程监看
+* 使用pywebview提供桌面GUI，同时保留浏览器接口，可通过手机等设备远程监看（注：由于zrender内部问题，暂时降级为纯浏览器方案）
 * 配置化实现多摄像头显示，支持通过topic在前端绘图
 * 支持前端绘图通过topic发送，用于相机外参标定等场景
 * 松耦合设计，提供后端接口模板类，ros接口基于该模板类实现，可简单脱离ros环境使用
@@ -29,6 +29,8 @@ yarn build
 6. 使用catkin_make编译包并生成消息文件
 7. `roslaunch displayer_app displayer.launch`
 8. 可通过配置文件开关本地显示，外部浏览器可通过终端提示的链接接入监看
+9. 本显示器提供了一个血量显示组件以及一个血量上限推断器，hpLimitHelper通过每辆机器人历史最高血量推断其当前血量上限，请参考hp_limit_helper/RobotsHP消息定义实现从裁判系统读取该数据并发送
+10. 发送至前端的绘图信息的类型均为radar_msgs/points（注意：id不能为0）,color可以接受颜色的英文名称和#开头的16进制色彩格式，当data中的点数目为1时，会被识别成点，否则为多边形，若收到0长data,该id相关图像将被删除，该类型判断仅在id第一次出现时执行，text可以为空，点类型的text不推荐超过1位
 ## 移植
 注：此处移植至移植至除ros1以外的其他环境
 参考示例：displayer_app/RosNode.py
@@ -47,4 +49,8 @@ baseNode为后端接口维护线程，将在完成gevent patch以后被导入，
 * 发送多边形绘图  
 ```bash
 rostopic pub /displayer/cameraOne/shape radar_msgs/points "{'id':3, 'color':'green', 'text':'test', 'data':[{'x':0.4,'y':0.4},{'x':0.8,'y':0.8},{'x':0.2,'y':0.7}]}"
+```
+* 发送血量信息
+```bash
+rostopic pub /judgeSystem/hpLimit hp_limit_helper/RobotsHP "[{'team':1,'number':3,'hp':150}]"
 ```

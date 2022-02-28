@@ -23,6 +23,7 @@ public:
     uint8 team;
     RobotType type;
     uint16 hpLimit;
+    uint16 hpNow;
 
     Robot(uint8 team, RobotType type);
     void update(uint16 hp);

@@ -1,5 +1,4 @@
 rospkg
-pywebview
 flask
 flask-socketio
 gevent

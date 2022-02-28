@@ -1,30 +1,30 @@
 import React, {Component} from 'react';
-import { Progress, Empty } from 'antd'
+import { Empty } from 'antd'
 import { connect } from 'umi'
+
+import HealthBar from "./healthBar";
 
 @connect(({ robotStatus }) => ({
   robotStatus,
 }))
 class Hp extends Component {
   render() {
-    console.log(this.props.robotStatus)
     let hpInfo = []
     const teams = ['red', 'blue']
-    const color = ['red', '']
     for (let i = 0; i < teams.length; i++) {
       const teamInfo = this.props.robotStatus[teams[i]]
       const robots = Object.keys(teamInfo)
       for (let j = 0; j < robots.length; j++) {
         hpInfo.push(
-          <div style={{width: '100%'}}>
-            <div style={{width: 40}}>{robots[j]}</div>
-            <div style={{width: '88%'}}>
-              <Progress
-                percent={teamInfo[robots[j]].hp / teamInfo[robots[j]].hpLimit * 100} strokeColor={color[i]} status="normal"
-                format={()=>(teamInfo[robots[j]].hp.toString() + "/" + teamInfo[robots[j]].hpLimit.toString())}
-                key={teams[i] + '-' + robots[j]}
-              />
+          <div style={{width: '100%'}} key={`${teams[i]}-${i}-info`}>
+            <div>
+              {robots[j]}
+              <div style={{float: 'right'}}>
+                {teamInfo[robots[j]].hp.toString() + "/" + teamInfo[robots[j]].hpLimit.toString()}
+              </div>
             </div>
+            <HealthBar width={this.props.width - 20} team={teams[i]} id={`${teams[i]}-${i}`}
+                       hp={teamInfo[robots[j]].hp} hpLimit={teamInfo[robots[j]].hpLimit} />
           </div>
         )
       }

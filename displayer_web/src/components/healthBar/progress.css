@@ -1,0 +1,16 @@
+.progress {
+  margin-right: 4px;
+  position: relative;
+  display: block;
+  float: left;
+  overflow: hidden;
+  height: 15px;
+}
+
+.filled {
+  z-index: 8;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
