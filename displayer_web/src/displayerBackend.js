@@ -19,14 +19,14 @@ class DisplayerBackend {
     if (getDvaApp()) {
       clearInterval(this.timer);
       this.dispatch = getDvaApp()._store.dispatch;
-      const config = await axois.get('/api/getConfig');
-      this.dispatch({
-        type: 'configProvider/init',
-        payload: config.data
-      })
       this.io = io('/api/ws');
-      this.io.on('connect', () => {
+      this.io.on('connect', async () => {
         message.success('已成功连接至后端服务器')
+        const config = await axois.get('/api/getConfig');
+        this.dispatch({
+          type: 'configProvider/init',
+          payload: config.data
+        })
       });
       this.io.on('disconnect', (reason) => {
         if (reason === 'io server disconnect' || reason === 'io client disconnect') {
