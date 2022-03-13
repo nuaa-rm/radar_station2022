@@ -16,7 +16,7 @@ class Progress extends Component {
     }
 
     return (
-      <div className={progress} style={{width: width.toString() + 'px'}}>
+      <div className={progress} style={{width: width.toString() + 'px', marginRight: this.props.margin}}>
         <div className={filled} style={{width: (this.props.progress * 100).toString() + '%', backgroundColor: color}} />
       </div>
     );
