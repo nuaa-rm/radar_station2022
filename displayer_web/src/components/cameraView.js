@@ -290,7 +290,7 @@ class CameraView extends Component {
     this.onSubmit({camera})
     this.setState({
       scale,
-      offset,
+      offset: offset.map(e=>(0.5-e)),
     })
   }
 
