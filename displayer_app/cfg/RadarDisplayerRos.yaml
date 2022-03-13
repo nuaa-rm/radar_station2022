@@ -23,5 +23,7 @@ displayer:
     hpLimitSubscribe: '/judgeSystem/hpLimit'        # 返回HP的topic
   minimap:
     subscribeTopic: '/displayer/minimap'
+  view:
+    subscribeTopic: '/viewControl'    # 控制首页显示的话题名
   ros:
     cvBridge: false   # 是否使用cvBridge解码图像消息

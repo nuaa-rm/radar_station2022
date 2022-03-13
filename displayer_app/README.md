@@ -11,7 +11,7 @@ GUI: pywebview
 * 配置化实现多摄像头显示，支持通过topic在前端绘图
 * 支持前端绘图通过topic发送，用于相机外参标定等场景
 * 松耦合设计，提供后端接口模板类，ros接口基于该模板类实现，可简单脱离ros环境使用
-## 构建
+## 构建前端工程
 要构建本工程需要安装nodejs环境，本例采用yarn做包管理
 ```bash
 git clone https://github.com/bismarckkk/radar_displayer
@@ -21,7 +21,7 @@ yarn build
 ```
 构建完成的前端工程将自动部署至同目录下的displayer_app工程
 ## 部署
-1. 从release下载displayer_app并解压至工作空间，或将本工程clone至工作空间
+1. 从release下载displayer_app并解压至工作空间，或将本工程clone至工作空间并构建前端工程
 2. 在displayer_app目录中使用requirements.txt完成依赖包安装
 3. 参照示例编辑`displayer_app/cfg/RadarDisplayerRos.yaml`，该配置文件通过ros param读取，
 4. 亦可使用其他方式加载配置至ros，
@@ -31,6 +31,7 @@ yarn build
 8. 可通过配置文件开关本地显示，外部浏览器可通过终端提示的链接接入监看
 9. 本显示器提供了一个血量显示组件以及一个血量上限推断器，hpLimitHelper通过每辆机器人历史最高血量推断其当前血量上限，请参考hp_limit_helper/RobotsHP消息定义实现从裁判系统读取该数据并发送
 10. 发送至前端的绘图信息的类型均为radar_msgs/points（注意：id不能为0）,color可以接受颜色的英文名称和#开头的16进制色彩格式，当data中的点数目为1时，会被识别成点，否则为多边形，若收到0长data,该id相关图像将被删除，该类型判断仅在id第一次出现时执行，text可以为空，点类型的text不推荐超过1位
+11. 可以通过ViewControl消息接口控制前端显示界面（赛场时通过车间通信遥控）
 ## 移植
 注：此处移植至移植至除ros1以外的其他环境
 参考示例：displayer_app/RosNode.py

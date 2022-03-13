@@ -12,7 +12,7 @@ import {displayerBackend} from "../displayerBackend";
   configProvider,
 }))
 class CameraView extends Component {
-  state = {camera: '', modalShow: false, aspectRatio: 4. / 3.};
+  state = {camera: '', modalShow: false, aspectRatio: 4. / 3., scale: 1, offset: [0, 0]};
   container = createRef();
   renderer = new CanvasRenderer();
   canvas = null
@@ -42,7 +42,9 @@ class CameraView extends Component {
       height: this.props.height,
       renderer: this.renderer,
     });
-    displayerBackend.onCameraShapeUpdate(this.updateShapes)
+    const that = this
+    displayerBackend.onCameraShapeUpdate((shapes)=>{that.updateShapes(shapes)})
+    displayerBackend.onViewSet((_1, _2, _3)=>{that.viewSet(_1, _2, _3)})
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -279,9 +281,17 @@ class CameraView extends Component {
       modalShow: false,
       aspectRatio
     })
-    this.resize(aspectRatio)
+    // this.resize(aspectRatio)
     this.shapes = {}
     this.canvas.removeChildren()
+  }
+
+  viewSet(camera, scale, offset) {
+    this.onSubmit({camera})
+    this.setState({
+      scale,
+      offset,
+    })
   }
 
   render() {
@@ -306,14 +316,18 @@ class CameraView extends Component {
       height = targetWidth / aspectRatio;
     }
     return (
-      <div style={{height: '100%', width: '100%'}} ref={this.container}>
-        <div style={{ position: 'relative', height: height, width: targetWidth, cursor: 'pointer' }}
-             onClick={()=>{this.onModalShowChange(true)}}>
-          <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 1 }}>
-            <div id="cameraShape" />
-          </div>
-          <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 0 }}>
-            <img src={uri} alt="camera" style={{height: height, width: targetWidth}} />
+      <div style={{height: '100%', width: '100%', overflow: 'hidden'}} ref={this.container}>
+        <div style={{overflow: 'hidden', height: height, width: targetWidth, background: '#fff '}}>
+          <div style={{transform: `scale(${this.state.scale}, ${this.state.scale}) translate(${this.state.offset[0]}%, ${this.state.offset[1]}%)`, height: '100%', width: '100%'}}>
+            <div style={{ position: 'relative', height: height, width: targetWidth, cursor: 'pointer' }}
+                 onClick={()=>{this.onModalShowChange(true)}}>
+              <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 1 }}>
+                <div id="cameraShape" />
+              </div>
+              <div style={{ position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 0 }}>
+                <img src={uri} alt="camera" style={{height: height, width: targetWidth}} />
+              </div>
+            </div>
           </div>
         </div>
         <ModalForm

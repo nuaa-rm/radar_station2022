@@ -60,6 +60,15 @@ class DisplayerBackend {
         this.updateCameraShape(msg.data)
       }
     })
+    this.io.on('viewControl', (msg)=>{
+      if (this.updateLayout) {
+        this.updateLayout(msg.cameraFullScreen)
+      }
+      if (this.updateView) {
+        this.updateView(msg.camera, msg.scale, msg.offset)
+        this.cameraSelect(msg.camera)
+      }
+    })
   }
 
   saveCalibrate(camera, path) {
@@ -76,6 +85,14 @@ class DisplayerBackend {
 
   cameraSelect(camera) {
     this.camera = camera
+  }
+
+  onViewSet(fun) {
+    this.updateView = fun
+  }
+
+  onLayoutSet(fun) {
+    this.updateLayout = fun
   }
 }
 

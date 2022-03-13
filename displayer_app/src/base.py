@@ -97,3 +97,14 @@ class BaseCameraShapeSubscriber:
 
     def sendInfo(self, data):
         socketio.emit('cameraShape', {'data': data, 'camera': self.camera}, namespace='/api/ws')
+
+
+class BaseViewHandler:
+    @staticmethod
+    def setView(camera, camera_full_screen=False, scale=1, x=0.5, y=0.5):
+        socketio.emit('viewControl', {
+            'cameraFullScreen': camera_full_screen,
+            'camera': camera,
+            'scale': scale,
+            'offset': [x, y]
+        }, namespace='/api/ws')

@@ -25,3 +25,5 @@ judgeSystem = rospy.get_param('/displayer/judgeSystem', {'hpSubscribe': '', 'hpL
 minimapTopic = rospy.get_param('/displayer/minimap/subscribeTopic', None)
 
 isCvBridge = rospy.get_param('/displayer/ros/cvBridge', False)
+
+viewControlTopic = rospy.get_param('/displayer/view/subscribeTopic', '/viewControl')

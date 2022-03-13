@@ -12,10 +12,11 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import Image
 
-from radar_msgs.msg import points, point
-from hp_limit_helper.msg import RobotHP, RobotsHP
+from radar_msgs.msg import points, point, view_control
+from hp_limit_helper.msg import RobotsHP
 
-from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscriber, BaseCameraShapeSubscriber
+from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscriber, \
+    BaseCameraShapeSubscriber, BaseViewHandler
 import config
 
 """
@@ -193,6 +194,15 @@ class RosCameraShapeSubscriber(BaseCameraShapeSubscriber):
         self.sendInfo(data)
 
 
+class RosViewControl(BaseViewHandler):
+    def __init__(self, topic):
+        if cfg['shapeTopic'] is not None:
+            self.subscriber = rospy.Subscriber(topic, view_control, self.callback, queue_size=1)
+
+    def callback(self, msg: view_control):
+        self.setView(msg.camera, msg.cameraFullScreen, msg.scale, msg.x, msg.y)
+
+
 imageSubscribers = {}
 for cam, cfg in config.cameraConfig.items():
     imageSubscribers[cam] = RosImageSubscriber(cfg)
@@ -209,3 +219,4 @@ for cam, cfg in config.cameraConfig.items():
 
 rosHpHandler = RosHpHandler(config.judgeSystem)
 rosMinimapShapeSubscriber = RosMinimapShapeSubscriber(config)
+rosViewControl = RosViewControl(config.viewControlTopic)
