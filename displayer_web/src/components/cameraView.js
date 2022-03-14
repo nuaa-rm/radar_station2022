@@ -288,9 +288,12 @@ class CameraView extends Component {
 
   viewSet(camera, scale, offset) {
     this.onSubmit({camera})
+    if (scale < 1) {
+      scale = 1;
+    }
     this.setState({
       scale,
-      offset: offset.map(e=>(0.5-e)),
+      offset: offset.map(e=>(e - 0.5)),
     })
   }
 

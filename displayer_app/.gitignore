@@ -1,5 +1,4 @@
 */__pycache__
 *.py[cod]
 
-src/static/*
 !/src/static/noImage.png

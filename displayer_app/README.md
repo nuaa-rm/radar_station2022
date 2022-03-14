@@ -30,8 +30,11 @@ yarn build
 7. `roslaunch displayer_app displayer.launch`
 8. 可通过配置文件开关本地显示，外部浏览器可通过终端提示的链接接入监看
 9. 本显示器提供了一个血量显示组件以及一个血量上限推断器，hpLimitHelper通过每辆机器人历史最高血量推断其当前血量上限，请参考hp_limit_helper/RobotsHP消息定义实现从裁判系统读取该数据并发送
-10. 发送至前端的绘图信息的类型均为radar_msgs/points（注意：id不能为0）,color可以接受颜色的英文名称和#开头的16进制色彩格式，当data中的点数目为1时，会被识别成点，否则为多边形，若收到0长data,该id相关图像将被删除，该类型判断仅在id第一次出现时执行，text可以为空，点类型的text不推荐超过1位
-11. 可以通过ViewControl消息接口控制前端显示界面（赛场时通过车间通信遥控）
+10. 发送至前端的绘图信息的类型均为radar_msgs/points，具体请参考消息定义文件注释
+11. 可以通过ViewControl消息接口控制前端显示界面（赛场时通过车间通信遥控），消息定义请参考radar_msgs/view_control.msg
+
+注意：
+由于图片传输与显示的过程中多次进行缩放，本显示器中采用的所有坐标均为比例坐标，即实际坐标/对应边边长，采用float类型。
 ## 移植
 注：此处移植至移植至除ros1以外的其他环境
 参考示例：displayer_app/RosNode.py
