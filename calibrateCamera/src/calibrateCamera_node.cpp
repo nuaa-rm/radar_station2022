@@ -13,6 +13,10 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <tf/transform_broadcaster.h>
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
+#define POINTS_COUNT 6
 using namespace std;
 using namespace cv;
 
@@ -131,7 +135,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         	}
 
         	//生成棋盘格每个内角点的空间三维坐标
-        	Size squareSize = Size2f (3, 3);  //棋盘格每个方格的真实尺寸
+        	Size squareSize = Size2f (26, 26);  //棋盘格每个方格的真实尺寸
         	vector<vector<Point3f>> objectPoints;
 	        for (int i = 0; i < imgsPoints.size(); i++)
 	        {
@@ -177,6 +181,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         }
     }
     else if(mode == 2)
+
     {
         imshow("realsense", img);
         int k = waitKey(30);
@@ -194,45 +199,55 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     }
     else if(mode == 3)
     {
-        circle(img, imgPoints[0], 5, Scalar(0, 255, 0), 2);
-        circle(img, imgPoints[1], 5, Scalar(0, 255, 0), 2);
-        circle(img, imgPoints[2], 5, Scalar(0, 255, 0), 2);
-        circle(img, imgPoints[3], 5, Scalar(0, 255, 0), 2);
-        circle(img, imgPoints[4], 5, Scalar(0, 255, 0), 2);
-        circle(img, imgPoints[5], 5, Scalar(0, 255, 0), 2);
+        static Mat rvec;
+        static Mat tvec; //旋转向量和平移向量
+        static Mat RRansac;
+        static Eigen::Matrix<double, 3, 3> rotation;
+        static Eigen::Matrix<double, 3, 1> translation;
+
+        for(int i = 0; i < POINTS_COUNT; i++)
+        {
+            circle(img, imgPoints[i], 5, Scalar(0, 255, 0), 2);
+        }
         imshow("realsense", img);
         int k = waitKey(30);
         if(k == 'p' && !img.empty())
         {
             flag = false;
+
+            solvePnPRansac(cloudPoints, imgPoints, camera_matrix, distortion_coefficient, rvec, tvec, SOLVEPNP_AP3P);
+            Rodrigues(rvec, RRansac);
+            translation << tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
+            cout << translation;
+            rotation << RRansac.at<double>(0, 0), RRansac.at<double>(0, 1), RRansac.at<double>(0, 2),
+                    RRansac.at<double>(1, 0), RRansac.at<double>(1, 1), RRansac.at<double>(1, 2),
+                    RRansac.at<double>(2, 0), RRansac.at<double>(2, 1), RRansac.at<double>(2, 2);
+            cout << "旋转向量: " << endl << rvec;
+            cout << "旋转向量转换成旋转矩阵：" << endl << RRansac << endl;
+            cout << "平移向量："  <<endl << tvec << endl;
         }
         if(!flag)
         {
             img.copyTo(img2);
 
-            Mat rvec, tvec; //旋转向量和平移向量
-            solvePnPRansac(cloudPoints, imgPoints, camera_matrix, distortion_coefficient, rvec, tvec, SOLVEPNP_AP3P);
-            Mat RRansac;
-
-            Rodrigues(rvec, RRansac);
-            cout << "旋转向量转换成旋转矩阵：" << endl << RRansac << endl;
-            cout << "平移向量："  <<endl << tvec << endl;
-
+            static tf::TransformBroadcaster br;
+            tf::Transform transform;
+            tf::Quaternion quaternion;
+            transform.setOrigin(tf::Vector3(translation.x(), translation.y(), translation.z()));
+            Eigen::Matrix<double, 3, 1> eulerAngle = rotation.eulerAngles(0, 1, 2);
+            quaternion.setRPY(eulerAngle[0], eulerAngle[1], eulerAngle[2]);
+            transform.setRotation(quaternion);
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "camera"));
             //测试
             getTestPoints();
             vector<Point2f> imagePointsForTest;
             projectPoints(cloudPoints, rvec, tvec, camera_matrix, distortion_coefficient, imagePointsForTest);
-            circle(img2, imagePointsForTest[0], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imagePointsForTest[1], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imagePointsForTest[2], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imagePointsForTest[3], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imagePointsForTest[4], 5, Scalar(0, 0, 255), 2);
-            circle(img2, imagePointsForTest[5], 5, Scalar(0, 0, 255), 2);
-
-
+            for(int i = 0; i < POINTS_COUNT; i++)
+            {
+                circle(img2, imagePointsForTest[i], 5, Scalar(0, 0, 255), 2);
+            }
             imshow("image", img2);
-
-            waitKey(0);
+            waitKey(30);
         }
     }
 }
@@ -248,7 +263,6 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& input)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1;
     cloud1.reset (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg (*input, *cloud1);
-
 
     /*if(pointFlag)
     {
@@ -382,7 +396,6 @@ int main(int argc, char **argv)
         ros::spinOnce();
         loop_rate.sleep();
     }*/
-
     ros::spin();
     return 0;
 }

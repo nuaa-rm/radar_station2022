@@ -30,3 +30,16 @@ object_points:
     x: 272
     y: 140
     z: 60
+uni_matrix:
+  zerozero: -0.163272
+  zeroone: -0.98645
+  zerotwo: 0.0160648
+  zerothree: -0.86006
+  onezero: -0.0249504
+  oneone: -0.0121495
+  onetwo: -0.999615
+  onethree: -0.428547
+  twozero: 0.986265
+  twoone: -0.16361
+  twotwo: -0.0226286
+  twothree: 1.51717

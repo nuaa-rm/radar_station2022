@@ -1,4 +1,4 @@
-mode: 3
+mode: 0
 cloud_points:
   one:
     x: -37.1321
@@ -24,7 +24,6 @@ cloud_points:
     x: -40.4775
     y: 8.58996
     z: 68.3
-
 img_points:
   one:
     x: 155

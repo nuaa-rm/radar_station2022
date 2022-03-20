@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   cv_bridge
   sensor_msgs
+  tf
 )
 find_package(PCL 1.2 REQUIRED)
 ## System dependencies are found with CMake's conventions
