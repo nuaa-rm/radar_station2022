@@ -3,5 +3,5 @@
     <include file="$(find realsense2_camera)/launch/rs_camera.launch" />
     <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
     <rosparam command="load" file="$(find calibrateCamera)/src/yaml/calibrate.yaml" />
-    <node pkg="getPictures" type="getPictures_node" name="getPictures_node" output="screen" respawn="true" />
+    <node pkg="get_depth" type="get_depth_node" name="get_depth_node" output="screen" respawn="true" />
 </launch>

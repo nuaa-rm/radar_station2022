@@ -2,6 +2,7 @@
 //DoveJH
 
 #include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include <fstream> 
 #include <iostream>
 #include <cv_bridge/cv_bridge.h>
@@ -16,6 +17,7 @@
 #include <tf/transform_broadcaster.h>
 #include <Eigen/Geometry>
 #include <Eigen/Dense>
+#include <sensor_msgs/Image.h>
 #define POINTS_COUNT 6
 using namespace std;
 using namespace cv;
@@ -371,6 +373,7 @@ int main(int argc, char **argv)
     ros::param::get("/img_points/six/y", imgPoint.y);
     imgPoints.push_back(imgPoint);
     cout << "Image points load done!" << endl;
+
 
     ros::Subscriber sub;
     if(mode == 1)//点云获取
