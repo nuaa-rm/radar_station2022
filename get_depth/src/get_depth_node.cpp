@@ -31,8 +31,18 @@ using namespace cv;
 int imgRows = 720, imgCols = 1280;
 Mat camera_matrix = Mat_<double>(3, 3);
 Mat distortion_coefficient = Mat_<double>(5, 1);
-Mat uni_matrix = Mat_<double>(3, 4);
+Mat uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
 ros::Publisher depthPub;
+
+void depthShow(Mat& input);//将深度图像归一化成灰度图并发布话题进行展示
+void getTheoreticalUV(double x, double y, double z, Mat& output);//得到某一点对应图像中的位置
+void cloudFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr output);
+void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr& output);//对点云进行聚类,并挑选点数最多的点云作为返回
+double getDepthInRect(Rect rect, Mat& depthImg);//得到ROI中点的深度
+void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr& input);//去除平面
+void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat& output);//对于每一个点云中的点调用一次getTheoreticalUV函数
+double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input);//显示实时点云,放在程序结尾
+void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& input);
 
 void depthShow(Mat& input)
 {
@@ -131,7 +141,6 @@ void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud
         }
     }
 }
-
 double getDepthInRect(Rect rect, Mat& depthImg)
 {
     depthShow(depthImg);
@@ -175,6 +184,7 @@ double getDepthInRect(Rect rect, Mat& depthImg)
                 distance += mostClusterInROI->points[i].x;
             }
             distance /= mostClusterInROI->points.size();
+            pointCloudShower(mostClusterInROI);
             return distance;
         }
     }
@@ -239,7 +249,7 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& input)
     //depthShow(depthes);
     Rect rect(320, 180, 130, 80);
     cout << getDepthInRect(rect, depthes) << endl;
-    pointCloudShower(cloud);
+
 
 }
 
