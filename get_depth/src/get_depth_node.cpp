@@ -246,7 +246,7 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& input)
     //cloudFilter(cloud, cloudFilted);
     removeFlat(cloud);
     projectPoints(cloud, depthes);
-    //depthShow(depthes);
+    depthShow(depthes);
     Rect rect(320, 180, 130, 80);
     cout << getDepthInRect(rect, depthes) << endl;
 
