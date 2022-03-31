@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far"/>
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
+</launch>
