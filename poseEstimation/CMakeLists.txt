@@ -152,7 +152,7 @@ include_directories(OpenCV_INCLUDE_DIRS)
    ${catkin_LIBRARIES}
    ${OpenCV_LIBS}
  )
-
+add_definitions(-DPROJECT_PATH="${PROJECT_SOURCE_DIR}")
 #############
 ## Install ##
 #############

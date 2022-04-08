@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   cv_bridge
 )
-
+find_package(OpenCV)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -119,9 +119,9 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  OpenCV_INCLUDE_DIRS
 )
-find_package(OpenCV)
-include_directories(OpenCV_INCLUDE_DIRS)
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/getPictures.cpp
@@ -155,6 +155,7 @@ add_executable(${PROJECT_NAME}_node src/getPictures_node.cpp)
    ${catkin_LIBRARIES}
    ${OpenCV_LIBS}
  )
+add_definitions(-DPROJECT_PATH="${PROJECT_SOURCE_DIR}")
 #############
 ## Install ##
 #############

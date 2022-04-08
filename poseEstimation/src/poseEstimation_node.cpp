@@ -66,7 +66,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     int k = waitKey(30);
     if(k == 's' && !img.empty())
     {
-        cv::imwrite("/home/dovejh/project/rader_station/src/rader_station2022/poseEstimation/templates/0.jpg", img);
+        std::string ad(PROJECT_PATH);
+        ad += "/templates/0.jpg";
+        cv::imwrite(ad, img);
         ROS_INFO("Get picture!");
     }
     imgPoints.clear();

@@ -15,7 +15,10 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
         int k = cv::waitKey(30);
         if(k == 'p' && !img.empty())
         {
-            sprintf(ad, "/home/dovejh/project/radar_station/src/radar_station2022/pictures/%d.jpg", d++);
+            std::string ad(PROJECT_PATH);
+            ad += "/pictures/";
+            ad += std::to_string(d++);
+            ad += ".jpg";
             cv::imwrite(ad, img);
             ROS_INFO("Get %d pictures!", d);
         }

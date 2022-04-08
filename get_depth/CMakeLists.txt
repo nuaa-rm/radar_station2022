@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 find_package(PCL 1.2 REQUIRED)
+find_package(OpenCV)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -121,11 +122,9 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  ../../devel/include
+  OpenCV_INCLUDE_DIRS
+  ${PCL_INCLUDE_DIRS}
 )
-find_package(OpenCV)
-include_directories(OpenCV_INCLUDE_DIRS)
-include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

@@ -121,7 +121,6 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  ../../devel/include
 )
 find_package(OpenCV)
 include_directories(OpenCV_INCLUDE_DIRS)
