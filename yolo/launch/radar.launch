@@ -1,4 +1,5 @@
 <launch>
   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true"/>
+  <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true"/>
   <rosparam command="load" file="$(find mv_driver)/cfg/params.yaml" />
 </launch>

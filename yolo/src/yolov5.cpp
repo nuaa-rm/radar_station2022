@@ -376,7 +376,8 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "image_subscribe");
     ros::start();
     ros::NodeHandle n;
-    ros::Subscriber imageSub = n.subscribe("/MVCamera/image_raw", 1, &imageCB);
+    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
+    ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &imageCB);
 
     //发布识别到的目标坐标
     ros::Publisher relative_coordinate =n.advertise< radar_msgs::relative_coordinate>("relative_coordinate",11);
@@ -448,6 +449,7 @@ void imageCB(
         //将车辆坐标赋值给自定义消息类型relative_coordinate
         if(j<car_point.size())
         {
+            car_point[j].frame_id = msg->header.frame_id;
             car_point[j].id=j+1;
             car_point[j].xaxis=(float)r.x+(float)r.width/2;
             car_point[j].yaxis=(float)r.x+(float)r.height/2;
