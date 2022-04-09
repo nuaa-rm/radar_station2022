@@ -46,7 +46,7 @@ public:
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
 
-        image_pub_ = it.advertise("/MVCamera/image_raw", 1);
+        image_pub_ = it.advertise("image_raw", 1);
 
         node_.param("image_width", image_width_, 640);
         if(large_resolution_)
@@ -164,6 +164,7 @@ public:
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
         image_pub_.publish(msg);
+        std::cout << msg->header;
         return true;
     }
 
