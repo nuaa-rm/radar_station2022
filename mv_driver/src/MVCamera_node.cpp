@@ -13,6 +13,8 @@ using namespace std;
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include "video_saver.h"
+#define FARCAM 0
+#define CLOSECAM 1
 using namespace std;
 using namespace cv;
 MVCamera *mv_driver=NULL;
@@ -25,6 +27,7 @@ class MVCamNode
 public:
     ros::NodeHandle node_;
     int false_idx=0;
+    int deviceID=0;
     // shared image message
     Mat rawImg;
     sensor_msgs::ImagePtr msg;
@@ -45,7 +48,7 @@ public:
         cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
-
+        ros::param::get("deviceID", deviceID);
         image_pub_ = it.advertise("image_raw", 1);
 
         node_.param("image_width", image_width_, 640);
@@ -69,7 +72,7 @@ public:
         //init camera param
         mv_driver=new MVCamera;
 
-        mv_driver->Init();
+        mv_driver->Init(deviceID);
         mv_driver->SetExposureTime(autoexposure_, exposure_);
         mv_driver->SetLargeResolution(large_resolution_);
         mv_driver->Set_fps(fps_mode);
@@ -145,21 +148,17 @@ public:
         if(large_resolution_)
             resize(rawImg,rawImg,dist_size);
 
-            //按q拍照并保存
-                // static int cnt=0;
-                // imshow("raw img from MV cam",rawImg);
-                // char filename[12];
-                // char key =(char)waitKey(10);
-                // if(key=='q')
-                // {
-                //     sprintf(filename,"L%d.png",cnt);
-                //     imwrite(filename,rawImg);
-                //     cout<<"save img L"<<cnt<<endl;
-                //     cnt++;
-                // }
-
-
         std_msgs::Header imgHead;
+
+        //DoveJH：用于在订阅者节点区分两个相机。
+        if(deviceID == FARCAM)
+        {
+            imgHead.frame_id = "sensor_far";
+        }
+        else if(deviceID == CLOSECAM)
+        {
+            imgHead.frame_id = "sensor_close";
+        }
         imgHead.stamp=imgTime;
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
