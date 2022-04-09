@@ -19,7 +19,7 @@ void msgCallback(const radar_msgs::relative_coordinate::ConstPtr &msg)
   if(msg->id!=255)
   {
     //test_msgs::Test类型里的float32[]数据传到vector
-    cv::Point2f car_point ;
+    cv::Point2f car_point;
     car_point.x=msg->xaxis;
     car_point.y=msg->yaxis;
     cout<<car_point<<endl;
@@ -68,7 +68,7 @@ void imageCB(
     if(!img.empty())
     {
       cv::imshow("video",img);
-	    cv::setMouseCallback("video",onMouse,0);
+      cv::setMouseCallback("video",onMouse,0);
       cv::putText(img,temp,pre_pt,cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0,0,0,255),1,8);//在窗口上显示坐标
       cv::circle(img,pre_pt,2,cv::Scalar(255,0,0,0),-1,16,0);//划圆
       cv::imshow("video",img);

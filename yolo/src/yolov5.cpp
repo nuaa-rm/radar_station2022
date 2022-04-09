@@ -449,7 +449,7 @@ void imageCB(
         //将车辆坐标赋值给自定义消息类型relative_coordinate
         if(j<car_point.size())
         {
-            car_point[j].frame_id = msg->header.frame_id;
+            car_point[j].frame_id = msg->header.frame_id;//用于为下一订阅节点提供图片的来源信息
             car_point[j].id=j+1;
             car_point[j].xaxis=(float)r.x+(float)r.width/2;
             car_point[j].yaxis=(float)r.x+(float)r.height/2;
