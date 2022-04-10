@@ -57,3 +57,4 @@ else()
   ${PROJECT_SOURCE_DIR}/lib/arm64/libMVSDK.so
    )
 endif()
+add_definitions(-DPROJECT_PATH="${PROJECT_SOURCE_DIR}")

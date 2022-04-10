@@ -66,7 +66,14 @@ public:
         }
         node_.param("/framerate", framerate_, 360);
         node_.getParam("/is_record", is_record_);
-        node_.getParam("/rcd_path", rcd_path_);
+        if(deviceID == FARCAM)
+        {
+            rcd_path_ = PROJECT_PATH + "/sensor_far";
+        }
+        else if(deviceID == CLOSECAM)
+        {
+            rcd_path_ = PROJECT_PATH + "/sensor_close";
+        }
         node_.getParam("/fps_mode", fps_mode);
         node_.param("/exp_time", exposure_);
         //init camera param
