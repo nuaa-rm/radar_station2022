@@ -66,13 +66,14 @@ public:
         }
         node_.param("/framerate", framerate_, 360);
         node_.getParam("/is_record", is_record_);
+        string project_path(PROJECT_PATH);
         if(deviceID == FARCAM)
         {
-            rcd_path_ = PROJECT_PATH + "/sensor_far";
+            rcd_path_ = project_path + "/sensor_far";
         }
         else if(deviceID == CLOSECAM)
         {
-            rcd_path_ = PROJECT_PATH + "/sensor_close";
+            rcd_path_ = project_path + "/sensor_close";
         }
         node_.getParam("/fps_mode", fps_mode);
         node_.param("/exp_time", exposure_);
