@@ -40,12 +40,12 @@ vector<radar_msgs::distance_point> distance_points;
 Mat camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
 Mat distortion_coefficient = Mat_<double>(5, 1);
 Mat uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
-
 vector<radar_msgs::points> car_points(10);//detected points received from yolo_node
 vector<Rect> car_rects(10);
 radar_msgs::points car_point;
 uint8_t i = 0;//the number of car_points vector
-//vector<double> distances(10);//the vector that stores the depths
+queue<Mat> depthQueue;
+Mat depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
 
 void depthShow(Mat &input, vector<double> distances);//将深度图像归一化成灰度图并发布话题进行展示
 void getTheoreticalUV(double x, double y, double z, Mat &output);//得到某一点对应图像中的位置
@@ -58,6 +58,8 @@ void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//去除平面
 void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat &output);//对于每一个点云中的点调用一次getTheoreticalUV函数
 double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input);//显示实时点云,放在程序结尾
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
+
+void minusDepth(Mat &depth_accumulate, Mat depth_now);
 
 void yoloCallback(const radar_msgs::points::ConstPtr &input);
 
@@ -237,14 +239,35 @@ double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input) {
     viewer->spinOnce(0.001);
 }
 
+void minusDepth(Mat &depth_accumulate, Mat depth_now) {
+    for (int i = 0; i < imgRows; i++) {
+        for (int j = 0; j < imgCols; j++) {
+            if (depth_now.at<Vec3d>(i, j)[0] != 0) {
+                depth_accumulate.at<Vec3d>(i, j)[0] = 0;
+                depth_accumulate.at<Vec3d>(i, j)[1] = 0;
+                depth_accumulate.at<Vec3d>(i, j)[2] = 0;
+            }
+        }
+    }
+}
+
 //update the dethes_img by pointcloud
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
-    Mat depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+    //obtain the depth image by project
+    Mat depth_now = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
     removeFlat(cloud);
     projectPoints(cloud, depthes);
+    projectPoints(cloud, depth_now);
+    if (depthQueue.size() == 20) {
+        minusDepth(depthes,depthQueue.front());
+        depthQueue.pop();
+    }
+    depthQueue.push(depth_now);
+
+    //obtain the distance by clustering
     vector<double> distances(car_rects.size());
     radar_msgs::distance_point distance_it;
     std::vector<radar_msgs::distance_point>().swap(distance_points);
@@ -255,9 +278,9 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
         distance_it.point.id = j;
         distance_it.depth = distances[j];
         distancePointPub.publish(distance_it);
-//        distance_points.push_back(distance_it);
     }
     depthShow(depthes, distances);
+
 }
 
 //update the car_rects
