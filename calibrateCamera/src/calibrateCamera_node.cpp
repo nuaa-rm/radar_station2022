@@ -126,7 +126,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	        {
 		        Mat img1 = imgs[i];
 		        Mat gray1;
+                imshow("chessboard", img1);
+                waitKey(0);
+
 		        cvtColor(img1, gray1, COLOR_BGR2GRAY);
+                imshow("chessboard", gray1);
+                waitKey(0);
 		        vector<Point2f> img1_points;
 		        findChessboardCorners(gray1, board_size, img1_points);  //计算方格标定板角点
 		        find4QuadCornerSubpix(gray1, img1_points, Size(3, 3));  //细化方格标定板角点坐标
@@ -305,7 +310,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     ros::param::get("/mode", mode);
-    cout << "Mode lode done!" << mode << endl;
+    cout << "Mode load done!" << mode << endl;
 
     ros::param::get("/camera_matrix/zerozero", camera_matrix.at<float>(0, 0));
     ros::param::get("/camera_matrix/zerotwo", camera_matrix.at<float>(0, 2));
