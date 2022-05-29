@@ -7,6 +7,7 @@
 #include "CRC8_CRC16.h"
 #include "CRC.h"
 #include "radar_msgs/points.h"
+#include "radar_msgs/small_map.h"
 
 using namespace std;
 
@@ -50,7 +51,8 @@ public:
     serial::Serial ser;
     map_msg mapMsg;
     interactive_with_robots_msgs interactiveWithRobotsMsgs;
-    void serial_port_init()
+    //vector<point>points;
+    int serial_port_init()
     {
         ser.setPort("/dev/ttyUSB0");
         ser.setBaudrate(115200);
@@ -66,32 +68,35 @@ public:
     {
         mapMsg.head.SOF = 0xA5;
         mapMsg.head.data_length = 10;
-        mapMsg.head.seq = 0;
-        mapMsg.head.crc = get_CRC8_check_sum((uint8_t*)&mapMsg.head, (sizeof(mapMsg.head) - sizeof(mapMsg.head.crc)), 0xff);
+        mapMsg.head.seq = 1;
+        mapMsg.head.crc = get_CRC8_check_sum((uint8_t*)&mapMsg, (sizeof(mapMsg.head) - sizeof(mapMsg.head.crc)), 0xff);
         mapMsg.cmd_id = 0x0305;
         mapMsg.data.target_position_x = x;
         mapMsg.data.target_position_y = y;
         mapMsg.data.target_robot_id = id;
         mapMsg.crc = get_CRC16_check_sum((uint8_t*)&mapMsg, (sizeof(mapMsg) - sizeof(mapMsg.crc)), 0xffff);
-        string msg;
+        /*char msg[sizeof (mapMsg)];
+        uint8_t* p = mapMsg;
         for(int i = 0; i < sizeof(mapMsg); i++)
         {
-            msg += ((char*)&mapMsg + i);
-        }
-        ser.write(msg);
-        cout << "Send one map msg " << endl;
+            msg[i] = *p;
+            p++;
+        }*/
+        //ser.write(msg);
+        ser.write((uint8_t* )&mapMsg, sizeof(map_msg));
+        cout << "Send one map msg target_id = " << mapMsg.data.target_robot_id << " x = " << mapMsg.data.target_position_x << " y = " << mapMsg.data.target_position_y << endl;
         return true;
     }
     bool sendInteractiveMsgs()
     {
         interactiveWithRobotsMsgs.head.SOF = 0xA5;
 
-        string msg;
+        /*string msg;
         for(int i = 0; i < sizeof(interactiveWithRobotsMsgs); i++)
         {
             msg += ((char*)&interactiveWithRobotsMsgs + i);
-        }
-        ser.write(msg);
+        }*/
+        //ser.write((uint8_t* )mapMsg, sizeof(mapMsg));
         cout << "Send one interactive msg " << endl;
         return true;
     }
@@ -102,35 +107,47 @@ public:
 
 };
 
+void imgCallback(const radar_msgs::small_mapConstPtr& msg)
+{
+    msg->points;
+
+}
+
 int main (int argc, char** argv)
 {
     //初始化节点
     ros::init(argc, argv, "serial_port_node");
     //声明节点句柄
     ros::NodeHandle nh;
-
-
     serial_port sp;
+
     if(!sp.ser.isOpen())
     {
-        ROS_ERROR_STREAM("Unable to open port ");
+        ROS_ERROR_STREAM("Unable to open port, please check USB2TTL! ");
         return -1;
     }
     else
     {
-        ROS_INFO_STREAM("Serial Port initialized");
+        ROS_INFO_STREAM("Serial Port initialized! ");
     }
 
 
     ros::Rate loop(10);
+    ROS_INFO_STREAM("Looping! ");
+    float x = 0, y = 0;
     while(ros::ok())
     {
-        for(int x = 0; x < 28; x++)
+        sp.sendMapMsgs(6, (float)x, (float)y);
+
+        x++;
+        y++;
+        if(x >= 28)
         {
-            for(int y = 0; y < 15; y++)
-            {
-                sp.sendMapMsgs(6, (float)x, (float)y);
-            }
+            x = 0;
+        }
+        if(y >= 15)
+        {
+            y = 0;
         }
         //循环休眠
         ros::spinOnce();
