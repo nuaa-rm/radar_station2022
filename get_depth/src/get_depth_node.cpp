@@ -31,12 +31,13 @@
 using namespace std;
 using namespace cv;
 
-int imgRows = 720, imgCols = 1280;
+int imgRows = 1024, imgCols = 1280;
+//int imgRows = 720, imgCols = 1280;
 
 ros::Publisher depthPub;
 ros::Publisher distancePointPub;
 
-vector<radar_msgs::distance_point> distance_points;
+vector<radar_msgs::points> distance_points;
 Mat camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
 Mat distortion_coefficient = Mat_<double>(5, 1);
 Mat uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
@@ -84,6 +85,7 @@ void depthShow(Mat &input, vector<double> distances) {
 //    circle(depthsGray, Point(450, 260), 5, Scalar(255, 255, 255), 1);
 //    rectangle(depthsGray, Point(320, 180), Point(450, 260), Scalar(255, 255, 255), 1);
     uint8_t a = 0;
+
     for (vector<Rect>::iterator it = car_rects.begin(); it != car_rects.end(); it++) {
         if (!it->empty()) {
             rectangle(depthsGray, *it, Scalar(255, 255, 255), 1);
@@ -256,30 +258,40 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
     //obtain the depth image by project
     Mat depth_now = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+    std::vector<int> index;
+
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
-    removeFlat(cloud);
-    projectPoints(cloud, depthes);
+
+//    removeFlat(cloud);
+//    projectPoints(cloud, depthes);
     projectPoints(cloud, depth_now);
-    if (depthQueue.size() == 20) {
-        minusDepth(depthes,depthQueue.front());
-        depthQueue.pop();
-    }
-    depthQueue.push(depth_now);
+//    if (depthQueue.size() == 10) {
+//        minusDepth(depthes, depthQueue.front());
+//        depthQueue.pop();
+//    }
+//    depthQueue.push(depth_now);
 
     //obtain the distance by clustering
     vector<double> distances(car_rects.size());
-    radar_msgs::distance_point distance_it;
-    std::vector<radar_msgs::distance_point>().swap(distance_points);
+    radar_msgs::points distance_it;
+    radar_msgs::point point_it;
+    std::vector<radar_msgs::points>().swap(distance_points);
     for (int j = 0; j < car_rects.size(); j++) {
-        distances[j] = getDepthInRect(car_rects[j], depthes);
-        distance_it.point.x = car_rects[j].x + car_rects[j].width / 2;
-        distance_it.point.y = car_rects[j].y + car_rects[j].height / 2;
-        distance_it.point.id = j;
-        distance_it.depth = distances[j];
+        distances[j] = getDepthInRect(car_rects[j], depth_now);
+        point_it.x = car_rects[j].x;
+        point_it.y = car_rects[j].y;
+        distance_it.data.push_back(point_it);
+        point_it.x = car_rects[j].x + car_rects[j].width;
+        point_it.y = car_rects[j].y + car_rects[j].height;
+        distance_it.data.push_back(point_it);
+        point_it.x = distances[j];
+        point_it.y = 1;
+        distance_it.data.push_back(point_it);
+        distance_it.id = j;
         distancePointPub.publish(distance_it);
     }
-    depthShow(depthes, distances);
+    depthShow(depth_now, distances);
 
 }
 
@@ -291,7 +303,9 @@ void yoloCallback(const radar_msgs::points::ConstPtr &input) {
     if ((*input).text == "last") {
     }
     car_point = *input;
-    if (car_point.data[0].x > 0) {
+    if (car_point.text == "none") {
+        std::vector<cv::Rect>().swap(car_rects);
+    } else if (car_point.data[0].x > 0) {
         int x = (int) car_point.data[0].x;
         int y = (int) car_point.data[0].y;
         int width = (int) (car_point.data[1].x - car_point.data[0].x);
@@ -349,7 +363,7 @@ int main(int argc, char **argv) {
     cloud_sub = n.subscribe("/livox/lidar", 10, &pointCloudCallback);
     ros::Subscriber yolo_sub;
     yolo_sub = n.subscribe("/rectangles", 20, &yoloCallback);
-    distancePointPub = n.advertise<radar_msgs::distance_point>("distance_point", 10);
+    distancePointPub = n.advertise<radar_msgs::points>("distance_point", 10);
 //    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
 
     ros::spin();

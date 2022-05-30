@@ -164,7 +164,7 @@ public:
 //            ROS_INFO("Get %d far pictures!", count);
 //            cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
 //            stringstream ss;
-//            ss<<"/home/chris/radar_station2022/src/image/"<<count<<".jpg";
+//            ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/"<<count<<".bmp";
 //            cv::imwrite(ss.str(),rawImg);
 //            count++;
 //        }

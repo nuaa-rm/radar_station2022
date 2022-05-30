@@ -443,7 +443,7 @@ int main(int argc, char **argv) {
     CUDA_CHECK(cudaMalloc((void **) &img_device, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
 
 
-    ros::init(argc, argv, "image_subscribe");
+    ros::init(argc, argv, "yolov5");
     ros::start();
     ros::NodeHandle n;
 //    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
@@ -512,6 +512,12 @@ void imageCB(
             rect_msg.text="first";
         else if(it==res.end()-1)
             rect_msg.text="last";
+        rectangles.publish(rect_msg);
+    }
+    if(res.size()==0)
+    {
+        radar_msgs::points rect_msg;
+        rect_msg.text="none";
         rectangles.publish(rect_msg);
     }
 

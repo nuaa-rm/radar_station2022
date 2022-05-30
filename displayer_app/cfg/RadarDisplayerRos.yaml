@@ -22,6 +22,6 @@ displayer:
     hpSubscribe: '/judgeSystem/hp'                  # 返回HP的topic
     hpLimitSubscribe: '/judgeSystem/hpLimit'        # 返回HP的topic
   minimap:
-    subscribeTopic: '/displayer/minimap'
+    subscribeTopic: '/world_point'
   ros:
     cvBridge: false   # 是否使用cvBridge解码图像消息

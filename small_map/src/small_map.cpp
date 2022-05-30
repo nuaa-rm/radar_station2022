@@ -14,10 +14,11 @@
 
 using namespace std;
 using namespace cv;
+int field_width = 28, field_height = 15;
+int i = 0;
 ros::Publisher worldPointPub;
 cv::Mat img;
 int cnt = 0;
-vector<radar_msgs::distance_point> distance_points;
 //世界坐标,取四个点用于solvePnP的objects_array
 vector<cv::Point3f> objectPoints(5);
 //像平面坐标,鼠标在图像上选点并用于solvePnP的imagePoints
@@ -48,7 +49,7 @@ void imageCB(const sensor_msgs::ImageConstPtr &msg);
 void calibration(const radar_msgs::points &msg);//相机标定
 void reproject(void);//反投影
 void depthShow(Mat &input);//将深度图像归一化成灰度图并发布话题进行展示
-void distPointCallback(const radar_msgs::distance_point &input);
+void distPointCallback(const radar_msgs::points &input);
 
 
 int main(int argc, char **argv) {
@@ -92,7 +93,7 @@ int main(int argc, char **argv) {
 //    imagesub = n.subscribe("/MVCamera/image_raw", 5, &imageCB);
 //    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 5, &calibration);
     ros::Subscriber distPointSub = n.subscribe("/distance_point", 10, &distPointCallback);
-    worldPointPub=n.advertise<radar_msgs::world_point>("/world_point",10);
+    worldPointPub = n.advertise<radar_msgs::points>("/world_point", 1);
     ros::spin();
     return 0;
 }
@@ -124,22 +125,58 @@ void onMouse(int event, int x, int y, int flags, void *ustc)//event鼠标事件�
     }
 }
 
-void distPointCallback(const radar_msgs::distance_point &input) {
+void distPointCallback(const radar_msgs::points &input) {
     Mat invR;
     Mat invM;
     invert(CamMatrix_, invM);
     invert(R, invR);
     Mat x8_pixel;
-    x8_pixel = (Mat_<double>(3, 1) << (double) input.point.x, (double) input.point.y, 1);
-    Mat calcWorld = invR * (invM * input.depth * x8_pixel - T);//2D-3D变换
+    x8_pixel = (Mat_<double>(3, 1) << (double) (input.data[0].x + input.data[1].x) / 2,
+            (double) (input.data[0].y + input.data[1].y) / 2, 1);
+    Mat calcWorld = invR * (invM * input.data[3].x * x8_pixel - T);//2D-3D变换
 
-    radar_msgs::world_point worldPoint;
-    worldPoint.id=input.point.id;
-    worldPoint.x=calcWorld.at<double>(0,0);
-    worldPoint.y=calcWorld.at<double>(1,0);
-    worldPoint.z=calcWorld.at<double>(2,0);
+//    radar_msgs::world_point worldPoint;
+    radar_msgs::points worldPoint;
+    radar_msgs::point point;
+    worldPoint.id = input.id;
+    worldPoint.color = string("red");
+    double x = calcWorld.at<double>(0, 0);
+    double y = calcWorld.at<double>(1, 0);
+    double width = 0.5;
+    double height = 0.5;
+//    point.x = x - width / 2;
+//    point.y = y - height / 2;
+//    worldPoint.data.push_back(point);
+//    point.x = x + width / 2;
+//    point.y = y - height / 2;
+//    worldPoint.data.push_back(point);
+//    point.x = x + width / 2;
+//    point.y = y + height / 2;
+//    worldPoint.data.push_back(point);
+//    point.x = x - width / 2;
+//    point.y = y + height / 2;
+//    worldPoint.data.push_back(point);
+    if (i == 20)i = 0;
+    point.x = 1 + i;
+    point.y = 1 + i;
+    worldPoint.data.push_back(point);
+    point.x = 2 + i;
+    point.y = 1 + i;
+    worldPoint.data.push_back(point);
+    point.x = 2 + i;
+    point.y = 2 + i;
+    worldPoint.data.push_back(point);
+    point.x = 1 + i;
+    point.y = 2 + i;
+    worldPoint.data.push_back(point);
+    i++;
+    for (int i = 0; i < 4; i++) {
+        worldPoint.data[i].x /= field_height;
+        worldPoint.data[i].y /= field_width;
+    }
+//    worldPoint.z=calcWorld.at<double>(2,0);
     worldPointPub.publish(worldPoint);
-    cout << calcWorld << endl;
+    cout << worldPoint.data[0].x << "  " << worldPoint.data[0].y << endl;
 //    if(cout_flag==0) {
 //        cout << calcWorld << endl;
 //        cout_flag = 1;
