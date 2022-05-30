@@ -365,7 +365,6 @@ int main(int argc, char **argv) {
     yolo_sub = n.subscribe("/rectangles", 20, &yoloCallback);
     distancePointPub = n.advertise<radar_msgs::points>("distance_point", 10);
 //    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
-
     ros::spin();
     return 0;
 }

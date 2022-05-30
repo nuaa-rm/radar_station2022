@@ -116,7 +116,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
+string(REGEX REPLACE "(.+)\\src/get_depth.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -124,7 +124,8 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         OpenCV_INCLUDE_DIRS
         ${PCL_INCLUDE_DIRS}
-        "~/radar_station2022/devel/include"
+        "${PROJECT_INIT_PATH}/devel/include"
+
 )
 link_directories(${PCL_LIBRARY_DIRS})
 ## Declare a C++ library

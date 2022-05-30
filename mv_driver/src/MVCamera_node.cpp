@@ -183,7 +183,8 @@ public:
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
         image_pub_.publish(msg);
-        std::cout << msg->header;
+
+//        std::cout<<rawImg.size<<std::endl;
         return true;
     }
 

@@ -15,6 +15,7 @@
 using namespace std;
 using namespace cv;
 int field_width = 28, field_height = 15;
+double imgCols = 1280.0, imgRows = 1024.0;
 int i = 0;
 ros::Publisher worldPointPub;
 cv::Mat img;
@@ -42,8 +43,6 @@ int cout_flag = 0;
 cv::Mat distCoeffs_ = cv::Mat(1, 5, CV_64FC1, cv::Scalar::all(0));
 
 void onMouse(int event, int x, int y, int flags, void *ustc);//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
-void msgCallback(const radar_msgs::relative_coordinate::ConstPtr &msg);
-
 void imageCB(const sensor_msgs::ImageConstPtr &msg);
 
 void calibration(const radar_msgs::points &msg);//相机标定
@@ -53,63 +52,43 @@ void distPointCallback(const radar_msgs::points &input);
 
 
 int main(int argc, char **argv) {
-    /*相机标定 Camera Calibration*/
-    objectPoints[0].x = 0;
-    objectPoints[0].y = 0;
-    objectPoints[0].z = 1910;
-
-    objectPoints[1].x = 14969;
-    objectPoints[1].y = 15772;
-    objectPoints[1].z = 930;
-
-    // objectPoints[2].x=9600;
-    // objectPoints[2].y=9600;
-    // objectPoints[2].z=0;
-
-    objectPoints[2].x = 19640;
-    objectPoints[2].y = 12120;
-    objectPoints[2].z = 0;
-
-    // objectPoints[4].x=19725;
-    // objectPoints[4].y=12120;
-    // objectPoints[4].z=0;
-
-    objectPoints[3].x = 19640;
-    objectPoints[3].y = 11270;
-    objectPoints[3].z = 0;
-
-    objectPoints[4].x = 12200;
-    objectPoints[4].y = 7200;
-    objectPoints[4].z = 420;
 
     /*solvePnP求解相机外参矩阵*/
 
 
     ros::init(argc, argv, "point_subscribe");
-
     ros::NodeHandle n;
 
+    /*相机标定 Camera Calibration*/
+    ros::param::get("/point1/x",objectPoints[0].x);
+    ros::param::get("/point1/y",objectPoints[0].y);
+    ros::param::get("/point1/z",objectPoints[0].z);
+    ros::param::get("/point2/x",objectPoints[1].x);
+    ros::param::get("/point2/y",objectPoints[1].y);
+    ros::param::get("/point2/z",objectPoints[1].z);
+    ros::param::get("/point3/x",objectPoints[2].x);
+    ros::param::get("/point3/y",objectPoints[2].y);
+    ros::param::get("/point3/z",objectPoints[2].z);
+    ros::param::get("/point4/x",objectPoints[3].x);
+    ros::param::get("/point4/y",objectPoints[3].y);
+    ros::param::get("/point4/z",objectPoints[3].z);
+    ros::param::get("/point5/x",objectPoints[4].x);
+    ros::param::get("/point5/y",objectPoints[4].y);
+    ros::param::get("/point5/z",objectPoints[4].z);
+    cout<<objectPoints[0].z<<endl;
+    cout<<objectPoints[1].x<<endl;
+    cout<<objectPoints[2].x<<endl;
+    cout<<objectPoints[3].x<<endl;
+    cout<<objectPoints[4].x<<endl;
     // ros::Subscriber msg_sub = n.subscribe("relative_coordinate", 100, msgCallback);
 //    imagesub = n.subscribe("/MVCamera/image_raw", 5, &imageCB);
-//    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 5, &calibration);
+    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 5, &calibration);
     ros::Subscriber distPointSub = n.subscribe("/distance_point", 10, &distPointCallback);
     worldPointPub = n.advertise<radar_msgs::points>("/world_point", 1);
     ros::spin();
     return 0;
 }
 
-void msgCallback(const radar_msgs::relative_coordinate::ConstPtr &msg) {
-    if (msg->id != 255) {
-        //test_msgs::Test类型里的float32[]数据传到vector
-        cv::Point2f car_point;
-        car_point.x = msg->xaxis;
-        car_point.y = msg->yaxis;
-        cout << car_point << endl;
-    } else if (msg->id == 255) {
-        cout << "\n" << endl;
-    }
-
-}
 
 void onMouse(int event, int x, int y, int flags, void *ustc)//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
 {
@@ -126,24 +105,25 @@ void onMouse(int event, int x, int y, int flags, void *ustc)//event鼠标事件�
 }
 
 void distPointCallback(const radar_msgs::points &input) {
-    Mat invR;
-    Mat invM;
-    invert(CamMatrix_, invM);
-    invert(R, invR);
-    Mat x8_pixel;
-    x8_pixel = (Mat_<double>(3, 1) << (double) (input.data[0].x + input.data[1].x) / 2,
-            (double) (input.data[0].y + input.data[1].y) / 2, 1);
-    Mat calcWorld = invR * (invM * input.data[3].x * x8_pixel - T);//2D-3D变换
+    if (calc_flag == 1) {
+        Mat invR;
+        Mat invM;
+        invert(CamMatrix_, invM);
+        invert(R, invR);
+        Mat x8_pixel;
+        x8_pixel = (Mat_<double>(3, 1) << (double) (input.data[0].x + input.data[1].x) / 2,
+                (double) (input.data[0].y + input.data[1].y) / 2, 1);
+        Mat calcWorld = invR * (invM * input.data[3].x * x8_pixel - T);//2D-3D变换
 
 //    radar_msgs::world_point worldPoint;
-    radar_msgs::points worldPoint;
-    radar_msgs::point point;
-    worldPoint.id = input.id;
-    worldPoint.color = string("red");
-    double x = calcWorld.at<double>(0, 0);
-    double y = calcWorld.at<double>(1, 0);
-    double width = 0.5;
-    double height = 0.5;
+        radar_msgs::points worldPoint;
+        radar_msgs::point point;
+        worldPoint.id = input.id;
+        worldPoint.color = string("red");
+        double x = calcWorld.at<double>(0, 0);
+        double y = calcWorld.at<double>(1, 0);
+        double width = 0.5;
+        double height = 0.5;
 //    point.x = x - width / 2;
 //    point.y = y - height / 2;
 //    worldPoint.data.push_back(point);
@@ -156,94 +136,41 @@ void distPointCallback(const radar_msgs::points &input) {
 //    point.x = x - width / 2;
 //    point.y = y + height / 2;
 //    worldPoint.data.push_back(point);
-    if (i == 20)i = 0;
-    point.x = 1 + i;
-    point.y = 1 + i;
-    worldPoint.data.push_back(point);
-    point.x = 2 + i;
-    point.y = 1 + i;
-    worldPoint.data.push_back(point);
-    point.x = 2 + i;
-    point.y = 2 + i;
-    worldPoint.data.push_back(point);
-    point.x = 1 + i;
-    point.y = 2 + i;
-    worldPoint.data.push_back(point);
-    i++;
-    for (int i = 0; i < 4; i++) {
-        worldPoint.data[i].x /= field_height;
-        worldPoint.data[i].y /= field_width;
-    }
+        if (i == 20)i = 0;
+        point.x = 1 + i;
+        point.y = 1 + i;
+        worldPoint.data.push_back(point);
+        point.x = 2 + i;
+        point.y = 1 + i;
+        worldPoint.data.push_back(point);
+        point.x = 2 + i;
+        point.y = 2 + i;
+        worldPoint.data.push_back(point);
+        point.x = 1 + i;
+        point.y = 2 + i;
+        worldPoint.data.push_back(point);
+        i++;
+        for (int i = 0; i < 4; i++) {
+            worldPoint.data[i].x /= field_height;
+            worldPoint.data[i].y /= field_width;
+        }
 //    worldPoint.z=calcWorld.at<double>(2,0);
-    worldPointPub.publish(worldPoint);
-    cout << worldPoint.data[0].x << "  " << worldPoint.data[0].y << endl;
+        worldPointPub.publish(worldPoint);
+        cout << worldPoint.data[0].x << "  " << worldPoint.data[0].y << endl;
+    }
 //    if(cout_flag==0) {
 //        cout << calcWorld << endl;
 //        cout_flag = 1;
 //    }
 }
 
-void imageCB(
-        const sensor_msgs::ImageConstPtr &msg
-) {
-    img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
-
-    if (!img.empty()) {
-        //鼠标点击事件，记录点到的图像坐标
-        cv::imshow("reproject", img);
-        cv::setMouseCallback("reproject", onMouse, 0);
-        auto textit = imagePoints_string.begin();
-        for (auto it = reprojectPoints.begin(); it < reprojectPoints.end(); it++) {
-            cv::putText(img, (*textit).c_str(), *it, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1, 8);
-            cv::circle(img, *it, 2, cv::Scalar(255, 255, 255), -1, 16, 0);//画圆
-            textit++;
-        }
-        if (calc_flag && cnt)//如果已经计算出了R T
-        {
-            //反投影：
-            cv::Mat invR;
-            cv::Mat invM;
-            invert(CamMatrix_, invM);
-            invert(R, invR);
-            cv::Mat x8_pixel;
-            x8_pixel = (cv::Mat_<double>(3, 1) << reprojectPoints[0].x, reprojectPoints[0].y, 1);
-            double s1 = 5207;//21961
-            cv::Mat calcWorld = invR * (invM * s1 * x8_pixel - T);//2D-3D变换
-            if (cout_flag == 0) {
-                cout << calcWorld << endl;
-                cout_flag = 1;
-
-
-                //正投影：
-                // cv::Mat x8_world,x8_img;
-                // x8_world=(cv::Mat_<double>(3,1) <<9600,9600,0);//左上角点
-                // x8_img=CamMatrix_*(R*x8_world+T);
-                // x8_img/=x8_img.at<double>(2,0);
-                // cv::circle(img,cv::Point2d(x8_img.at<double>(0,0),x8_img.at<double>(1,0)),5,cv::Scalar(0,0,255),-1,16,0);//画圆
-            }
-        }
-        cv::imshow("reproject", img);
-        char key = cv::waitKey(10);
-        //按q拍照
-        // if(key=='q')
-        // {
-        //   cout<<"save image!"<<endl;
-        //   cv::imwrite("/home/chris/radar_station2022/img/MV_camera.jpg",img);
-        // }
-    }
-}
-
-
 void calibration(const radar_msgs::points &msg) {
     for (const auto &abc: msg.data) {
         imagePoints[abc.id] = cv::Point2d(abc.x, abc.y);
-        imagePoints[abc.id].x *= 1080;
-        imagePoints[abc.id].y *= 864;
+        imagePoints[abc.id].x *= imgCols;
+        imagePoints[abc.id].y *= imgRows;
         cout << imagePoints[abc.id] << endl;
-        // cout<<cv::Point2d(abc.x,abc.y)<<endl;
     }
-    // cout<<img.cols<<endl;
-    // cout<<img.rows<<endl;
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
     cv::Mat abc;
     int suc = cv::solvePnPRansac(objectPoints, imagePoints, CamMatrix_, distCoeffs_, Rjacob, T, false, 100, 8.0, 0.99,
@@ -254,7 +181,6 @@ void calibration(const radar_msgs::points &msg) {
     cout << "旋转矩阵:" << R << endl;
     cout << "平移矩阵" << T << endl;
     calc_flag = 1;
-
 
 
 
@@ -286,24 +212,61 @@ void calibration(const radar_msgs::points &msg) {
     //   cv::setMouseCallback("video",onMouse,0);
     // }
 
-    /*
-    Mat x8_world;
-    x8_world=(Mat_<double>(3,1) << object_points_[0][8].x,object_points_[0][8].y,object_points_[0][8].z);//世界坐标
-    Mat x8_pixel;
-    x8_pixel=CamMatrix_*(R*x8_world+T);//像素坐标
-    cout<<x8_pixel<<endl;
-    double s =x8_pixel.at<double>(2,0);//深度信息，以mm为单位
-    x8_pixel=x8_pixel/x8_pixel.at<double>(2,0);//除以深度信息
-    cout<<x8_pixel<<endl;
-    Mat invR;
-    Mat invM;
-    invert(CamMatrix_,invM);
-    invert(R,invR);
-    cout<<"CamMatrix_:\n"<<CamMatrix_<<endl;
-    Mat calcWorld=invR*(invM*s*x8_pixel-T);//2D-3D变换
-    cout<<"calcWorld:\n"<<calcWorld<<endl;
-    */
+
 }
+
+void imageCB(
+        const sensor_msgs::ImageConstPtr &msg
+) {
+    img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+
+    if (!img.empty()) {
+        //鼠标点击事件，记录点到的图像坐标
+//        cv::imshow("reproject", img);
+//        cv::setMouseCallback("reproject", onMouse, 0);
+//        auto textit = imagePoints_string.begin();
+//        for (auto it = reprojectPoints.begin(); it < reprojectPoints.end(); it++) {
+//            cv::putText(img, (*textit).c_str(), *it, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1, 8);
+//            cv::circle(img, *it, 2, cv::Scalar(255, 255, 255), -1, 16, 0);//画圆
+//            textit++;
+//        }
+        if (calc_flag && cnt)//如果已经计算出了R T
+        {
+            //反投影：
+            cv::Mat invR;
+            cv::Mat invM;
+            invert(CamMatrix_, invM);
+            invert(R, invR);
+            cv::Mat x8_pixel;
+            x8_pixel = (cv::Mat_<double>(3, 1) << reprojectPoints[0].x, reprojectPoints[0].y, 1);
+            double s1 = 5207;//21961
+            cv::Mat calcWorld = invR * (invM * s1 * x8_pixel - T);//2D-3D变换
+            if (cout_flag == 0) {
+                cout << calcWorld << endl;
+                cout_flag = 1;
+
+
+//             正投影：
+//             cv::Mat x8_world,x8_img;
+//             x8_world=(cv::Mat_<double>(3,1) <<9600,9600,0);//左上角点
+//             x8_img=CamMatrix_*(R*x8_world+T);
+//             x8_img/=x8_img.at<double>(2,0);
+//             cv::circle(img,cv::Point2d(x8_img.at<double>(0,0),x8_img.at<double>(1,0)),5,cv::Scalar(0,0,255),-1,16,0);//画圆
+            }
+        }
+        cv::imshow("reproject", img);
+        char key = cv::waitKey(10);
+        //按q拍照
+        // if(key=='q')
+        // {
+        //   cout<<"save image!"<<endl;
+        //   cv::imwrite("/home/chris/radar_station2022/img/MV_camera.jpg",img);
+        // }
+    }
+}
+
+
+
 
 // void reproject(cv::Point2d pixel_point)
 // {

@@ -36,11 +36,12 @@ find_package(CUDA REQUIRED)
 message('CUDA FOUND:${CUDA_FOUND}')
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+string(REGEX REPLACE "(.+)\\src/yolo.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
         "/usr/include/eigen3"
-        "/home/chris/radar_station2022/devel/include/"
+        ${PROJECT_INIT_PATH}/devel/include/
 )# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
 
 include_directories(${CUDA_INCLUDE_DIRS})
