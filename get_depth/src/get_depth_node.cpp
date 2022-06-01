@@ -363,7 +363,7 @@ int main(int argc, char **argv) {
     cloud_sub = n.subscribe("/livox/lidar", 10, &pointCloudCallback);
     ros::Subscriber yolo_sub;
     yolo_sub = n.subscribe("/rectangles", 20, &yoloCallback);
-    distancePointPub = n.advertise<radar_msgs::points>("distance_point", 10);
+    distancePointPub = n.advertise<radar_msgs::points>("distance_point", 100);
 //    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
     ros::spin();
     return 0;

@@ -27,7 +27,7 @@
     <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
     <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
-    <node name="MVcamera_node" pkg="mv_driver" type="mv_driver_node"  output="screen" respawn="true"/>
+<!--     <node name="MVcamera_node" pkg="mv_driver" type="mv_driver_node"  output="screen" respawn="true"/> -->
     <node name="yolov5"        pkg="yolo"      type="yolov5"  output="screen" respawn="true"/>
     <node name="livox_lidar_publisher"
           pkg="livox_ros_driver"
