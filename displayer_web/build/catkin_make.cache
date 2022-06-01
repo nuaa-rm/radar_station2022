@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/chris/radar_station2022/src/displayer_web/devel -DCMAKE_INSTALL_PREFIX=/home/chris/radar_station2022/src/displayer_web/install -G Unix Makefiles

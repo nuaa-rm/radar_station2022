@@ -31,7 +31,8 @@ vector<cv::Point2f> reprojectPoints(4);
 vector<string> imagePoints_string(4);
 //相机内参矩阵
 // cv::Mat CamMatrix_ = (cv::Mat_<double>(3,3) << 919.1319, 0, 645.5211, 0, 919.7624, 539.8345, 0, 0, 1);
-cv::Mat CamMatrix_ = (cv::Mat_<double>(3, 3) << 865.4454, 0, 307.764, 0, 865.9519, 221.537, 0, 0, 1);
+//cv::Mat CamMatrix_ = (cv::Mat_<double>(3, 3) << 865.4454, 0, 307.764, 0, 865.9519, 221.537, 0, 0, 1);
+cv::Mat CamMatrix_ = (cv::Mat_<double>(3, 3) << 1965.8110, 0, 687.967095, 0, 1937.942874, 487.860580, 0, 0, 1);
 //是否求出外参矩阵的标志位
 bool if_pnp = false;
 //旋转矩阵和平移矩阵
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
     ros::param::get("/point5/z", objectPoints[4].z);
     // ros::Subscriber msg_sub = n.subscribe("relative_coordinate", 100, msgCallback);
 //    imagesub = n.subscribe("/MVCamera/image_raw", 5, &imageCB);
-    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 5, &calibration);
+    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 1, &calibration);
     ros::Subscriber distPointSub = n.subscribe("/distance_point", 100, &distPointCallback);
 //    ros::Subscriber distPointSub = n.subscribe("/dist", 10, &distPointCallback);
     worldPointPub = n.advertise<radar_msgs::points>("/world_point", 4);
@@ -123,10 +124,16 @@ void distPointCallback(const radar_msgs::points &input) {
         Mat x8_pixel;
         x8_pixel = (Mat_<double>(3, 1) << (double) (input.data[0].x + input.data[1].x) / 2,
                 (double) (input.data[0].y + input.data[1].y) / 2, 1);
-        Mat calcWorld = invR * (invM * input.data[3].x * x8_pixel - T);//2D-3D变换
+        Mat calcWorld = invR * (invM * input.data[2].x * x8_pixel - T);//2D-3D变换
         double x = calcWorld.at<double>(0, 0);
         double y = calcWorld.at<double>(1, 0);
-        cout << x << "  " << y << endl;
+        calcWorld/=1000;
+        cout << invR << endl << invM << endl << T;
+        cout << input.data[2].x << " " << x << "  " << y << endl;
+        cout << x8_pixel << endl;
+        cout << calcWorld << endl;
+
+//        cout << x8_pixel.at<double>(0,0) << "  " << x8_pixel.at<double>(1,0) << endl;
         double width = 0.5;
         double height = 0.5;
 //        if (i == 20)i = 0;

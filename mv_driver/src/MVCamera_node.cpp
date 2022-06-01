@@ -157,17 +157,17 @@ public:
         }
         if(large_resolution_)
             resize(rawImg,rawImg,dist_size);
-        imshow("raw_img",rawImg);
-        int k = waitKey(30);
-        if(k == 'q' && !rawImg.empty())
-        {
-            ROS_INFO("Get %d far pictures!", count);
-            cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
-            stringstream ss;
-            ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/"<<count<<".bmp";
-            cv::imwrite(ss.str(),rawImg);
-            count++;
-        }
+//        imshow("raw_img",rawImg);
+//        int k = waitKey(30);
+//        if(k == 'q' && !rawImg.empty())
+//        {
+//            ROS_INFO("Get %d far pictures!", count);
+//            cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//            stringstream ss;
+//            ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/"<<count<<".bmp";
+//            cv::imwrite(ss.str(),rawImg);
+//            count++;
+//        }
         std_msgs::Header imgHead;
 
         //DoveJH：用于在订阅者节点区分两个相机。
