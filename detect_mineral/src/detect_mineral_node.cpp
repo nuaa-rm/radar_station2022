@@ -75,7 +75,8 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
     static Mat temp = imread("/home/dovejh/project/radar_station/temp.jpg");
     Mat roi;
     Mat imgs[3], imgBindary;
-    static int led_state[5][5] = {0};
+    static bool led_state[5][5] = {true};
+    static bool last_led_state[5] = {true};
     static int send_state[5] = {0};
     Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
     Rect rect(707, 401, 50, 19);
@@ -90,14 +91,19 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
             //寻找匹配结果中的最大值和最小值以及坐标位置
             minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc);
             //绘制最佳匹配区域
-            rect = Rect(maxLoc.x, maxLoc.y, temp.cols, temp.rows);
-            ROS_WARN("Template matched successfully! Now ROI is %d, %d, %d, %d", rect.x, rect.y, rect.width, rect.height);
+            if(maxVal >= 0.5)
+            {
+                rect = Rect(maxLoc.x, maxLoc.y, temp.cols, temp.rows);
+                ROS_WARN("Template matched successfully! Now ROI is %d, %d, %d, %d", rect.x, rect.y, rect.width, rect.height);
+                if_temp_init = true;
+            }
         }
         else
         {
             ROS_WARN("Template load ERROR!!!");
+            if_temp_init = true;
         }
-        if_temp_init = true;
+
     }
 
     roi = img(rect);
@@ -113,11 +119,6 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
 
     vector<vector<Point>> contours;  //轮廓
     findContours(imgBindary, contours, RETR_LIST, CHAIN_APPROX_SIMPLE, Point());
-    led_state[0][4] = 0;
-    led_state[1][4] = 0;
-    led_state[2][4] = 0;
-    led_state[3][4] = 0;
-    led_state[4][4] = 0;
     if(!if_boundary_init && contours.size() == 5)//最小二乘确定五个点的共线程度
     {
         vector<Point>points;
@@ -147,9 +148,14 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
         Rect rect = boundingRect(contours[n]);
         points.push_back(Point(rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height));
     }
-    cout << abs(LineFitLeastSquares(points)) << endl;
+    //cout << abs(LineFitLeastSquares(points)) << endl;
     if(abs(LineFitLeastSquares(points)) >= 0.98)
     {
+        led_state[0][4] = 0;
+        led_state[1][4] = 0;
+        led_state[2][4] = 0;
+        led_state[3][4] = 0;
+        led_state[4][4] = 0;
         for (int n = 0; n < contours.size(); n++)
         {
             // 最大外接矩形
@@ -178,9 +184,10 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
         }
         for(int i = 0; i < 5; i++)
         {
-            if((led_state[i][0] != led_state[i][1]) && (led_state[i][1] == led_state[i][2]) && (led_state[i][1] == led_state[i][3]) && (led_state[i][1] == led_state[i][4]))
+            if((led_state[i][0] != last_led_state[i]) && led_state[i][0] == led_state[i][1] && led_state[i][0] == led_state[i][2] && led_state[i][0] == led_state[i][3] && led_state[i][0] == led_state[i][4])
             {
-                send_state[i] = 100;
+                send_state[i] = 30;
+                last_led_state[i] = led_state[i][0];
             }
             if(send_state[i])
             {
@@ -207,6 +214,11 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
                 send_state[i]--;
             }
         }
+        for(int i = 0; i < 5; i++)
+        {
+            cout << send_state[i] << ' ';
+        }
+        cout << endl;
         for(int i = 0; i < 4; i++)
         {
             led_state[0][i] = led_state[0][i + 1];
