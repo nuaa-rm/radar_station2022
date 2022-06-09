@@ -8,9 +8,15 @@
 #include "CRC.h"
 #include "radar_msgs/points.h"
 #include "radar_msgs/small_map.h"
-
+#include <opencv2/opencv.hpp>
 using namespace std;
+using namespace cv;
 
+struct car_point
+{
+    Point2f point;
+    bool color //红色为0 蓝色为1
+};
 struct frame_header//消息头
 {
  uint8_t SOF = 0xA5;
@@ -143,19 +149,55 @@ public:
     }
 
 };
-
-void imgCallback(const radar_msgs::small_mapConstPtr& msg)
+serial_port sp;
+vector<car_point>worldPoints;
+void worldPointsCallback(const radar_msgs::points& msg)
 {
-    msg->points;
-}
 
+    for(int i = 0; i < msg.data.size(); i++)
+    {
+        if(msg.color == "red")
+        {
+            if(sp.is_enemy_red)
+            {
+                car_point carPoint;
+                carPoint.color = 0;
+                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                worldPoints.insert(worldPoints.begin(), carPoint);
+            }
+            else
+            {
+                car_point carPoint;
+                carPoint.color = 0;
+                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                worldPoints.push_back(carPoint);
+            }
+        }
+        else if(msg.color == "blue")
+        {
+            if(sp.is_enemy_red)
+            {
+                car_point carPoint;
+                carPoint.color = 1;
+                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                worldPoints.push_back(carPoint);
+            }
+            else
+            {
+                car_point carPoint;
+                carPoint.color = 1;
+                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                worldPoints.insert(worldPoints.begin(), carPoint);
+            }
+        }
+    }
+}
 int main (int argc, char** argv)
 {
     //初始化节点
     ros::init(argc, argv, "serial_port_node");
     //声明节点句柄
     ros::NodeHandle nh;
-    serial_port sp;
 
     if(!sp.ser.isOpen())
     {
@@ -167,26 +209,30 @@ int main (int argc, char** argv)
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
     ros::param::get("is_enemy_red", sp.is_enemy_red);
-
+    ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
     float x = 0, y = 0;
     while(ros::ok())
     {
-        sp.sendMapMsgs(6, (float)x, (float)y);
-        sp.receiveMsgs();
-        x++;
-        y++;
-        if(x >= 28)
+        if(!worldPoints.empty())
         {
-            x = 0;
+            if(worldPoints[0].color)
+            {
+                sp.sendMapMsgs(101, worldPoints[0].point.x, worldPoints[0].point.x);
+            }
+            else
+            {
+                sp.sendMapMsgs(1, worldPoints[0].point.x, worldPoints[0].point.x);
+            }
+            worldPoints.erase(worldPoints.begin())
         }
-        if(y >= 15)
+        else
         {
-            y = 0;
+            ros::spinOnce();
         }
+
         //循环休眠
-        ros::spinOnce();
         loop.sleep();
     }
     return 0;
