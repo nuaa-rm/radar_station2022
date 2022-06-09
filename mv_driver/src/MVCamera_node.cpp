@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include <sstream>
 using namespace std;
 
 #include <ros/ros.h>
@@ -17,6 +18,7 @@ using namespace std;
 #define CLOSECAM 1
 using namespace std;
 using namespace cv;
+
 MVCamera *mv_driver=NULL;
 Size dist_size=Size(640,512);
 
@@ -28,6 +30,8 @@ public:
     ros::NodeHandle node_;
     int false_idx=0;
     int deviceID=0;
+    int count=0;
+    bool flag=true;
     // shared image message
     Mat rawImg;
     sensor_msgs::ImagePtr msg;
@@ -69,11 +73,11 @@ public:
         string project_path(PROJECT_PATH);
         if(deviceID == FARCAM)
         {
-            rcd_path_ = project_path + "/sensor_far";
+            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_far";
         }
         else if(deviceID == CLOSECAM)
         {
-            rcd_path_ = project_path + "/sensor_close";
+            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_close";
         }
         node_.getParam("/fps_mode", fps_mode);
         node_.param("/exp_time", exposure_);
@@ -123,7 +127,6 @@ public:
         if(is_record_!=is_rcd->data)
         {
             is_record_=is_rcd->data;
-
         }
     }
     string num2str(double i)
@@ -155,7 +158,17 @@ public:
         }
         if(large_resolution_)
             resize(rawImg,rawImg,dist_size);
-
+//        imshow("raw_img",rawImg);
+//        int k = waitKey(30);
+//        if(k == 'q' && !rawImg.empty())
+//        {
+//            ROS_INFO("Get %d far pictures!", count);
+//            cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//            stringstream ss;
+//            ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/"<<count<<".bmp";
+//            cv::imwrite(ss.str(),rawImg);
+//            count++;
+//        }
         std_msgs::Header imgHead;
 
         //DoveJH：用于在订阅者节点区分两个相机。
@@ -171,7 +184,8 @@ public:
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
         image_pub_.publish(msg);
-        std::cout << msg->header;
+
+//        std::cout<<rawImg.size<<std::endl;
         return true;
     }
 

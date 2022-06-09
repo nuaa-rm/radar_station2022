@@ -8,17 +8,17 @@ project(yolo)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  mv_driver
-  cv_bridge
-  image_transport
-  sensor_msgs
-  radar_msgs
-)
+        roscpp
+        rospy
+        std_msgs
+        mv_driver
+        cv_bridge
+        image_transport
+        sensor_msgs
+        radar_msgs
+        )
 catkin_package(
- DEPENDS
+        DEPENDS
 )
 add_definitions(-std=c++11)
 add_definitions(-DAPI_EXPORTS)
@@ -26,30 +26,39 @@ add_definitions(-DPACK_PATH="${PROJECT_SOURCE_DIR}")
 option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
+#OPENCV
+find_package(OpenCV)
+include_directories(${OpenCV_INCLUDE_DIRS})
+message('OPENCV FOUND:${OpenCV_FOUND}')
+# cuda
+set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.2)
 find_package(CUDA REQUIRED)
+message('CUDA FOUND:${CUDA_FOUND}')
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+string(REGEX REPLACE "(.+)\\src/yolo.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  "/usr/include/eigen3"
-)
-# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
-# cuda
-include_directories(/usr/local/cuda-10.2/include)
+        include
+        ${catkin_INCLUDE_DIRS}
+        "/usr/include/eigen3"
+        ${PROJECT_INIT_PATH}/devel/include/
+)# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
+
+include_directories(${CUDA_INCLUDE_DIRS})
+message('CUDA_LIBRARIES:${CUDA_INCLUDE_DIRS}')
 link_directories(/usr/local/cuda-10.2/lib64)
-include_directories(include)
+#include_directories(include)
 # tensorrt
-include_directories(/usr/include/x86_64-linux-gnu/)
-link_directories(/usr/lib/x86_64-linux-gnu/)
+
+include_directories(/home/chris/TensorRT-7.0.0.11/include/)
+link_directories(/home/chris/TensorRT-7.0.0.11/lib/)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Ofast -g -Wfatal-errors -D_MWAITXINTRIN_H_INCLUDED")
 cuda_add_library(myplugins SHARED src/yololayer.cu)
 target_link_libraries(myplugins nvinfer cudart)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenCV)
-include_directories(${OpenCV_INCLUDE_DIRS})
+
 
 cuda_add_executable(yolov5 src/calibrator.cpp src/yolov5.cpp src/preprocess.cu)
 add_dependencies(yolov5 mv_driver_node)
@@ -57,8 +66,8 @@ target_link_libraries(yolov5 nvinfer)
 target_link_libraries(yolov5 cudart)
 target_link_libraries(yolov5 myplugins)
 target_link_libraries(yolov5 ${OpenCV_LIBS}
-${catkin_LIBRARIES}
-)
+        ${catkin_LIBRARIES}
+        )
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html

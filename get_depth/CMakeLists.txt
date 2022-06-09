@@ -8,13 +8,13 @@ project(get_depth)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  cv_bridge
-  sensor_msgs
-  tf
-)
+        roscpp
+        rospy
+        std_msgs
+        cv_bridge
+        sensor_msgs
+        tf
+        )
 find_package(PCL 1.2 REQUIRED)
 find_package(OpenCV)
 ## System dependencies are found with CMake's conventions
@@ -107,23 +107,25 @@ find_package(OpenCV)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES get_depth
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+        #  INCLUDE_DIRS include
+        #  LIBRARIES get_depth
+        #  CATKIN_DEPENDS roscpp rospy std_msgs
+        #  DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
-
+string(REGEX REPLACE "(.+)\\src/get_depth.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-  OpenCV_INCLUDE_DIRS
-  ${PCL_INCLUDE_DIRS}
+        # include
+        ${catkin_INCLUDE_DIRS}
+        OpenCV_INCLUDE_DIRS
+        ${PCL_INCLUDE_DIRS}
+        "${PROJECT_INIT_PATH}/devel/include"
+
 )
 link_directories(${PCL_LIBRARY_DIRS})
 ## Declare a C++ library
@@ -152,12 +154,12 @@ add_executable(${PROJECT_NAME}_node src/get_depth_node.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBS}
-   ${PCL_LIBRARIES}
- )
-
+target_link_libraries(${PROJECT_NAME}_node
+        ${catkin_LIBRARIES}
+        ${OpenCV_LIBS}
+        ${PCL_LIBRARIES}
+        )
+message("{PCL_INCLUDE_DIRS}: ${PCL_INCLUDE_DIRS}")
 #############
 ## Install ##
 #############

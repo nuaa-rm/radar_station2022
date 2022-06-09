@@ -16,7 +16,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
-#include <radar_msgs/relative_coordinate.h>
+#include <radar_msgs/point.h>
+#include <radar_msgs/points.h>
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
@@ -24,28 +25,34 @@
 #define CONF_THRESH 0.5
 #define BATCH_SIZE 1
 #define MAX_IMAGE_INPUT_SIZE_THRESH 3000 * 3000 // ensure it exceed the maximum size in the input images !
-
+//using namespace std;
+//using namespace cv;
 // stuff we know about the network and the input/output blobs
 static const int INPUT_H = Yolo::INPUT_H;
 static const int INPUT_W = Yolo::INPUT_W;
 static const int CLASS_NUM = Yolo::CLASS_NUM;
-static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) + 1;  // we assume the yololayer outputs no more than MAX_OUTPUT_BBOX_COUNT boxes that conf >= 0.1
-const char* INPUT_BLOB_NAME = "data";
-const char* OUTPUT_BLOB_NAME = "prob";
+static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) +
+                               1;  // we assume the yololayer outputs no more than MAX_OUTPUT_BBOX_COUNT boxes that conf >= 0.1
+const char *INPUT_BLOB_NAME = "data";
+const char *OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
-
-std::vector<radar_msgs::relative_coordinate> car_point(11);//存储车辆坐标rostopic echo /relative_coordinate
+ros::Publisher rectangles;
+//std::vector<radar_msgs::points> car_points;//the 2 points of a rectangle, saved in one member of the car_points
+void imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
+void
+rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::points>::iterator msg_it, cv::Mat &img);
 
 static float prob[BATCH_SIZE * OUTPUT_SIZE];
-IExecutionContext* context;
-float* buffers[2];
-ICudaEngine* engine;
-IRuntime* runtime;
+IExecutionContext *context;
+float *buffers[2];
+ICudaEngine *engine;
+IRuntime *runtime;
 cudaStream_t stream;
-uint8_t* img_host = nullptr;
-uint8_t* img_device = nullptr;
+uint8_t *img_host = nullptr;
+uint8_t *img_device = nullptr;
 int inputIndex;
 int outputIndex;
+
 static int get_width(int x, float gw, int divisor = 8) {
     return int(ceil((x * gw) / divisor)) * divisor;
 }
@@ -59,25 +66,32 @@ static int get_depth(int x, float gd) {
     return std::max<int>(r, 1);
 }
 
-ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
-    INetworkDefinition* network = builder->createNetworkV2(0U);
+ICudaEngine *
+build_engine(unsigned int maxBatchSize, IBuilder *builder, IBuilderConfig *config, DataType dt, float &gd, float &gw,
+             std::string &wts_name) {
+    INetworkDefinition *network = builder->createNetworkV2(0U);
 
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
-    ITensor* data = network->addInput(INPUT_BLOB_NAME, dt, Dims3{ 3, INPUT_H, INPUT_W });
+    ITensor *data = network->addInput(INPUT_BLOB_NAME, dt, Dims3{3, INPUT_H, INPUT_W});
     assert(data);
     std::map<std::string, Weights> weightMap = loadWeights(wts_name);
     /* ------ yolov5 backbone------ */
-    auto conv0 = convBlock(network, weightMap, *data,  get_width(64, gw), 6, 2, 1,  "model.0");
+    auto conv0 = convBlock(network, weightMap, *data, get_width(64, gw), 6, 2, 1, "model.0");
     assert(conv0);
     auto conv1 = convBlock(network, weightMap, *conv0->getOutput(0), get_width(128, gw), 3, 2, 1, "model.1");
-    auto bottleneck_CSP2 = C3(network, weightMap, *conv1->getOutput(0), get_width(128, gw), get_width(128, gw), get_depth(3, gd), true, 1, 0.5, "model.2");
+    auto bottleneck_CSP2 = C3(network, weightMap, *conv1->getOutput(0), get_width(128, gw), get_width(128, gw),
+                              get_depth(3, gd), true, 1, 0.5, "model.2");
     auto conv3 = convBlock(network, weightMap, *bottleneck_CSP2->getOutput(0), get_width(256, gw), 3, 2, 1, "model.3");
-    auto bottleneck_csp4 = C3(network, weightMap, *conv3->getOutput(0), get_width(256, gw), get_width(256, gw), get_depth(6, gd), true, 1, 0.5, "model.4");
+    auto bottleneck_csp4 = C3(network, weightMap, *conv3->getOutput(0), get_width(256, gw), get_width(256, gw),
+                              get_depth(6, gd), true, 1, 0.5, "model.4");
     auto conv5 = convBlock(network, weightMap, *bottleneck_csp4->getOutput(0), get_width(512, gw), 3, 2, 1, "model.5");
-    auto bottleneck_csp6 = C3(network, weightMap, *conv5->getOutput(0), get_width(512, gw), get_width(512, gw), get_depth(9, gd), true, 1, 0.5, "model.6");
+    auto bottleneck_csp6 = C3(network, weightMap, *conv5->getOutput(0), get_width(512, gw), get_width(512, gw),
+                              get_depth(9, gd), true, 1, 0.5, "model.6");
     auto conv7 = convBlock(network, weightMap, *bottleneck_csp6->getOutput(0), get_width(1024, gw), 3, 2, 1, "model.7");
-    auto bottleneck_csp8 = C3(network, weightMap, *conv7->getOutput(0), get_width(1024, gw), get_width(1024, gw), get_depth(3, gd), true, 1, 0.5, "model.8");
-    auto spp9 = SPPF(network, weightMap, *bottleneck_csp8->getOutput(0), get_width(1024, gw), get_width(1024, gw), 5, "model.9");
+    auto bottleneck_csp8 = C3(network, weightMap, *conv7->getOutput(0), get_width(1024, gw), get_width(1024, gw),
+                              get_depth(3, gd), true, 1, 0.5, "model.8");
+    auto spp9 = SPPF(network, weightMap, *bottleneck_csp8->getOutput(0), get_width(1024, gw), get_width(1024, gw), 5,
+                     "model.9");
     /* ------ yolov5 head ------ */
     auto conv10 = convBlock(network, weightMap, *spp9->getOutput(0), get_width(512, gw), 1, 1, 1, "model.10");
 
@@ -86,35 +100,48 @@ ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilder
     upsample11->setResizeMode(ResizeMode::kNEAREST);
     upsample11->setOutputDimensions(bottleneck_csp6->getOutput(0)->getDimensions());
 
-    ITensor* inputTensors12[] = { upsample11->getOutput(0), bottleneck_csp6->getOutput(0) };
+    ITensor *inputTensors12[] = {upsample11->getOutput(0), bottleneck_csp6->getOutput(0)};
     auto cat12 = network->addConcatenation(inputTensors12, 2);
-    auto bottleneck_csp13 = C3(network, weightMap, *cat12->getOutput(0), get_width(1024, gw), get_width(512, gw), get_depth(3, gd), false, 1, 0.5, "model.13");
-    auto conv14 = convBlock(network, weightMap, *bottleneck_csp13->getOutput(0), get_width(256, gw), 1, 1, 1, "model.14");
+    auto bottleneck_csp13 = C3(network, weightMap, *cat12->getOutput(0), get_width(1024, gw), get_width(512, gw),
+                               get_depth(3, gd), false, 1, 0.5, "model.13");
+    auto conv14 = convBlock(network, weightMap, *bottleneck_csp13->getOutput(0), get_width(256, gw), 1, 1, 1,
+                            "model.14");
 
     auto upsample15 = network->addResize(*conv14->getOutput(0));
     assert(upsample15);
     upsample15->setResizeMode(ResizeMode::kNEAREST);
     upsample15->setOutputDimensions(bottleneck_csp4->getOutput(0)->getDimensions());
 
-    ITensor* inputTensors16[] = { upsample15->getOutput(0), bottleneck_csp4->getOutput(0) };
+    ITensor *inputTensors16[] = {upsample15->getOutput(0), bottleneck_csp4->getOutput(0)};
     auto cat16 = network->addConcatenation(inputTensors16, 2);
 
-    auto bottleneck_csp17 = C3(network, weightMap, *cat16->getOutput(0), get_width(512, gw), get_width(256, gw), get_depth(3, gd), false, 1, 0.5, "model.17");
+    auto bottleneck_csp17 = C3(network, weightMap, *cat16->getOutput(0), get_width(512, gw), get_width(256, gw),
+                               get_depth(3, gd), false, 1, 0.5, "model.17");
 
     /* ------ detect ------ */
-    IConvolutionLayer* det0 = network->addConvolutionNd(*bottleneck_csp17->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.0.weight"], weightMap["model.24.m.0.bias"]);
-    auto conv18 = convBlock(network, weightMap, *bottleneck_csp17->getOutput(0), get_width(256, gw), 3, 2, 1, "model.18");
-    ITensor* inputTensors19[] = { conv18->getOutput(0), conv14->getOutput(0) };
+    IConvolutionLayer *det0 = network->addConvolutionNd(*bottleneck_csp17->getOutput(0), 3 * (Yolo::CLASS_NUM + 5),
+                                                        DimsHW{1, 1}, weightMap["model.24.m.0.weight"],
+                                                        weightMap["model.24.m.0.bias"]);
+    auto conv18 = convBlock(network, weightMap, *bottleneck_csp17->getOutput(0), get_width(256, gw), 3, 2, 1,
+                            "model.18");
+    ITensor *inputTensors19[] = {conv18->getOutput(0), conv14->getOutput(0)};
     auto cat19 = network->addConcatenation(inputTensors19, 2);
-    auto bottleneck_csp20 = C3(network, weightMap, *cat19->getOutput(0), get_width(512, gw), get_width(512, gw), get_depth(3, gd), false, 1, 0.5, "model.20");
-    IConvolutionLayer* det1 = network->addConvolutionNd(*bottleneck_csp20->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.1.weight"], weightMap["model.24.m.1.bias"]);
-    auto conv21 = convBlock(network, weightMap, *bottleneck_csp20->getOutput(0), get_width(512, gw), 3, 2, 1, "model.21");
-    ITensor* inputTensors22[] = { conv21->getOutput(0), conv10->getOutput(0) };
+    auto bottleneck_csp20 = C3(network, weightMap, *cat19->getOutput(0), get_width(512, gw), get_width(512, gw),
+                               get_depth(3, gd), false, 1, 0.5, "model.20");
+    IConvolutionLayer *det1 = network->addConvolutionNd(*bottleneck_csp20->getOutput(0), 3 * (Yolo::CLASS_NUM + 5),
+                                                        DimsHW{1, 1}, weightMap["model.24.m.1.weight"],
+                                                        weightMap["model.24.m.1.bias"]);
+    auto conv21 = convBlock(network, weightMap, *bottleneck_csp20->getOutput(0), get_width(512, gw), 3, 2, 1,
+                            "model.21");
+    ITensor *inputTensors22[] = {conv21->getOutput(0), conv10->getOutput(0)};
     auto cat22 = network->addConcatenation(inputTensors22, 2);
-    auto bottleneck_csp23 = C3(network, weightMap, *cat22->getOutput(0), get_width(1024, gw), get_width(1024, gw), get_depth(3, gd), false, 1, 0.5, "model.23");
-    IConvolutionLayer* det2 = network->addConvolutionNd(*bottleneck_csp23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.24.m.2.weight"], weightMap["model.24.m.2.bias"]);
+    auto bottleneck_csp23 = C3(network, weightMap, *cat22->getOutput(0), get_width(1024, gw), get_width(1024, gw),
+                               get_depth(3, gd), false, 1, 0.5, "model.23");
+    IConvolutionLayer *det2 = network->addConvolutionNd(*bottleneck_csp23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5),
+                                                        DimsHW{1, 1}, weightMap["model.24.m.2.weight"],
+                                                        weightMap["model.24.m.2.bias"]);
 
-    auto yolo = addYoLoLayer(network, weightMap, "model.24", std::vector<IConvolutionLayer*>{det0, det1, det2});
+    auto yolo = addYoLoLayer(network, weightMap, "model.24", std::vector<IConvolutionLayer *>{det0, det1, det2});
     yolo->getOutput(0)->setName(OUTPUT_BLOB_NAME);
     network->markOutput(*yolo->getOutput(0));
     // Build engine
@@ -131,42 +158,49 @@ ICudaEngine* build_engine(unsigned int maxBatchSize, IBuilder* builder, IBuilder
 #endif
 
     std::cout << "Building engine, please wait for a while..." << std::endl;
-    ICudaEngine* engine = builder->buildEngineWithConfig(*network, *config);
+    ICudaEngine *engine = builder->buildEngineWithConfig(*network, *config);
     std::cout << "Build engine successfully!" << std::endl;
 
     // Don't need the network any more
     network->destroy();
 
     // Release host memory
-    for (auto& mem : weightMap)
-    {
-        free((void*)(mem.second.values));
+    for (auto &mem: weightMap) {
+        free((void *) (mem.second.values));
     }
 
     return engine;
 }
 
-ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuilderConfig* config, DataType dt, float& gd, float& gw, std::string& wts_name) {
-    INetworkDefinition* network = builder->createNetworkV2(0U);
+ICudaEngine *
+build_engine_p6(unsigned int maxBatchSize, IBuilder *builder, IBuilderConfig *config, DataType dt, float &gd, float &gw,
+                std::string &wts_name) {
+    INetworkDefinition *network = builder->createNetworkV2(0U);
     // Create input tensor of shape {3, INPUT_H, INPUT_W} with name INPUT_BLOB_NAME
-    ITensor* data = network->addInput(INPUT_BLOB_NAME, dt, Dims3{ 3, INPUT_H, INPUT_W });
+    ITensor *data = network->addInput(INPUT_BLOB_NAME, dt, Dims3{3, INPUT_H, INPUT_W});
     assert(data);
-    
+
     std::map<std::string, Weights> weightMap = loadWeights(wts_name);
 
     /* ------ yolov5 backbone------ */
-    auto conv0 = convBlock(network, weightMap, *data,  get_width(64, gw), 6, 2, 1,  "model.0");
+    auto conv0 = convBlock(network, weightMap, *data, get_width(64, gw), 6, 2, 1, "model.0");
     auto conv1 = convBlock(network, weightMap, *conv0->getOutput(0), get_width(128, gw), 3, 2, 1, "model.1");
-    auto c3_2 = C3(network, weightMap, *conv1->getOutput(0), get_width(128, gw), get_width(128, gw), get_depth(3, gd), true, 1, 0.5, "model.2");
+    auto c3_2 = C3(network, weightMap, *conv1->getOutput(0), get_width(128, gw), get_width(128, gw), get_depth(3, gd),
+                   true, 1, 0.5, "model.2");
     auto conv3 = convBlock(network, weightMap, *c3_2->getOutput(0), get_width(256, gw), 3, 2, 1, "model.3");
-    auto c3_4 = C3(network, weightMap, *conv3->getOutput(0), get_width(256, gw), get_width(256, gw), get_depth(6, gd), true, 1, 0.5, "model.4");
+    auto c3_4 = C3(network, weightMap, *conv3->getOutput(0), get_width(256, gw), get_width(256, gw), get_depth(6, gd),
+                   true, 1, 0.5, "model.4");
     auto conv5 = convBlock(network, weightMap, *c3_4->getOutput(0), get_width(512, gw), 3, 2, 1, "model.5");
-    auto c3_6 = C3(network, weightMap, *conv5->getOutput(0), get_width(512, gw), get_width(512, gw), get_depth(9, gd), true, 1, 0.5, "model.6");
+    auto c3_6 = C3(network, weightMap, *conv5->getOutput(0), get_width(512, gw), get_width(512, gw), get_depth(9, gd),
+                   true, 1, 0.5, "model.6");
     auto conv7 = convBlock(network, weightMap, *c3_6->getOutput(0), get_width(768, gw), 3, 2, 1, "model.7");
-    auto c3_8 = C3(network, weightMap, *conv7->getOutput(0), get_width(768, gw), get_width(768, gw), get_depth(3, gd), true, 1, 0.5, "model.8");
+    auto c3_8 = C3(network, weightMap, *conv7->getOutput(0), get_width(768, gw), get_width(768, gw), get_depth(3, gd),
+                   true, 1, 0.5, "model.8");
     auto conv9 = convBlock(network, weightMap, *c3_8->getOutput(0), get_width(1024, gw), 3, 2, 1, "model.9");
-    auto c3_10 = C3(network, weightMap, *conv9->getOutput(0), get_width(1024, gw), get_width(1024, gw), get_depth(3, gd), true, 1, 0.5, "model.10");
-    auto sppf11 = SPPF(network, weightMap, *c3_10->getOutput(0), get_width(1024, gw), get_width(1024, gw), 5, "model.11");
+    auto c3_10 = C3(network, weightMap, *conv9->getOutput(0), get_width(1024, gw), get_width(1024, gw),
+                    get_depth(3, gd), true, 1, 0.5, "model.10");
+    auto sppf11 = SPPF(network, weightMap, *c3_10->getOutput(0), get_width(1024, gw), get_width(1024, gw), 5,
+                       "model.11");
 
     /* ------ yolov5 head ------ */
     auto conv12 = convBlock(network, weightMap, *sppf11->getOutput(0), get_width(768, gw), 1, 1, 1, "model.12");
@@ -174,50 +208,64 @@ ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuil
     assert(upsample13);
     upsample13->setResizeMode(ResizeMode::kNEAREST);
     upsample13->setOutputDimensions(c3_8->getOutput(0)->getDimensions());
-    ITensor* inputTensors14[] = { upsample13->getOutput(0), c3_8->getOutput(0) };
+    ITensor *inputTensors14[] = {upsample13->getOutput(0), c3_8->getOutput(0)};
     auto cat14 = network->addConcatenation(inputTensors14, 2);
-    auto c3_15 = C3(network, weightMap, *cat14->getOutput(0), get_width(1536, gw), get_width(768, gw), get_depth(3, gd), false, 1, 0.5, "model.15");
+    auto c3_15 = C3(network, weightMap, *cat14->getOutput(0), get_width(1536, gw), get_width(768, gw), get_depth(3, gd),
+                    false, 1, 0.5, "model.15");
 
     auto conv16 = convBlock(network, weightMap, *c3_15->getOutput(0), get_width(512, gw), 1, 1, 1, "model.16");
     auto upsample17 = network->addResize(*conv16->getOutput(0));
     assert(upsample17);
     upsample17->setResizeMode(ResizeMode::kNEAREST);
     upsample17->setOutputDimensions(c3_6->getOutput(0)->getDimensions());
-    ITensor* inputTensors18[] = { upsample17->getOutput(0), c3_6->getOutput(0) };
+    ITensor *inputTensors18[] = {upsample17->getOutput(0), c3_6->getOutput(0)};
     auto cat18 = network->addConcatenation(inputTensors18, 2);
-    auto c3_19 = C3(network, weightMap, *cat18->getOutput(0), get_width(1024, gw), get_width(512, gw), get_depth(3, gd), false, 1, 0.5, "model.19");
+    auto c3_19 = C3(network, weightMap, *cat18->getOutput(0), get_width(1024, gw), get_width(512, gw), get_depth(3, gd),
+                    false, 1, 0.5, "model.19");
 
     auto conv20 = convBlock(network, weightMap, *c3_19->getOutput(0), get_width(256, gw), 1, 1, 1, "model.20");
     auto upsample21 = network->addResize(*conv20->getOutput(0));
     assert(upsample21);
     upsample21->setResizeMode(ResizeMode::kNEAREST);
     upsample21->setOutputDimensions(c3_4->getOutput(0)->getDimensions());
-    ITensor* inputTensors21[] = { upsample21->getOutput(0), c3_4->getOutput(0) };
+    ITensor *inputTensors21[] = {upsample21->getOutput(0), c3_4->getOutput(0)};
     auto cat22 = network->addConcatenation(inputTensors21, 2);
-    auto c3_23 = C3(network, weightMap, *cat22->getOutput(0), get_width(512, gw), get_width(256, gw), get_depth(3, gd), false, 1, 0.5, "model.23");
+    auto c3_23 = C3(network, weightMap, *cat22->getOutput(0), get_width(512, gw), get_width(256, gw), get_depth(3, gd),
+                    false, 1, 0.5, "model.23");
 
     auto conv24 = convBlock(network, weightMap, *c3_23->getOutput(0), get_width(256, gw), 3, 2, 1, "model.24");
-    ITensor* inputTensors25[] = { conv24->getOutput(0), conv20->getOutput(0) };
+    ITensor *inputTensors25[] = {conv24->getOutput(0), conv20->getOutput(0)};
     auto cat25 = network->addConcatenation(inputTensors25, 2);
-    auto c3_26 = C3(network, weightMap, *cat25->getOutput(0), get_width(1024, gw), get_width(512, gw), get_depth(3, gd), false, 1, 0.5, "model.26");
+    auto c3_26 = C3(network, weightMap, *cat25->getOutput(0), get_width(1024, gw), get_width(512, gw), get_depth(3, gd),
+                    false, 1, 0.5, "model.26");
 
     auto conv27 = convBlock(network, weightMap, *c3_26->getOutput(0), get_width(512, gw), 3, 2, 1, "model.27");
-    ITensor* inputTensors28[] = { conv27->getOutput(0), conv16->getOutput(0) };
+    ITensor *inputTensors28[] = {conv27->getOutput(0), conv16->getOutput(0)};
     auto cat28 = network->addConcatenation(inputTensors28, 2);
-    auto c3_29 = C3(network, weightMap, *cat28->getOutput(0), get_width(1536, gw), get_width(768, gw), get_depth(3, gd), false, 1, 0.5, "model.29");
+    auto c3_29 = C3(network, weightMap, *cat28->getOutput(0), get_width(1536, gw), get_width(768, gw), get_depth(3, gd),
+                    false, 1, 0.5, "model.29");
 
     auto conv30 = convBlock(network, weightMap, *c3_29->getOutput(0), get_width(768, gw), 3, 2, 1, "model.30");
-    ITensor* inputTensors31[] = { conv30->getOutput(0), conv12->getOutput(0) };
+    ITensor *inputTensors31[] = {conv30->getOutput(0), conv12->getOutput(0)};
     auto cat31 = network->addConcatenation(inputTensors31, 2);
-    auto c3_32 = C3(network, weightMap, *cat31->getOutput(0), get_width(2048, gw), get_width(1024, gw), get_depth(3, gd), false, 1, 0.5, "model.32");
+    auto c3_32 = C3(network, weightMap, *cat31->getOutput(0), get_width(2048, gw), get_width(1024, gw),
+                    get_depth(3, gd), false, 1, 0.5, "model.32");
 
     /* ------ detect ------ */
-    IConvolutionLayer* det0 = network->addConvolutionNd(*c3_23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.0.weight"], weightMap["model.33.m.0.bias"]);
-    IConvolutionLayer* det1 = network->addConvolutionNd(*c3_26->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.1.weight"], weightMap["model.33.m.1.bias"]);
-    IConvolutionLayer* det2 = network->addConvolutionNd(*c3_29->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.2.weight"], weightMap["model.33.m.2.bias"]);
-    IConvolutionLayer* det3 = network->addConvolutionNd(*c3_32->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{ 1, 1 }, weightMap["model.33.m.3.weight"], weightMap["model.33.m.3.bias"]);
+    IConvolutionLayer *det0 = network->addConvolutionNd(*c3_23->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{1, 1},
+                                                        weightMap["model.33.m.0.weight"],
+                                                        weightMap["model.33.m.0.bias"]);
+    IConvolutionLayer *det1 = network->addConvolutionNd(*c3_26->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{1, 1},
+                                                        weightMap["model.33.m.1.weight"],
+                                                        weightMap["model.33.m.1.bias"]);
+    IConvolutionLayer *det2 = network->addConvolutionNd(*c3_29->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{1, 1},
+                                                        weightMap["model.33.m.2.weight"],
+                                                        weightMap["model.33.m.2.bias"]);
+    IConvolutionLayer *det3 = network->addConvolutionNd(*c3_32->getOutput(0), 3 * (Yolo::CLASS_NUM + 5), DimsHW{1, 1},
+                                                        weightMap["model.33.m.3.weight"],
+                                                        weightMap["model.33.m.3.bias"]);
 
-    auto yolo = addYoLoLayer(network, weightMap, "model.33", std::vector<IConvolutionLayer*>{det0, det1, det2, det3});
+    auto yolo = addYoLoLayer(network, weightMap, "model.33", std::vector<IConvolutionLayer *>{det0, det1, det2, det3});
     yolo->getOutput(0)->setName(OUTPUT_BLOB_NAME);
     network->markOutput(*yolo->getOutput(0));
 
@@ -235,25 +283,25 @@ ICudaEngine* build_engine_p6(unsigned int maxBatchSize, IBuilder* builder, IBuil
 #endif
 
     std::cout << "Building engine, please wait for a while..." << std::endl;
-    ICudaEngine* engine = builder->buildEngineWithConfig(*network, *config);
+    ICudaEngine *engine = builder->buildEngineWithConfig(*network, *config);
     std::cout << "Build engine successfully!" << std::endl;
 
     // Don't need the network any more
     network->destroy();
 
     // Release host memory
-    for (auto& mem : weightMap)
-    {
-        free((void*)(mem.second.values));
+    for (auto &mem: weightMap) {
+        free((void *) (mem.second.values));
     }
 
     return engine;
 }
 
-void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p6, float& gd, float& gw, std::string& wts_name) {
+void APIToModel(unsigned int maxBatchSize, IHostMemory **modelStream, bool &is_p6, float &gd, float &gw,
+                std::string &wts_name) {
     // Create builder
-    IBuilder* builder = createInferBuilder(gLogger);
-    IBuilderConfig* config = builder->createBuilderConfig();
+    IBuilder *builder = createInferBuilder(gLogger);
+    IBuilderConfig *config = builder->createBuilderConfig();
 
     // Create model to populate the network, then set the outputs and create an engine
     ICudaEngine *engine = nullptr;
@@ -273,16 +321,18 @@ void APIToModel(unsigned int maxBatchSize, IHostMemory** modelStream, bool& is_p
     config->destroy();
 }
 
-void doInference(IExecutionContext& context, cudaStream_t& stream, void **buffers, float* output, int batchSize) {
+void doInference(IExecutionContext &context, cudaStream_t &stream, void **buffers, float *output, int batchSize) {
     // infer on the batch asynchronously, and DMA output back to host
     //CUDA_CHECK(cudaMemcpyAsync(buffers[0], input, batchSize * 3 * INPUT_H * INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream));
     context.enqueue(batchSize, buffers, stream, nullptr);
 
-    CUDA_CHECK(cudaMemcpyAsync(output, buffers[1], batchSize * OUTPUT_SIZE * sizeof(float), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpyAsync(output, buffers[1], batchSize * OUTPUT_SIZE * sizeof(float), cudaMemcpyDeviceToHost,
+                               stream));
     cudaStreamSynchronize(stream);
 }
 
-bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bool& is_p6, float& gd, float& gw, std::string& img_dir) {
+bool parse_args(int argc, char **argv, std::string &wts, std::string &engine, bool &is_p6, float &gd, float &gw,
+                std::string &img_dir) {
     if (argc < 4) return false;
     if (std::string(argv[1]) == "-s" && (argc == 5 || argc == 7)) {
         wts = std::string(argv[2]);
@@ -320,14 +370,34 @@ bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bo
     }
     return true;
 }
-void imageCB(const sensor_msgs::ImageConstPtr& msg);
 
-int main(int argc, char** argv) {
+
+radar_msgs::points
+rect2msg(std::vector<Yolo::Detection>::iterator it, cv::Mat &img) {
+    radar_msgs::points msg_it;
+    cv::Rect r = get_rect(img, it->bbox);
+    msg_it.id = it->class_id;
+    if (msg_it.id == 0)msg_it.color = "red";
+    else msg_it.color = "blue";
+    std::vector<radar_msgs::point> rect_point(2);
+    rect_point[0].x = (float) r.x;
+    rect_point[0].y = (float) r.y;
+    rect_point[1].x = (float) (r.x + r.width);
+    rect_point[1].y = (float) (r.y + r.height);
+    msg_it.data = rect_point;
+    //draw rectangles on img
+    cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
+    cv::putText(img, std::to_string((int) it->class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+    return msg_it;
+}
+
+int main(int argc, char **argv) {
     cudaSetDevice(DEVICE);
 
     std::string wts_name = "";
     std::string engine_name = std::string(PACK_PATH) + "/yolov5s.engine";
-    
+
     // bool is_p6 = false;
     // float gd = 0.0f, gw = 0.0f;
 
@@ -362,37 +432,29 @@ int main(int argc, char** argv) {
     assert(inputIndex == 0);
     assert(outputIndex == 1);
     // Create GPU buffers on device
-    CUDA_CHECK(cudaMalloc((void**)&buffers[inputIndex], BATCH_SIZE * 3 * INPUT_H * INPUT_W * sizeof(float)));
-    CUDA_CHECK(cudaMalloc((void**)&buffers[outputIndex], BATCH_SIZE * OUTPUT_SIZE * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers[inputIndex], BATCH_SIZE * 3 * INPUT_H * INPUT_W * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers[outputIndex], BATCH_SIZE * OUTPUT_SIZE * sizeof(float)));
 
     // Create stream
     CUDA_CHECK(cudaStreamCreate(&stream));
     // prepare input data cache in pinned memory 
-    CUDA_CHECK(cudaMallocHost((void**)&img_host, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
+    CUDA_CHECK(cudaMallocHost((void **) &img_host, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
     // prepare input data cache in device memory
-    CUDA_CHECK(cudaMalloc((void**)&img_device, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
-    
+    CUDA_CHECK(cudaMalloc((void **) &img_device, MAX_IMAGE_INPUT_SIZE_THRESH * 3));
 
-    ros::init(argc, argv, "image_subscribe");
+
+    ros::init(argc, argv, "yolov5");
     ros::start();
     ros::NodeHandle n;
-    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
+//    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
+    ros::Subscriber farImageSub = n.subscribe("/MVcamera_node/image_raw", 1, &imageCB);
     ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &imageCB);
 
     //发布识别到的目标坐标
-    ros::Publisher relative_coordinate =n.advertise< radar_msgs::relative_coordinate>("relative_coordinate",11);
-    car_point[10].id=255;
-    ros::Rate loop_rate(60);
-    while (ros::ok())
-	{
-        for (int i=0;i<car_point.size();i++)
-        {
-            relative_coordinate.publish(car_point[i]);
-        }
-        ros::spinOnce();
-		loop_rate.sleep();
-    }
-    
+    rectangles= n.advertise<radar_msgs::points>("rectangles", 20);
+    ros::Rate loop_rate(30);
+        ros::spin();
+
     // Release stream and buffers
     cudaStreamDestroy(stream);
     CUDA_CHECK(cudaFree(img_device));
@@ -409,58 +471,59 @@ int main(int argc, char** argv) {
 }
 
 void imageCB(
-    const sensor_msgs::ImageConstPtr& msg
-    )
-{
+        const sensor_msgs::ImageConstPtr &msg
+) {
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+
     int fcount = 1;
     std::vector<cv::Mat> imgs_buffer(BATCH_SIZE);
-    float* buffer_idx = (float*)buffers[inputIndex];
-    if(img.empty())
-    {
+    float *buffer_idx = (float *) buffers[inputIndex];
+    if (img.empty()) {
         printf("img empty!!!!\t");
         assert(!img.empty());
     }
 
     cv::Mat img_raw;
     img.copyTo(img_raw);
-    size_t  size_image = img.cols * img.rows * 3;
+    size_t size_image = img.cols * img.rows * 3;
     // size_t  size_image_dst = INPUT_H * INPUT_W * 3;
     //copy data to pinned memory
-    memcpy(img_host,img.data,size_image);
+    memcpy(img_host, img.data, size_image);
     //copy data to device memory
-    CUDA_CHECK(cudaMemcpyAsync(img_device,img_host,size_image,cudaMemcpyHostToDevice,stream));
+    CUDA_CHECK(cudaMemcpyAsync(img_device, img_host, size_image, cudaMemcpyHostToDevice, stream));
     preprocess_kernel_img(img_device, img.cols, img.rows, buffer_idx, INPUT_W, INPUT_H, stream);
-    
+
     // Run inference
     auto start = std::chrono::system_clock::now();
-    doInference(*context, stream, (void**)buffers, prob, BATCH_SIZE);
+    doInference(*context, stream, (void **) buffers, prob, BATCH_SIZE);
     auto end = std::chrono::system_clock::now();
-    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << "ms" << std::endl;
     std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
-    
-    auto& res = batch_res[0];
+
+    auto &res = batch_res[0];
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
 
-    //将识别得到的目标框出
-    for (size_t j = 0; j < res.size(); j++) {
-        cv::Rect r = get_rect(img, res[j].bbox);//cv::get_rect函数实现了yolo数据结构中的bbox到opencv数据结构中的Rect之间的转换
-        //将车辆坐标赋值给自定义消息类型relative_coordinate
-        if(j<car_point.size())
-        {
-            car_point[j].frame_id = msg->header.frame_id;//用于为下一订阅节点提供图片的来源信息
-            car_point[j].id=j+1;
-            car_point[j].xaxis=(float)r.x+(float)r.width/2;
-            car_point[j].yaxis=(float)r.x+(float)r.height/2;
-        }
-        // std::cout<<r.x<<"\t"<<r.y<<std::endl;
-        cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
-        cv::putText(img, std::to_string((int)res[j].class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+    //将识别得到的目标框出并发送ROS消息
+    for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
+        radar_msgs::points rect_msg=rect2msg(it, img);
+        if(it==res.begin())
+            rect_msg.text="first";
+        else if(it==res.end()-1)
+            rect_msg.text="last";
+        rectangles.publish(rect_msg);
     }
-    std::cout<<car_point.size()<<std::endl;
+    if(res.size()==0)
+    {
+        radar_msgs::points rect_msg;
+        rect_msg.text="none";
+        rectangles.publish(rect_msg);
+    }
+
+    std::cout << res.size() << std::endl;
     cv::imshow("test", img);
     cv::waitKey(1);
-    
+
 }
 

@@ -24,7 +24,7 @@ Size small_size = Size(640, 480);
 //Size dist_size=large_size;
 Size dist_size=small_size;
 // string video_source="/home/chris/D/datasets/DJI ROCO/djtu_vs_sjtu_Trim3.mp4";
-string video_source="/media/chris/HIKVISION/RMvideo/djtu_vs_sjtu_Trim3.mp4";
+string video_source="/media/chris/HIKVISION/RM/RMvideo/djtu_vs_sjtu_Trim3.mp4";
 // string video_source="/home/chris/D/datasets/our_own/close1Video_2021-5-29_10-42-21.avi";
 Mat img_show;
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   ros::init(argc,argv,"video_publisher");
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);// useful when publish imgs
-  image_transport::Publisher pub = it.advertise("/MVCamera/image_raw", 1);
+  image_transport::Publisher pub = it.advertise("/MVcamera_node/image_raw", 1);
   ros::Subscriber is_large_sub=nh.subscribe("/mv_param/is_large",1,get_is_large);
 
   // nh.getParam("/video_source",video_source);

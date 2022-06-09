@@ -8,11 +8,11 @@ project(radar_msgs)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
-  message_runtime
-  sensor_msgs
-  std_msgs
-)
+        message_generation
+        message_runtime
+        sensor_msgs
+        std_msgs
+        )
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -20,7 +20,8 @@ add_message_files(
         relative_coordinate.msg
         point.msg
         points.msg
-	small_map.msg
+        distance_point.msg
+        world_point.msg
 )
 
 ## Generate services in the 'srv' folder
