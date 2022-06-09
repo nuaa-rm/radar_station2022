@@ -15,7 +15,7 @@ using namespace cv;
 struct car_point
 {
     Point2f point;
-    bool color //红色为0 蓝色为1
+    bool color; //红色为0 蓝色为1
 };
 struct frame_header//消息头
 {
@@ -225,7 +225,7 @@ int main (int argc, char** argv)
             {
                 sp.sendMapMsgs(1, worldPoints[0].point.x, worldPoints[0].point.x);
             }
-            worldPoints.erase(worldPoints.begin())
+            worldPoints.erase(worldPoints.begin());
         }
         else
         {
