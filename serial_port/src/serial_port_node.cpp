@@ -213,22 +213,27 @@ int main (int argc, char** argv)
     ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
     float x = 0, y = 0;
+    int r = 1, b = 1;
     while(ros::ok())
     {
         if(!worldPoints.empty())
         {
             if(worldPoints[0].color)
             {
-                sp.sendMapMsgs(101, worldPoints[0].point.x, worldPoints[0].point.x);
+                sp.sendMapMsgs(100 + b, worldPoints[0].point.x, worldPoints[0].point.x);
+                b++;
             }
             else
             {
-                sp.sendMapMsgs(1, worldPoints[0].point.x, worldPoints[0].point.x);
+                sp.sendMapMsgs(r, worldPoints[0].point.x, worldPoints[0].point.x);
+                r++;
             }
             worldPoints.erase(worldPoints.begin());
         }
         else
         {
+            r = 1;
+            b = 1;
             ros::spinOnce();
         }
 
