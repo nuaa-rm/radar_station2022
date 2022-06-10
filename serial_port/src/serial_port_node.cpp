@@ -9,6 +9,7 @@
 #include "radar_msgs/points.h"
 #include "radar_msgs/small_map.h"
 #include <opencv2/opencv.hpp>
+#include "std_msgs/Int8.h"
 using namespace std;
 using namespace cv;
 
@@ -53,12 +54,13 @@ struct interactive_with_robots_msgs//目前是专门给工程写的
 } __attribute__((packed));//最大10HZ
 struct game_status_msgs_data
 {
-    uint8_t game_type = 1;
-    uint16_t game_progress = 0;
+    uint8_t game_type : 4;
+    uint8_t game_progress : 4;
     uint16_t stage_remain_time = 0;
     uint64_t SyncTimeStamp = 0;
 
 } __attribute__((packed));
+
 struct game_status_msgs //1HZ
 {
     frame_header head;
@@ -73,9 +75,8 @@ public:
     map_msg mapMsg;
     interactive_with_robots_msgs interactiveWithRobotsMsgs;
     game_status_msgs gameStatusMsgs;
-    uint8_t receiveData[200];
+    uint8_t receiveData[1000];
     bool is_enemy_red = true;
-    //vector<point>points;
     int serial_port_init()
     {
         ser.setPort("/dev/ttyUSB0");
@@ -136,13 +137,17 @@ public:
         if(ser.available())
         {
             ser.read(receiveData, ser.available());
-            gameStatusMsgs = *(game_status_msgs*)receiveData;
+            gameStatusMsgs = (*(game_status_msgs*)receiveData);
             if((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs.head) - sizeof(gameStatusMsgs.head.crc)), 0xff)) && (gameStatusMsgs.crc == get_CRC16_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)), 0xffff)))
             {
 
+                cout << gameStatusMsgs.data.game_progress << endl;
                 //这里还没写完，需要新的消息。
-
                 return true;
+            }
+            else
+            {
+                cout << "CRC failed" << endl;
             }
         }
         return false;
@@ -151,6 +156,10 @@ public:
 };
 serial_port sp;
 vector<car_point>worldPoints;
+void mineralCallback(const std_msgs::Int8& msg)
+{
+    sp.sendInteractiveMsgs(msg.data);
+}
 void worldPointsCallback(const radar_msgs::points& msg)
 {
 
@@ -165,22 +174,22 @@ void worldPointsCallback(const radar_msgs::points& msg)
                 carPoint.point = Point(msg.data[i].x, msg.data[i].y);
                 worldPoints.insert(worldPoints.begin(), carPoint);
             }
-            else
+            /*else
             {
                 car_point carPoint;
                 carPoint.color = 0;
                 carPoint.point = Point(msg.data[i].x, msg.data[i].y);
                 worldPoints.push_back(carPoint);
-            }
+            }*/
         }
         else if(msg.color == "blue")
         {
             if(sp.is_enemy_red)
             {
-                car_point carPoint;
+                /*car_point carPoint;
                 carPoint.color = 1;
                 carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                worldPoints.push_back(carPoint);
+                worldPoints.push_back(carPoint);*/
             }
             else
             {
@@ -210,6 +219,7 @@ int main (int argc, char** argv)
     }
     ros::param::get("is_enemy_red", sp.is_enemy_red);
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
+    ros::Subscriber mineralSub = nh.subscribe("/mineral", 1, &mineralCallback);
     ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
     float x = 0, y = 0;
@@ -235,8 +245,23 @@ int main (int argc, char** argv)
             r = 1;
             b = 1;
             ros::spinOnce();
+            /*for(int i = 0; i < 10; i++)
+            {
+                car_point carPoint;
+                carPoint.point = Point2f(1.4 * i, 2.8 * i);
+                if(i < 5)
+                {
+                    carPoint.color = true;
+                }
+                else
+                {
+                    carPoint.color = false;
+                }
+                worldPoints.push_back(carPoint);
+            }*/
+            //测试用
         }
-
+        sp.receiveMsgs();
         //循环休眠
         loop.sleep();
     }
