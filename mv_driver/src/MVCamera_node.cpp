@@ -46,7 +46,7 @@ public:
     string rcd_path_;
     VideoSaver saver;
     MVCamNode():
-        node_("~")
+        node_()
     {
         image_transport::ImageTransport it(node_);
         cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
@@ -174,10 +174,12 @@ public:
         if(deviceID == FARCAM)
         {
             imgHead.frame_id = "sensor_far";
+//            cout<<"far:"<<rawImg.size()<<endl;
         }
         else if(deviceID == CLOSECAM)
         {
             imgHead.frame_id = "sensor_close";
+//            cout<<"close:"<<rawImg.size()<<endl;
         }
         imgHead.stamp=imgTime;
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
