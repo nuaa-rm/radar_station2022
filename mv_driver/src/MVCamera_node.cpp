@@ -70,6 +70,7 @@ public:
         }
         node_.param("/framerate", framerate_, 360);
         node_.getParam("/is_record", is_record_);
+        string project_path(PROJECT_PATH);
         if(deviceID == FARCAM)
         {
             rcd_path_ = std::string(PROJECT_PATH) + "/sensor_far";
