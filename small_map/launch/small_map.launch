@@ -1,7 +1,7 @@
 <launch>
     <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
     <rosparam command="load" file="$(find calibrateCamera)/src/yaml/calibrate.yaml" />
-
+    <rosparam command="load" file="$(find calibrateCamera)/src/yaml/pnp_object.yaml" />
     <arg name="lvx_file_path" default="livox_test.lvx"/>
     <arg name="bd_list" default="100000000000000"/>
     <arg name="xfer_format" default="0"/>
@@ -29,13 +29,14 @@
 
 <!--     <node name="MVcamera_node" pkg="mv_driver" type="mv_driver_node"  output="screen" respawn="true"/> -->
     <node name="yolov5"        pkg="yolo"      type="yolov5"  output="screen" respawn="true"/>
-    <node name="livox_lidar_publisher"
-          pkg="livox_ros_driver"
-          type="livox_ros_driver_node" required="true"
-          output="screen" args="$(arg cmdline_arg)"/>
+<!--     <node name="livox_lidar_publisher" -->
+<!--           pkg="livox_ros_driver" -->
+<!--           type="livox_ros_driver_node" required="true" -->
+<!--           output="screen" args="$(arg cmdline_arg)"/> -->
     <node name="get_depth_node" pkg="get_depth" type="get_depth_node"  output="screen" respawn="true"/>
 <!--     <group if="$(arg rviz_enable)"> -->
 <!--     		<node name="rviz" pkg="rviz" type="rviz" respawn="true" -->
 <!--     		args="-d $(find livox_ros_driver)/config/display_lidar_points.rviz"/> -->
 <!--     </group> -->
+
 </launch>

@@ -36,9 +36,12 @@ static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detect
 const char *INPUT_BLOB_NAME = "data";
 const char *OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
-ros::Publisher rectangles;
+ros::Publisher far_rectangles;
+ros::Publisher close_rectangles;
+
 //std::vector<radar_msgs::points> car_points;//the 2 points of a rectangle, saved in one member of the car_points
-void imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
+void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
+void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void
 rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::points>::iterator msg_it, cv::Mat &img);
 
@@ -447,13 +450,14 @@ int main(int argc, char **argv) {
     ros::start();
     ros::NodeHandle n;
 //    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
-    ros::Subscriber farImageSub = n.subscribe("/MVcamera_node/image_raw", 1, &imageCB);
-    ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &imageCB);
+    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &far_imageCB);
+    ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &close_imageCB);
 
     //发布识别到的目标坐标
-    rectangles= n.advertise<radar_msgs::points>("rectangles", 20);
+    far_rectangles = n.advertise<radar_msgs::points>("far_rectangles", 20);
+    close_rectangles = n.advertise<radar_msgs::points>("close_rectangles", 20);
     ros::Rate loop_rate(30);
-        ros::spin();
+    ros::spin();
 
     // Release stream and buffers
     cudaStreamDestroy(stream);
@@ -470,7 +474,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void imageCB(
+void far_imageCB(
         const sensor_msgs::ImageConstPtr &msg
 ) {
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
@@ -506,23 +510,85 @@ void imageCB(
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
 
     //将识别得到的目标框出并发送ROS消息
-    for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
-        radar_msgs::points rect_msg=rect2msg(it, img);
-        if(it==res.begin())
-            rect_msg.text="first";
-        else if(it==res.end()-1)
-            rect_msg.text="last";
-        rectangles.publish(rect_msg);
+    if (res.size() != 0) {
+        for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
+            radar_msgs::points rect_msg = rect2msg(it, img);
+            if (it == res.begin())
+                rect_msg.text = "far_first";
+            else if (it == res.end() - 1)
+                rect_msg.text = "far_last";
+            else
+                rect_msg.text = "far";
+            far_rectangles.publish(rect_msg);
+        }
     }
-    if(res.size()==0)
-    {
+    else{
         radar_msgs::points rect_msg;
-        rect_msg.text="none";
-        rectangles.publish(rect_msg);
+        rect_msg.text = "none";
+        far_rectangles.publish(rect_msg);
+    }
+    std::cout << res.size() << std::endl;
+    cv::imshow("yolo_far", img);
+    cv::waitKey(1);
+
+}
+
+void close_imageCB(
+        const sensor_msgs::ImageConstPtr &msg
+) {
+    cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+
+    int fcount = 1;
+    std::vector<cv::Mat> imgs_buffer(BATCH_SIZE);
+    float *buffer_idx = (float *) buffers[inputIndex];
+    if (img.empty()) {
+        printf("img empty!!!!\t");
+        assert(!img.empty());
+    }
+
+    cv::Mat img_raw;
+    img.copyTo(img_raw);
+    size_t size_image = img.cols * img.rows * 3;
+    // size_t  size_image_dst = INPUT_H * INPUT_W * 3;
+    //copy data to pinned memory
+    memcpy(img_host, img.data, size_image);
+    //copy data to device memory
+    CUDA_CHECK(cudaMemcpyAsync(img_device, img_host, size_image, cudaMemcpyHostToDevice, stream));
+    preprocess_kernel_img(img_device, img.cols, img.rows, buffer_idx, INPUT_W, INPUT_H, stream);
+
+    // Run inference
+    auto start = std::chrono::system_clock::now();
+    doInference(*context, stream, (void **) buffers, prob, BATCH_SIZE);
+    auto end = std::chrono::system_clock::now();
+    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << "ms" << std::endl;
+    std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
+
+    auto &res = batch_res[0];
+    //识别出的车辆坐标被保存至res
+    nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
+
+    //将识别得到的目标框出并发送ROS消息
+    if (res.size() != 0) {
+        for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
+            radar_msgs::points rect_msg = rect2msg(it, img);
+            if (it == res.begin())
+                rect_msg.text = "close_first";
+            else if (it == res.end() - 1)
+                rect_msg.text = "close_last";
+            else
+                rect_msg.text = "close";
+            close_rectangles.publish(rect_msg);
+        }
+    }
+    else{
+        radar_msgs::points rect_msg;
+        rect_msg.text = "none";
+        close_rectangles.publish(rect_msg);
     }
 
     std::cout << res.size() << std::endl;
-    cv::imshow("test", img);
+    cv::imshow("yolo_close", img);
     cv::waitKey(1);
 
 }

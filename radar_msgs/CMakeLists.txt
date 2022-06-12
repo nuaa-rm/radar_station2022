@@ -22,6 +22,7 @@ add_message_files(
         points.msg
         distance_point.msg
         world_point.msg
+        small_map.msg
 )
 
 ## Generate services in the 'srv' folder

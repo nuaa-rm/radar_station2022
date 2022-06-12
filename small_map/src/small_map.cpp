@@ -24,15 +24,15 @@ cv::Mat img;
 
 int cnt = 0;
 //世界坐标,取四个点用于solvePnP的objects_array
-vector<cv::Point3f> objectPoints(5);
+vector<cv::Point3f> objectPoints(4);
 //像平面坐标,鼠标在图像上选点并用于solvePnP的imagePoints
-vector<cv::Point2f> imagePoints(5);
+vector<cv::Point2f> imagePoints(4);
 vector<cv::Point2f> reprojectPoints(4);
 vector<string> imagePoints_string(4);
 //相机内参矩阵
 // cv::Mat CamMatrix_ = (cv::Mat_<double>(3,3) << 919.1319, 0, 645.5211, 0, 919.7624, 539.8345, 0, 0, 1);
 //cv::Mat CamMatrix_ = (cv::Mat_<double>(3, 3) << 865.4454, 0, 307.764, 0, 865.9519, 221.537, 0, 0, 1);
-cv::Mat CamMatrix_ = (cv::Mat_<double>(3, 3) << 1965.8110, 0, 687.967095, 0, 1937.942874, 487.860580, 0, 0, 1);
+cv::Mat CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
 //是否求出外参矩阵的标志位
 bool if_pnp = false;
 //旋转矩阵和平移矩阵
@@ -44,7 +44,8 @@ Mat T = Mat::zeros(3, 1, CV_64FC1);
 int calc_flag = 0;
 int cout_flag = 0;
 //相机畸变系数k1、k2、p1、p2、k3
-cv::Mat distCoeffs_ = cv::Mat(1, 5, CV_64FC1, cv::Scalar::all(0));
+cv::Mat distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
+string param_name;
 
 void onMouse(int event, int x, int y, int flags, void *ustc);//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
 void imageCB(const sensor_msgs::ImageConstPtr &msg);
@@ -54,6 +55,7 @@ void reproject(void);//反投影
 void depthShow(Mat &input);//将深度图像归一化成灰度图并发布话题进行展示
 void distPointCallback(const radar_msgs::points &input);
 
+void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_); //图像必须提前矫正
 
 int main(int argc, char **argv) {
 
@@ -74,13 +76,31 @@ int main(int argc, char **argv) {
     ros::param::get("/point4/x", objectPoints[3].x);
     ros::param::get("/point4/y", objectPoints[3].y);
     ros::param::get("/point4/z", objectPoints[3].z);
-    ros::param::get("/point5/x", objectPoints[4].x);
-    ros::param::get("/point5/y", objectPoints[4].y);
-    ros::param::get("/point5/z", objectPoints[4].z);
+//    ros::param::get("/point5/x", objectPoints[4].x);
+//    ros::param::get("/point5/y", objectPoints[4].y);
+//    ros::param::get("/point5/z", objectPoints[4].z);
+    int id = 0;
+    param_name = n.getNamespace();
+    ros::param::get(param_name + "/camera_matrix/zerozero", CamMatrix_.at<double>(0, 0));
+    ros::param::get(param_name + "/camera_matrix/zerotwo", CamMatrix_.at<double>(0, 2));
+    ros::param::get(param_name + "/camera_matrix/oneone", CamMatrix_.at<double>(1, 1));
+    ros::param::get(param_name + "/camera_matrix/onetwo", CamMatrix_.at<double>(1, 2));
+    ros::param::get(param_name + "/camera_matrix/twotwo", CamMatrix_.at<double>(2, 2));
+    CamMatrix_.at<double>(0, 1) = 0;
+    CamMatrix_.at<double>(1, 0) = 0;
+    CamMatrix_.at<double>(2, 0) = 0;
+    CamMatrix_.at<double>(2, 1) = 0;
+    cout << CamMatrix_ << endl;
+    ros::param::get(param_name + "/distortion_coefficient/zero", distCoeffs_.at<double>(0, 0));
+    ros::param::get(param_name + "/distortion_coefficient/one", distCoeffs_.at<double>(1, 0));
+    ros::param::get(param_name + "/distortion_coefficient/two", distCoeffs_.at<double>(2, 0));
+    ros::param::get(param_name + "/distortion_coefficient/three", distCoeffs_.at<double>(3, 0));
+    ros::param::get(param_name + "/distortion_coefficient/four", distCoeffs_.at<double>(4, 0));
+    cout << distCoeffs_ << endl;
     // ros::Subscriber msg_sub = n.subscribe("relative_coordinate", 100, msgCallback);
-//    imagesub = n.subscribe("/MVCamera/image_raw", 5, &imageCB);
-    ros::Subscriber imageSub = n.subscribe("/displayer/cameraOne/calibration", 1, &calibration);
-    ros::Subscriber distPointSub = n.subscribe("/distance_point", 100, &distPointCallback);
+//    ros::Subscriber imagesub = n.subscribe(param_name + "/image_raw", 1, &imageCB);
+    ros::Subscriber imageSub = n.subscribe(param_name + "/calibration", 1, &calibration);
+    ros::Subscriber distPointSub = n.subscribe(param_name+"/distance_point", 100, &distPointCallback);
 //    ros::Subscriber distPointSub = n.subscribe("/dist", 10, &distPointCallback);
     worldPointPub = n.advertise<radar_msgs::points>("/world_point", 4);
     ros::Rate loop_rate(10);
@@ -115,6 +135,31 @@ void onMouse(int event, int x, int y, int flags, void *ustc)//event鼠标事件�
     }
 }
 
+void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_) //图像必须提前矫正
+{
+    double matrix3[4][1] = {x, y, z, 1};//激光雷达系中坐标
+
+    // transform into the opencv matrix*/
+    Mat coordinate(4, 1, CV_64F, matrix3);
+    Mat uni_matrix(3, 4, CV_64FC1);
+    hconcat(R, T, uni_matrix);
+    // calculate the result of u and v
+    Mat result = CamMatrix_ * uni_matrix * coordinate;
+    float u = result.at<double>(0, 0);
+    float v = result.at<double>(1, 0);
+    float depth = result.at<double>(2, 0);
+    u /= depth;
+    v /= depth;
+    int x1 = floor(u + 0.5);
+    int y1 = floor(v + 0.5);
+    cout << CamMatrix_ << endl << uni_matrix << endl << coordinate << endl;
+    cout << "project point:   " << Point(x1, y1) << endl;
+    if (x1 < imgCols && x1 >= 0 && y1 < imgRows && y1 >= 0) {
+        circle(output, Point(x1, y1), 2, Scalar(255, 0, 0), 2, 2, 0);
+    }
+
+}
+
 void distPointCallback(const radar_msgs::points &input) {
     if (calc_flag == 1) {
         Mat invR;
@@ -127,10 +172,10 @@ void distPointCallback(const radar_msgs::points &input) {
         Mat calcWorld = invR * (invM * input.data[2].x * x8_pixel - T);//2D-3D变换
         double x = calcWorld.at<double>(0, 0);
         double y = calcWorld.at<double>(1, 0);
-        calcWorld/=1000;
-        cout << invR << endl << invM << endl << T;
-        cout << input.data[2].x << " " << x << "  " << y << endl;
-        cout << x8_pixel << endl;
+        calcWorld /= 1000;
+//        cout << invR << endl << invM << endl << T;
+//        cout << input.data[2].x << " " << x << "  " << y << endl;
+//        cout << x8_pixel << endl;
         cout << calcWorld << endl;
 
 //        cout << x8_pixel.at<double>(0,0) << "  " << x8_pixel.at<double>(1,0) << endl;
@@ -192,7 +237,7 @@ void calibration(const radar_msgs::points &msg) {
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
     cv::Mat abc;
     int suc = cv::solvePnPRansac(objectPoints, imagePoints, CamMatrix_, distCoeffs_, Rjacob, T, false, 100, 8.0, 0.99,
-                                 abc, cv::SOLVEPNP_P3P);
+                                 abc, cv::SOLVEPNP_AP3P);
     // int suc=cv::solvePnP(objectPoints,imagePoints,CamMatrix_,distCoeffs_,Rjacob, T,false,cv::SOLVEPNP_EPNP);
     Rodrigues(Rjacob, R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
     cout << "suc:" << suc << endl;
@@ -248,31 +293,33 @@ void imageCB(
 //            cv::circle(img, *it, 2, cv::Scalar(255, 255, 255), -1, 16, 0);//画圆
 //            textit++;
 //        }
-        if (calc_flag && cnt)//如果已经计算出了R T
+        if (calc_flag)//如果已经计算出了R T
         {
-            //反投影：
-            cv::Mat invR;
-            cv::Mat invM;
-            invert(CamMatrix_, invM);
-            invert(R, invR);
-            cv::Mat x8_pixel;
-            x8_pixel = (cv::Mat_<double>(3, 1) << reprojectPoints[0].x, reprojectPoints[0].y, 1);
-            double s1 = 5207;//21961
-            cv::Mat calcWorld = invR * (invM * s1 * x8_pixel - T);//2D-3D变换
-            if (cout_flag == 0) {
-                cout << calcWorld << endl;
-                cout_flag = 1;
-
-
+//            //反投影：
+//            cv::Mat invR;
+//            cv::Mat invM;
+//            invert(CamMatrix_, invM);
+//            invert(R, invR);
+//            cv::Mat x8_pixel;
+//            x8_pixel = (cv::Mat_<double>(3, 1) << reprojectPoints[0].x, reprojectPoints[0].y, 1);
+//            double s1 = 5207;//21961
+//            cv::Mat calcWorld = invR * (invM * s1 * x8_pixel - T);//2D-3D变换
+//            if (cout_flag == 0) {
+//                cout << calcWorld << endl;
+//                cout_flag = 1;
+            project(objectPoints[0].x,objectPoints[0].y,objectPoints[0].z,img,R,T,CamMatrix_);
+            project(objectPoints[1].x,objectPoints[1].y,objectPoints[1].z,img,R,T,CamMatrix_);
+            project(objectPoints[2].x,objectPoints[2].y,objectPoints[2].z,img,R,T,CamMatrix_);
+            project(objectPoints[3].x,objectPoints[3].y,objectPoints[3].z,img,R,T,CamMatrix_);
 //             正投影：
 //             cv::Mat x8_world,x8_img;
 //             x8_world=(cv::Mat_<double>(3,1) <<9600,9600,0);//左上角点
 //             x8_img=CamMatrix_*(R*x8_world+T);
 //             x8_img/=x8_img.at<double>(2,0);
 //             cv::circle(img,cv::Point2d(x8_img.at<double>(0,0),x8_img.at<double>(1,0)),5,cv::Scalar(0,0,255),-1,16,0);//画圆
-            }
+
         }
-        cv::imshow("reproject", img);
+        cv::imshow(param_name + "project", img);
         char key = cv::waitKey(10);
         //按q拍照
         // if(key=='q')
@@ -282,11 +329,3 @@ void imageCB(
         // }
     }
 }
-
-
-
-
-// void reproject(cv::Point2d pixel_point)
-// {
-
-// }

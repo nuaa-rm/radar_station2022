@@ -22,7 +22,7 @@ export default defineConfig({
     ],
   }],
   fastRefresh: {},
-  //mfsu: {mfName: 'mfMain'},
+  mfsu: {mfName: 'mfMain'},
   dva: {},
   dynamicImport: {
     loading: '@/components/pageLoading',

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(get_depth)
-
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -117,6 +116,7 @@ catkin_package(
 ## Build ##
 ###########
 string(REGEX REPLACE "(.+)\\src/get_depth.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
+add_subdirectory(src/project)
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -158,6 +158,7 @@ target_link_libraries(${PROJECT_NAME}_node
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
         ${PCL_LIBRARIES}
+        project_lib
         )
 message("{PCL_INCLUDE_DIRS}: ${PCL_INCLUDE_DIRS}")
 #############
