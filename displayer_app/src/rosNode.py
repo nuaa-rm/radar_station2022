@@ -112,6 +112,7 @@ class RosPathHandler(BasePathHandler):
         super().__init__(cfg)
 
     def publish(self, data):
+        print("topic:::::::::::::"+cfg['calibrationTopic'])
         msg = points()
         res = []
         i = 0

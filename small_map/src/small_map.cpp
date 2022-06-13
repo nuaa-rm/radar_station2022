@@ -21,7 +21,7 @@ ros::Publisher worldPointPub;
 radar_msgs::points worldPoint;
 radar_msgs::point point;
 cv::Mat img;
-
+int red_or_blue=0;//0 is red, 1 is blue
 int cnt = 0;
 //世界坐标,取四个点用于solvePnP的objects_array
 vector<cv::Point3f> objectPoints(4);
@@ -60,7 +60,9 @@ void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMat
 int main(int argc, char **argv) {
 
     /*solvePnP求解相机外参矩阵*/
-    ros::init(argc, argv, "point_subscribe");
+//    ros::init(argc, argv, "map_close");
+//    ros::NodeHandle n("/sensor_close");
+    ros::init(argc, argv, "small_map");
     ros::NodeHandle n;
 
     /*相机标定 Camera Calibration*/
@@ -76,6 +78,10 @@ int main(int argc, char **argv) {
     ros::param::get("/point4/x", objectPoints[3].x);
     ros::param::get("/point4/y", objectPoints[3].y);
     ros::param::get("/point4/z", objectPoints[3].z);
+    string btlcolor;
+    ros::param::get("/battle_color", btlcolor);
+    if(btlcolor=="red")red_or_blue=0;
+    if(btlcolor=="blue") red_or_blue=1;
 //    ros::param::get("/point5/x", objectPoints[4].x);
 //    ros::param::get("/point5/y", objectPoints[4].y);
 //    ros::param::get("/point5/z", objectPoints[4].z);
@@ -161,7 +167,7 @@ void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMat
 }
 
 void distPointCallback(const radar_msgs::points &input) {
-    if (calc_flag == 1) {
+    if (calc_flag == 1&&input.data[2].x!=0) {
         Mat invR;
         Mat invM;
         invert(CamMatrix_, invM);
@@ -169,16 +175,19 @@ void distPointCallback(const radar_msgs::points &input) {
         Mat x8_pixel;
         x8_pixel = (Mat_<double>(3, 1) << (double) (input.data[0].x + input.data[1].x) / 2,
                 (double) (input.data[0].y + input.data[1].y) / 2, 1);
-        Mat calcWorld = invR * (invM * input.data[2].x * x8_pixel - T);//2D-3D变换
+        x8_pixel*=(1000*input.data[2].x);
+        Mat calcWorld = invR * (invM * x8_pixel - T);//2D-3D变换
+        calcWorld /= 1000;
+        cout << calcWorld << endl;
         double x = calcWorld.at<double>(0, 0);
         double y = calcWorld.at<double>(1, 0);
-        calcWorld /= 1000;
-//        cout << invR << endl << invM << endl << T;
-//        cout << input.data[2].x << " " << x << "  " << y << endl;
-//        cout << x8_pixel << endl;
-        cout << calcWorld << endl;
-
-//        cout << x8_pixel.at<double>(0,0) << "  " << x8_pixel.at<double>(1,0) << endl;
+        if(red_or_blue==0){
+            y=field_width-y;
+        }
+        else
+        {
+            x=field_height-x;
+        }
         double width = 0.5;
         double height = 0.5;
 //        if (i == 20)i = 0;
@@ -244,38 +253,6 @@ void calibration(const radar_msgs::points &msg) {
     cout << "旋转矩阵:" << R << endl;
     cout << "平移矩阵" << T << endl;
     calc_flag = 1;
-
-
-
-    /*
-  [69.9938, 345.6]
-  [1023.94, 429.213]
-  [679.43, 777.043]
-  [419.628, 784.846]
-  [131.963, 441.476]
-  已经选出了4个点!下面进行SolvePnP求解外参矩阵。
-  suc:1
-  旋转矩阵:[-0.1939506224760869, 0.9810107994098256, 0.00098360684916865;
-   -0.1559305285710967, -0.02983829646982272, -0.9873172470504694;
-   -0.968539532647314, -0.1916441689827121, 0.1587566886598766]
-  平移矩阵[-6831.473804735295;
-   5409.432086526362;
-   24360.80329266706]
-  [17341.26296644072;
-   12429.61885740408;
-   150.919077897785]
-
-    */
-
-
-
-    // if(!img.empty())
-    // {
-    //   cv::imshow("video",img);
-    //   cv::setMouseCallback("video",onMouse,0);
-    // }
-
-
 }
 
 void imageCB(
@@ -284,15 +261,7 @@ void imageCB(
     img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
 
     if (!img.empty()) {
-        //鼠标点击事件，记录点到的图像坐标
-//        cv::imshow("reproject", img);
-//        cv::setMouseCallback("reproject", onMouse, 0);
-//        auto textit = imagePoints_string.begin();
-//        for (auto it = reprojectPoints.begin(); it < reprojectPoints.end(); it++) {
-//            cv::putText(img, (*textit).c_str(), *it, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1, 8);
-//            cv::circle(img, *it, 2, cv::Scalar(255, 255, 255), -1, 16, 0);//画圆
-//            textit++;
-//        }
+
         if (calc_flag)//如果已经计算出了R T
         {
 //            //反投影：

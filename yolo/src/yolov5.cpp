@@ -388,6 +388,7 @@ rect2msg(std::vector<Yolo::Detection>::iterator it, cv::Mat &img) {
     rect_point[1].x = (float) (r.x + r.width);
     rect_point[1].y = (float) (r.y + r.height);
     msg_it.data = rect_point;
+    std::cout << r << std::endl;
     //draw rectangles on img
     cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
     cv::putText(img, std::to_string((int) it->class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
@@ -501,8 +502,8 @@ void far_imageCB(
     auto start = std::chrono::system_clock::now();
     doInference(*context, stream, (void **) buffers, prob, BATCH_SIZE);
     auto end = std::chrono::system_clock::now();
-    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "ms" << std::endl;
+//    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+//              << "ms" << std::endl;
     std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
 
     auto &res = batch_res[0];
@@ -521,13 +522,12 @@ void far_imageCB(
                 rect_msg.text = "far";
             far_rectangles.publish(rect_msg);
         }
-    }
-    else{
+    } else {
         radar_msgs::points rect_msg;
         rect_msg.text = "none";
         far_rectangles.publish(rect_msg);
     }
-    std::cout << res.size() << std::endl;
+//    std::cout << res.size() << std::endl;
     cv::imshow("yolo_far", img);
     cv::waitKey(1);
 
@@ -560,8 +560,8 @@ void close_imageCB(
     auto start = std::chrono::system_clock::now();
     doInference(*context, stream, (void **) buffers, prob, BATCH_SIZE);
     auto end = std::chrono::system_clock::now();
-    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << "ms" << std::endl;
+//    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+//              << "ms" << std::endl;
     std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
 
     auto &res = batch_res[0];
@@ -580,14 +580,13 @@ void close_imageCB(
                 rect_msg.text = "close";
             close_rectangles.publish(rect_msg);
         }
-    }
-    else{
+    } else {
         radar_msgs::points rect_msg;
         rect_msg.text = "none";
         close_rectangles.publish(rect_msg);
     }
 
-    std::cout << res.size() << std::endl;
+//    std::cout << res.size() << std::endl;
     cv::imshow("yolo_close", img);
     cv::waitKey(1);
 

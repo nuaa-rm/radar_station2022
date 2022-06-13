@@ -3,6 +3,7 @@
   <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
   <rosparam command="load" file="$(find calibrateCamera)/src/yaml/calibrate.yaml" />
   <rosparam command="load" file="$(find calibrateCamera)/src/yaml/pnp_object.yaml" />
+  <rosparam command="load" file="$(find calibrateCamera)/src/yaml/battlefield.yaml" />
   <arg name="lvx_file_path" default="livox_test.lvx"/>
   <arg name="bd_list" default="100000000000000"/>
   <arg name="xfer_format" default="0"/>
@@ -29,16 +30,12 @@
   <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close"/> -->
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far"/> -->
-  <node name="yolov5"        pkg="yolo"      type="yolov5"   respawn="true"/>
-<!--     <node name="livox_lidar_publisher" -->
+<!--   <node name="livox_lidar_publisher" -->
 <!--           pkg="livox_ros_driver" -->
 <!--           type="livox_ros_driver_node" required="true" -->
 <!--           output="screen" args="$(arg cmdline_arg)"/> -->
+  <node name="yolov5"        pkg="yolo"      type="yolov5"  respawn="true"/>
   <node name="get_depth_node" pkg="get_depth" type="get_depth_node"   respawn="true"/>
   <node pkg="small_map" type="small_map"  name="map_close" output="screen" respawn="true" ns="sensor_close"/>
   <node pkg="small_map" type="small_map"  name="map_far" output="screen" respawn="true" ns="sensor_far"/>
-<!--     <group if="$(arg rviz_enable)"> -->
-<!--     		<node name="rviz" pkg="rviz" type="rviz" respawn="true" -->
-<!--     		args="-d $(find livox_ros_driver)/config/display_lidar_points.rviz"/> -->
-<!--     </group> -->
 </launch>
