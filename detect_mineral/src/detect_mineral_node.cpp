@@ -10,7 +10,7 @@
 using namespace std;
 using namespace cv;
 
-bool if_ready = false;
+bool if_ready = true;
 ros::Publisher mineralPub;
 void mouse(int event, int x, int y, int flags, void*)
 {
@@ -76,7 +76,7 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
     static bool if_temp_init = 0;
     static bool if_boundary_init = 0;
     static int boundary12 = 120, boundary23 = 210, boundary34 = 295, boundary45 = 385;
-    static Mat temp = imread("/home/dovejh/project/radar_station/temp.jpg");
+    static Mat temp = imread("/home/dovejh/project/radar_station/temp5.png");
     Mat roi;
     Mat imgs[3], imgBindary;
     static bool led_state[5][5] = {true};
@@ -238,9 +238,10 @@ void imgCallback(const sensor_msgs::ImageConstPtr& msg)
                 led_state[4][i] = led_state[4][i + 1];
             }
         }
-        //imshow("ROI", roi);
-        //imshow("bindary", imgBindary);
-        //waitKey(1);
+        imshow("ROI", roi);
+        imshow("temp", temp);
+        imshow("bindary", imgBindary);
+        waitKey(1);
 
     }
 
@@ -253,7 +254,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "detect_mineral_node");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("/sensor_close/image_raw", 1, &imgCallback);
+    ros::Subscriber sub = n.subscribe("/sensor_far/image_raw", 1, &imgCallback);
     ros::Subscriber paramSub = n.subscribe("/sensor_close/calibration", 1, &paramCallback);
     mineralPub = n.advertise<std_msgs::Int8>("/mineral", 0);
 
