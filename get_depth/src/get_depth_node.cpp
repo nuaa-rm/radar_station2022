@@ -21,7 +21,8 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <radar_msgs/point.h>
 #include <radar_msgs/points.h>
-#include <radar_msgs/distance_point.h>
+#include <radar_msgs/dist_point.h>
+#include <radar_msgs/dist_points.h>
 #include "project/project.h"
 
 using namespace std;
@@ -33,8 +34,8 @@ int imgRows = 1024, imgCols = 1280;
 ros::Publisher depthPub;
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
-vector<double> far_distances(10);
-vector<double> close_distances(10);
+vector<double> far_distances;
+vector<double> close_distances;
 vector<radar_msgs::points> far_distance_points;
 vector<radar_msgs::points> close_distance_points;
 Mat far_camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
@@ -46,6 +47,8 @@ Mat close_uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
 vector<radar_msgs::points> car_points(10);//detected points received from yolo_node
 radar_msgs::points far_car_point;
 radar_msgs::points close_car_point;
+radar_msgs::dist_points far_distance_it;
+radar_msgs::dist_points close_distance_it;
 uint8_t i = 0;//the number of car_points vector
 queue<Mat> depthQueue;
 Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
@@ -84,74 +87,66 @@ vector<yolobox> close_car_rects(10);
 
 void far_depthShow(Mat &input, vector<double> distances, vector<yolobox> box) {
     Mat depthsGray(imgRows, imgCols, CV_8U);
-    double min = 100, max = 0;
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
-                min = input.at<Vec3d>(i, j)[0];
-            } else if (max < input.at<Vec3d>(i, j)[0]) {
-                max = input.at<Vec3d>(i, j)[0];
-            }
-        }
-    }
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
-        }
-    }
-    uint8_t a = 0;
+//    double min = 100, max = 0;
+//    for (int i = 0; i < imgRows; i++) {
+//        for (int j = 0; j < imgCols; j++) {
+//            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
+//                min = input.at<Vec3d>(i, j)[0];
+//            } else if (max < input.at<Vec3d>(i, j)[0]) {
+//                max = input.at<Vec3d>(i, j)[0];
+//            }
+//        }
+//    }
+//    for (int i = 0; i < imgRows; i++) {
+//        for (int j = 0; j < imgCols; j++) {
+//            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
+//        }
+//    }
+//    uint8_t a = 0;
     for (vector<yolobox>::iterator it = box.begin(); it != box.end(); it++) {
         if (!(it->rect.empty())) {
             rectangle(depthsGray, it->rect, Scalar(255, 255, 255), 1);
-            putText(depthsGray, std::to_string(far_distances[a]), Point((*it).rect.x, (*it).rect.y),
-                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-                    Scalar(255, 255, 255), 1, 8, 0);
-//        rectangle(depthsGray, Rect(600, 500, 50, 50), Scalar(255, 255, 255), 1);
-//        putText(depthsGray, std::to_string(far_distances[a]), Point(600, 500),
-//                FONT_HERSHEY_COMPLEX_SMALL, 1,
-//                Scalar(255, 255, 255), 1, 8, 0);
-            cout << it->rect << endl;
+//            putText(depthsGray, std::to_string(far_distances[a]), Point((*it).rect.x, (*it).rect.y),
+//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+//                    Scalar(255, 255, 255), 1, 8, 0);
+//            cout << it->rect << endl;
         }
     }
-//    std::vector<yolobox>().swap(box);
     std::vector<double>().swap(far_distances);
     imshow("far_depthsGray", depthsGray);
     waitKey(1);
-//    sensor_msgs::ImagePtr gray = cv_bridge::CvImage(std_msgs::Header(), "mono8", depthsGray).toImageMsg();
-//    depthPub.publish(gray);
-
 }
 
 void close_depthShow(Mat &input, vector<double> distances, vector<yolobox> box) {
     Mat depthsGray(imgRows, imgCols, CV_8U);
-    double min = 100, max = 0;
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
-                min = input.at<Vec3d>(i, j)[0];
-            } else if (max < input.at<Vec3d>(i, j)[0]) {
-                max = input.at<Vec3d>(i, j)[0];
-            }
-        }
-    }
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
-        }
-    }
-    uint8_t a = 0;
+//    double min = 100, max = 0;
+//    for (int i = 0; i < imgRows; i++) {
+//        for (int j = 0; j < imgCols; j++) {
+//            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
+//                min = input.at<Vec3d>(i, j)[0];
+//            } else if (max < input.at<Vec3d>(i, j)[0]) {
+//                max = input.at<Vec3d>(i, j)[0];
+//            }
+//        }
+//    }
+//    for (int i = 0; i < imgRows; i++) {
+//        for (int j = 0; j < imgCols; j++) {
+//            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
+//        }
+//    }
+//    uint8_t a = 0;
     for (vector<yolobox>::iterator it = box.begin(); it != box.end(); it++) {
         if (!(it->rect.empty())) {
             rectangle(depthsGray, it->rect, Scalar(255, 255, 255), 1);
-            putText(depthsGray, std::to_string(close_distances[a]), Point((*it).rect.x, (*it).rect.y),
-                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-                    Scalar(255, 255, 255), 1, 8, 0);
+//            putText(depthsGray, std::to_string(close_distances[a]), Point((*it).rect.x, (*it).rect.y),
+//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+//                    Scalar(255, 255, 255), 1, 8, 0);
             cout << it->rect << endl;
-        } else cout << "empty car_rects!" << endl;
+        }
     }
-    std::vector<double>().swap(close_distances);
+//    std::vector<double>().swap(close_distances);
     imshow("close_depthsGray", depthsGray);
-    waitKey(30);
+    waitKey(1);
 //    sensor_msgs::ImagePtr gray = cv_bridge::CvImage(std_msgs::Header(), "mono8", depthsGray).toImageMsg();
 //    depthPub.publish(gray);
 
@@ -301,9 +296,12 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
 void far_yoloCallback(const radar_msgs::points::ConstPtr &input) {
     if ((*input).text == "none") {
         std::vector<yolobox>().swap(far_car_rects);
+        std::vector<double>().swap(far_distances);
     } else {
-        if ((*input).text == "far_first") {
+        if ((*input).text == "far_first" || (*input).text == "far_first_and_last") {
             std::vector<yolobox>().swap(far_car_rects);
+            std::vector<double>().swap(far_distances);
+            std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
         }
         far_car_point = *input;
         if (far_car_point.data[0].x > 0) {
@@ -317,38 +315,35 @@ void far_yoloCallback(const radar_msgs::points::ConstPtr &input) {
             far_car_rects.push_back(abc);
         }
     }
-    if (cloud) {
+
+    if (cloud && ((*input).text == "far_last" || (*input).text == "far_first_and_last")) {
         far_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
         projectPoints(cloud, far_camera_matrix, far_uni_matrix, far_depthes);
+        close_distance_it.color = far_car_rects[0].color;
+        for (int j = 0; j < far_car_rects.size(); j++) {
+            radar_msgs::dist_point point_it;
+            far_distances.push_back(getDepthInRect(far_car_rects[j].rect, far_depthes));
+            point_it.x = far_car_rects[j].rect.x + (far_car_rects[j].rect.width) / 2;
+            point_it.y = far_car_rects[j].rect.y + (far_car_rects[j].rect.height) / 2;
+            point_it.dist = *(far_distances.end() - 1);
+//            point_it.dist=1;
+            point_it.id = j;
+            far_distance_it.data.push_back(point_it);
+        }
+        far_distancePointPub.publish(far_distance_it);
     }
-    radar_msgs::points distance_it;
-    radar_msgs::point point_it;
-    std::vector<radar_msgs::points>().swap(far_distance_points);
-    for (int j = 0; j < far_car_rects.size(); j++) {
-        far_distances.push_back(getDepthInRect(far_car_rects[j].rect, far_depthes));
-        point_it.x = far_car_rects[j].rect.x;
-        point_it.y = far_car_rects[j].rect.y;
-        distance_it.data.push_back(point_it);
-        point_it.x = far_car_rects[j].rect.x + far_car_rects[j].rect.width;
-        point_it.y = far_car_rects[j].rect.y + far_car_rects[j].rect.height;
-        distance_it.data.push_back(point_it);
-        point_it.x = *(far_distances.end() - 1);
-        point_it.y = 1;
-        distance_it.data.push_back(point_it);
-        distance_it.id = j;
-        distance_it.color = far_car_rects[j].color;
-        far_distancePointPub.publish(distance_it);
-    }
-
 }
 
 //update the car_rects
 void close_yoloCallback(const radar_msgs::points::ConstPtr &input) {
     if ((*input).text == "none") {
         std::vector<yolobox>().swap(close_car_rects);
+        std::vector<double>().swap(close_distances);
+        std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
     } else {
-        if ((*input).text == "close_first") {
+        if ((*input).text == "close_first" || (*input).text == "close_first_and_last") {
             std::vector<yolobox>().swap(close_car_rects);
+            std::vector<double>().swap(close_distances);
         }
         close_car_point = *input;
         if (close_car_point.data[0].x > 0) {
@@ -362,27 +357,22 @@ void close_yoloCallback(const radar_msgs::points::ConstPtr &input) {
             close_car_rects.push_back(abc);
         }
     }
-    if (cloud) {
+    if (cloud && ((*input).text == "close_last" || (*input).text == "close_first_and_last")) {
+//    if (0) {
         close_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
         projectPoints(cloud, close_camera_matrix, close_uni_matrix, close_depthes);
-    }
-    radar_msgs::points distance_it;
-    radar_msgs::point point_it;
-    std::vector<radar_msgs::points>().swap(close_distance_points);
-    for (int j = 0; j < close_car_rects.size(); j++) {
-        close_distances.push_back(getDepthInRect(close_car_rects[j].rect, close_depthes));
-        point_it.x = close_car_rects[j].rect.x;
-        point_it.y = close_car_rects[j].rect.y;
-        distance_it.data.push_back(point_it);
-        point_it.x = close_car_rects[j].rect.x + close_car_rects[j].rect.width;
-        point_it.y = close_car_rects[j].rect.y + close_car_rects[j].rect.height;
-        distance_it.data.push_back(point_it);
-        point_it.x = *(close_distances.end() - 1);
-        point_it.y = 1;
-        distance_it.data.push_back(point_it);
-        distance_it.id = j;
-        distance_it.color = close_car_rects[j].color;
-        close_distancePointPub.publish(distance_it);
+        close_distance_it.color = close_car_rects[0].color;
+        for (int j = 0; j < close_car_rects.size(); j++) {
+            radar_msgs::dist_point point_it;
+            close_distances.push_back(getDepthInRect(close_car_rects[j].rect, close_depthes));
+            point_it.x = close_car_rects[j].rect.x + (close_car_rects[j].rect.width) / 2;
+            point_it.y = close_car_rects[j].rect.y + (close_car_rects[j].rect.height) / 2;
+            point_it.dist = *(close_distances.end() - 1);
+//            point_it.dist = 1;
+            point_it.id = j;
+            close_distance_it.data.push_back(point_it);
+        }
+        close_distancePointPub.publish(close_distance_it);
     }
 }
 
@@ -455,20 +445,53 @@ int main(int argc, char **argv) {
     cout << "close Uni matrix load done!" << close_uni_matrix << endl;
 
     ros::Subscriber cloud_sub;
-    cloud_sub = n.subscribe("/livox/lidar", 10, &pointCloudCallback);
+    cloud_sub = n.subscribe("/livox/lidar", 1, &pointCloudCallback);
     ros::Subscriber far_yolo_sub;
-    far_yolo_sub = n.subscribe("/far_rectangles", 20, &far_yoloCallback);
+    far_yolo_sub = n.subscribe("/far_rectangles", 1, &far_yoloCallback);
     ros::Subscriber close_yolo_sub;
-    close_yolo_sub = n.subscribe("/close_rectangles", 20, &close_yoloCallback);
-    far_distancePointPub = n.advertise<radar_msgs::points>("/sensor_far/distance_point", 100);
-    close_distancePointPub = n.advertise<radar_msgs::points>("/sensor_close/distance_point", 100);
+    close_yolo_sub = n.subscribe("/close_rectangles", 1, &close_yoloCallback);
+    far_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_far/distance_point", 1);
+    close_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_close/distance_point", 1);
 //    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
     ros::Rate loop_rate(30);
     int jj = 0;
     while (ros::ok()) {
         ros::spinOnce();
-        far_depthShow(far_depthes, far_distances, far_car_rects);
-        close_depthShow(close_depthes, close_distances, close_car_rects);
+//        if(!far_distances.empty())far_depthShow(far_depthes, far_distances, far_car_rects);
+//        if(!close_distances.empty())close_depthShow(close_depthes, close_distances, close_car_rects);
+//        far_depthShow(far_depthes, far_distances, far_car_rects);
+//        close_depthShow(close_depthes, close_distances, close_car_rects);
+        Mat far_depthe = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+        Mat close_depthe = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+        uint8_t a = 0;
+        if (!far_distance_it.data.empty()) {
+            for (vector<yolobox>::iterator it = far_car_rects.begin(); it != far_car_rects.end(); it++) {
+                if (!(it->rect.empty())) {
+                    rectangle(far_depthe, it->rect, Scalar(255, 255, 255), 1);
+                    putText(far_depthe, std::to_string(far_distance_it.data[a].dist), Point((*it).rect.x, (*it).rect.y),
+                            FONT_HERSHEY_COMPLEX_SMALL, 1,
+                            Scalar(255, 255, 255), 1, 8, 0);
+                }
+                a++;
+            }
+        }
+        a = 0;
+        if (!close_distance_it.data.empty()) {
+            for (vector<yolobox>::iterator it = close_car_rects.begin(); it != close_car_rects.end(); it++) {
+                if (!(it->rect.empty())) {
+                    rectangle(close_depthe, it->rect, Scalar(255, 255, 255), 1);
+                    putText(close_depthe, std::to_string(close_distance_it.data[a].dist),
+                            Point((*it).rect.x, (*it).rect.y),
+                            FONT_HERSHEY_COMPLEX_SMALL, 1,
+                            Scalar(255, 255, 255), 1, 8, 0);
+                }
+                a++;
+            }
+        }
+        imshow("far_depthes", far_depthe);
+        waitKey(1);
+        imshow("close_depthes", close_depthe);
+        waitKey(1);
         loop_rate.sleep();
     }
     return 0;

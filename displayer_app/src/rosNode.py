@@ -11,11 +11,12 @@ import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image
+from std_msgs.msg import Bool
 
 from radar_msgs.msg import points, point
 from hp_limit_helper.msg import RobotHP, RobotsHP
 
-from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscriber, BaseCameraShapeSubscriber
+from base import BaseNode, BaseImageSubscriber, BasePathHandler, BaseHpHandler, BaseMinimapShapeSubscriber, BaseCameraShapeSubscriber, BaseMinimapClearSubscriber
 import config
 
 """
@@ -36,7 +37,7 @@ class RosNode(BaseNode):
 
     def __init__(self):
         super().__init__()
-        fixLogging(logging.INFO)
+        # fixLogging(logging.INFO)
         rospy.init_node('displayer')
 
     def run(self):
@@ -178,6 +179,15 @@ class RosMinimapShapeSubscriber(BaseMinimapShapeSubscriber):
         self.sendInfo(data)
 
 
+class RosMinimapClearSubscriber(BaseMinimapClearSubscriber):
+    def __init__(self, cfg):
+        if cfg.minimapTopic is not None:
+            self.subscriber = rospy.Subscriber(cfg.minimapClearTopic, Bool, self.callback, queue_size=1)
+
+    def callback(self, msg: Bool):
+        self.sendInfo()
+
+
 class RosCameraShapeSubscriber(BaseCameraShapeSubscriber):
     def __init__(self, cfg, cam):
         if cfg['shapeTopic'] is not None:
@@ -210,3 +220,4 @@ for cam, cfg in config.cameraConfig.items():
 
 rosHpHandler = RosHpHandler(config.judgeSystem)
 rosMinimapShapeSubscriber = RosMinimapShapeSubscriber(config)
+rosMinimapClearSubscriber = RosMinimapClearSubscriber(config)

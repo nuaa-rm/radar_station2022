@@ -55,6 +55,10 @@ class DisplayerBackend {
     this.io.on('minimapShape', (msg)=>{
       this.updateMinimap(msg)
     })
+    this.io.on('minimapClear', (msg)=>{
+      console.log('io recv')
+      this.clearMinimap(msg)
+    })
     this.io.on('cameraShape', (msg)=>{
       if (msg.camera === this.camera) {
         this.updateCameraShape(msg.data)
@@ -68,6 +72,10 @@ class DisplayerBackend {
 
   onMinimapUpdate(fun) {
     this.updateMinimap = fun
+  }
+
+  onMinimapClear(fun) {
+    this.clearMinimap = fun
   }
 
   onCameraShapeUpdate(fun) {

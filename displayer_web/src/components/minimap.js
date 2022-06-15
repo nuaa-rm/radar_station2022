@@ -29,6 +29,7 @@ class Minimap extends Component {
     })
     this.canvas.appendChild(this.image);
     displayerBackend.onMinimapUpdate(this.updateShapes)
+    displayerBackend.onMinimapClear(this.clear)
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -54,6 +55,13 @@ class Minimap extends Component {
         shape.text.style.y *= this.props.height / prevProps.height;
       }
     }
+  }
+
+  clear = () => {
+    console.log('debugTest')
+    this.shapes = {};
+    this.canvas.removeChildren();
+    this.canvas.appendChild(this.image);
   }
 
   updateShapes = (shapes) => {

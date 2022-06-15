@@ -55,6 +55,8 @@ uint8_t *img_host = nullptr;
 uint8_t *img_device = nullptr;
 int inputIndex;
 int outputIndex;
+std::string btl_color = "blue";
+int btl_number = 1;
 
 static int get_width(int x, float gw, int divisor = 8) {
     return int(ceil((x * gw) / divisor)) * divisor;
@@ -390,8 +392,8 @@ rect2msg(std::vector<Yolo::Detection>::iterator it, cv::Mat &img) {
     msg_it.data = rect_point;
     std::cout << r << std::endl;
     //draw rectangles on img
-    cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
-    cv::putText(img, std::to_string((int) it->class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+    cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 8);
+    cv::putText(img, std::to_string((int) it->class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 2.2,
                 cv::Scalar(0xFF, 0xFF, 0xFF), 2);
     return msg_it;
 }
@@ -448,6 +450,9 @@ int main(int argc, char **argv) {
 
 
     ros::init(argc, argv, "yolov5");
+    ros::param::get("/battle_color", btl_color);
+    if (btl_color == "red")btl_number = 0;
+    else btl_number = 1;
     ros::start();
     ros::NodeHandle n;
 //    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
@@ -479,7 +484,6 @@ void far_imageCB(
         const sensor_msgs::ImageConstPtr &msg
 ) {
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
-
     int fcount = 1;
     std::vector<cv::Mat> imgs_buffer(BATCH_SIZE);
     float *buffer_idx = (float *) buffers[inputIndex];
@@ -505,18 +509,25 @@ void far_imageCB(
 //    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
 //              << "ms" << std::endl;
     std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
-
+    std::vector<Yolo::Detection> new_res;
     auto &res = batch_res[0];
+
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-
+    for (int i = 0; i < res.size(); i++) {
+        if (((int) res[i].class_id) != btl_number) {
+            new_res.push_back(res[i]);
+        }
+    }
     //将识别得到的目标框出并发送ROS消息
-    if (res.size() != 0) {
-        for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
+    if (new_res.size() != 0) {
+        for (std::vector<Yolo::Detection>::iterator it = new_res.begin(); it != new_res.end(); it++) {
             radar_msgs::points rect_msg = rect2msg(it, img);
-            if (it == res.begin())
+            if (new_res.size() == 1) {
+                rect_msg.text = "far_first_and_last";
+            } else if (it == new_res.begin())
                 rect_msg.text = "far_first";
-            else if (it == res.end() - 1)
+            else if (it == new_res.end() - 1)
                 rect_msg.text = "far_last";
             else
                 rect_msg.text = "far";
@@ -528,6 +539,7 @@ void far_imageCB(
         far_rectangles.publish(rect_msg);
     }
 //    std::cout << res.size() << std::endl;
+    cv::resize(img, img, cv::Size(640, 512));
     cv::imshow("yolo_far", img);
     cv::waitKey(1);
 
@@ -563,18 +575,24 @@ void close_imageCB(
 //    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
 //              << "ms" << std::endl;
     std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
-
+    std::vector<Yolo::Detection> new_res;
     auto &res = batch_res[0];
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-
+    for (int i = 0; i < res.size(); i++) {
+        if (((int) res[i].class_id) != btl_number) {
+            new_res.push_back(res[i]);
+        }
+    }
     //将识别得到的目标框出并发送ROS消息
-    if (res.size() != 0) {
-        for (std::vector<Yolo::Detection>::iterator it = res.begin(); it != res.end(); it++) {
+    if (new_res.size() != 0) {
+        for (std::vector<Yolo::Detection>::iterator it = new_res.begin(); it != new_res.end(); it++) {
             radar_msgs::points rect_msg = rect2msg(it, img);
-            if (it == res.begin())
+            if (new_res.size() == 1) {
+                rect_msg.text = "close_first_and_last";
+            } else if (it == new_res.begin())
                 rect_msg.text = "close_first";
-            else if (it == res.end() - 1)
+            else if (it == new_res.end() - 1)
                 rect_msg.text = "close_last";
             else
                 rect_msg.text = "close";
@@ -587,8 +605,8 @@ void close_imageCB(
     }
 
 //    std::cout << res.size() << std::endl;
+    cv::resize(img, img, cv::Size(640, 512));
     cv::imshow("yolo_close", img);
     cv::waitKey(1);
-
 }
 
