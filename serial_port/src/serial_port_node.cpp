@@ -162,45 +162,88 @@ void mineralCallback(const std_msgs::Int8& msg)
 }
 void worldPointsCallback(const radar_msgs::points& msg)
 {
-
-    for(int i = 0; i < msg.data.size(); i++)
+    if(sp.is_enemy_red)
     {
-        if(msg.color == "red")
+        for(int i = 0; i < msg.data.size(); i++)
         {
-            if(sp.is_enemy_red)
+            if(msg.color == "red")
             {
-                car_point carPoint;
-                carPoint.color = 0;
-                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                worldPoints.insert(worldPoints.begin(), carPoint);
+                if(sp.is_enemy_red)
+                {
+                    car_point carPoint;
+                    carPoint.color = 0;
+                    carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28 - msg.data[i].y * 28.0));
+                    worldPoints.insert(worldPoints.begin(), carPoint);
+                }
+                /*else
+                {
+                    car_point carPoint;
+                    carPoint.color = 0;
+                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                    worldPoints.push_back(carPoint);
+                }*/
             }
-            /*else
+            else if(msg.color == "blue")
             {
-                car_point carPoint;
-                carPoint.color = 0;
-                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                worldPoints.push_back(carPoint);
-            }*/
-        }
-        else if(msg.color == "blue")
-        {
-            if(sp.is_enemy_red)
-            {
-                /*car_point carPoint;
-                carPoint.color = 1;
-                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                worldPoints.push_back(carPoint);*/
-            }
-            else
-            {
-                car_point carPoint;
-                carPoint.color = 1;
-                carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                worldPoints.insert(worldPoints.begin(), carPoint);
+                if(sp.is_enemy_red)
+                {
+                    /*car_point carPoint;
+                    carPoint.color = 1;
+                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                    worldPoints.push_back(carPoint);*/
+                }
+                else
+                {
+                    car_point carPoint;
+                    carPoint.color = 1;
+                    carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28.0 - msg.data[i].y * 28.0));
+                    worldPoints.insert(worldPoints.begin(), carPoint);
+                }
             }
         }
     }
-}
+    else
+    {
+        for(int i = 0; i < msg.data.size(); i++)
+        {
+            if(msg.color == "red")
+            {
+                if(sp.is_enemy_red)
+                {
+                    car_point carPoint;
+                    carPoint.color = 0;
+                    carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
+                    worldPoints.insert(worldPoints.begin(), carPoint);
+                }
+                /*else
+                {
+                    car_point carPoint;
+                    carPoint.color = 0;
+                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                    worldPoints.push_back(carPoint);
+                }*/
+            }
+            else if(msg.color == "blue")
+            {
+                if(sp.is_enemy_red)
+                {
+                    /*car_point carPoint;
+                    carPoint.color = 1;
+                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
+                    worldPoints.push_back(carPoint);*/
+                }
+                else
+                {
+                    car_point carPoint;
+                    carPoint.color = 1;
+                    carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
+                    worldPoints.insert(worldPoints.begin(), carPoint);
+                }
+            }
+        }
+    }
+    }
+
 int main (int argc, char** argv)
 {
     //初始化节点
@@ -217,12 +260,20 @@ int main (int argc, char** argv)
     {
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
-    ros::param::get("is_enemy_red", sp.is_enemy_red);
+    string exchange;
+    ros::param::get("battle_color", exchange);
+    if(exchange == "red")
+    {
+        sp.is_enemy_red = false;
+    }
+    else
+    {
+        sp.is_enemy_red = true;
+    }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Subscriber mineralSub = nh.subscribe("/mineral", 1, &mineralCallback);
     ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
-    float x = 0, y = 0;
     int r = 1, b = 1;
     while(ros::ok())
     {
@@ -261,7 +312,7 @@ int main (int argc, char** argv)
             }*/
             //测试用
         }
-        sp.receiveMsgs();
+        //sp.receiveMsgs();
         //循环休眠
         loop.sleep();
     }
