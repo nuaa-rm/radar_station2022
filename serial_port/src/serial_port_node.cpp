@@ -170,35 +170,16 @@ void worldPointsCallback(const radar_msgs::points& msg)
         {
             if(msg.color == "red")
             {
-                if(sp.is_enemy_red)
-                {
-                    car_point carPoint;
-                    carPoint.id = pub_count;
-                    pub_count++;
-                    carPoint.color = 0;
-                    carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28 - msg.data[i].y * 28.0));
-                    worldPoints.insert(worldPoints.begin(), carPoint);
-                }
-                else
-                {
-                    pub_count = 1;
-                }
+                car_point carPoint;
+                carPoint.id = pub_count;
+                pub_count++;
+                carPoint.color = 0;
+                carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
+                worldPoints.insert(worldPoints.begin(), carPoint);
             }
-            else if(msg.color == "blue")
+            else
             {
-                if(sp.is_enemy_red)
-                {
-                    pub_count = 1;
-                }
-                else
-                {
-                    car_point carPoint;
-                    carPoint.id = pub_count;
-                    pub_count++;
-                    carPoint.color = 1;
-                    carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28.0 - msg.data[i].y * 28.0));
-                    worldPoints.insert(worldPoints.begin(), carPoint);
-                }
+                pub_count = 1;
             }
         }
     }
@@ -208,41 +189,18 @@ void worldPointsCallback(const radar_msgs::points& msg)
         {
             if(msg.color == "red")
             {
-                if(sp.is_enemy_red)
-                {
-                    car_point carPoint;
-                    carPoint.color = 0;
-                    carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
-                    worldPoints.insert(worldPoints.begin(), carPoint);
-                }
-                else
-                {
-                    car_point carPoint;
-                    carPoint.color = 0;
-                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                    worldPoints.push_back(carPoint);
-                }
+                pub_count = 1;
             }
             else if(msg.color == "blue")
             {
-                if(sp.is_enemy_red)
-                {
-                    /*car_point carPoint;
-                    carPoint.color = 1;
-                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                    worldPoints.push_back(carPoint);*/
-                }
-                else
-                {
-                    car_point carPoint;
-                    carPoint.color = 1;
-                    carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
-                    worldPoints.insert(worldPoints.begin(), carPoint);
-                }
+                car_point carPoint;
+                carPoint.color = 1;
+                carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
+                worldPoints.insert(worldPoints.begin(), carPoint);
             }
         }
     }
-    }
+}
 
 int main (int argc, char** argv)
 {
