@@ -77,7 +77,7 @@ public:
     interactive_with_robots_msgs interactiveWithRobotsMsgs;
     game_status_msgs gameStatusMsgs;
     uint8_t receiveData[1000];
-    bool is_enemy_red = true;
+    bool is_enemy_red = false;
     int serial_port_init()
     {
         ser.setPort("/dev/ttyUSB0");
