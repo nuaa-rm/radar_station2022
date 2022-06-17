@@ -15,6 +15,7 @@ using namespace cv;
 
 struct car_point
 {
+    uint16_t id;
     Point2f point;
     bool color; //红色为0 蓝色为1
 };
@@ -162,6 +163,7 @@ void mineralCallback(const std_msgs::Int8& msg)
 }
 void worldPointsCallback(const radar_msgs::points& msg)
 {
+    static int pub_count = 1;
     if(sp.is_enemy_red)
     {
         for(int i = 0; i < msg.data.size(); i++)
@@ -171,30 +173,28 @@ void worldPointsCallback(const radar_msgs::points& msg)
                 if(sp.is_enemy_red)
                 {
                     car_point carPoint;
+                    carPoint.id = pub_count;
+                    pub_count++;
                     carPoint.color = 0;
                     carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28 - msg.data[i].y * 28.0));
                     worldPoints.insert(worldPoints.begin(), carPoint);
                 }
-                /*else
+                else
                 {
-                    car_point carPoint;
-                    carPoint.color = 0;
-                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                    worldPoints.push_back(carPoint);
-                }*/
+                    pub_count = 1;
+                }
             }
             else if(msg.color == "blue")
             {
                 if(sp.is_enemy_red)
                 {
-                    /*car_point carPoint;
-                    carPoint.color = 1;
-                    carPoint.point = Point(msg.data[i].x, msg.data[i].y);
-                    worldPoints.push_back(carPoint);*/
+                    pub_count = 1;
                 }
                 else
                 {
                     car_point carPoint;
+                    carPoint.id = pub_count;
+                    pub_count++;
                     carPoint.color = 1;
                     carPoint.point = Point((15.0 - msg.data[i].x * 15.0), (28.0 - msg.data[i].y * 28.0));
                     worldPoints.insert(worldPoints.begin(), carPoint);
@@ -215,13 +215,13 @@ void worldPointsCallback(const radar_msgs::points& msg)
                     carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
                     worldPoints.insert(worldPoints.begin(), carPoint);
                 }
-                /*else
+                else
                 {
                     car_point carPoint;
                     carPoint.color = 0;
                     carPoint.point = Point(msg.data[i].x, msg.data[i].y);
                     worldPoints.push_back(carPoint);
-                }*/
+                }
             }
             else if(msg.color == "blue")
             {
@@ -274,27 +274,22 @@ int main (int argc, char** argv)
     ros::Subscriber mineralSub = nh.subscribe("/mineral", 1, &mineralCallback);
     ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
-    int r = 1, b = 1;
     while(ros::ok())
     {
         if(!worldPoints.empty())
         {
             if(worldPoints[0].color)
             {
-                sp.sendMapMsgs(100 + b, worldPoints[0].point.x, worldPoints[0].point.x);
-                b++;
+                sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
             }
             else
             {
-                sp.sendMapMsgs(r, worldPoints[0].point.x, worldPoints[0].point.x);
-                r++;
+                sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
             }
             worldPoints.erase(worldPoints.begin());
         }
         else
         {
-            r = 1;
-            b = 1;
             ros::spinOnce();
             /*for(int i = 0; i < 10; i++)
             {
