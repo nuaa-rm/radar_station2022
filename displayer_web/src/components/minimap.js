@@ -70,7 +70,7 @@ class Minimap extends Component {
     let reload = false;
     for (let i = 0; i < shapes.length; i++) {
       const shape = shapes[i];
-      if (this.shapes[shape.id]) {
+      if (this.shapes[shape.id] && Object.keys(this.shapes[shape.id]).length && this.shapes[shape.id].main) {
         if (shape.data.length === 0) {
           this.canvas.removeChild(this.shapes[shape.id].main);
           this.shapes[shape.id].main = null;
@@ -158,6 +158,9 @@ class Minimap extends Component {
           }
         }
       } else {
+        if (shape.data.length === 0) {
+          continue
+        }
         this.shapes[shape.id] = {};
         if (shape.data.length === 1) {
           shape.shapeType = 'point'

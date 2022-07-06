@@ -1,1 +1,35 @@
-battle_color: blue
+battle_color: red
+sensor_close:
+  point1:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 12539.0
+    y: 11294.0
+    z: 1581.0
+sensor_far:
+  point1:
+    x: 2461.0
+    y: 16706.0
+    z: 1581.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0

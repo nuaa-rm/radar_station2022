@@ -1,8 +1,6 @@
 <launch>
   <rosparam command="load" file="$(find mv_driver)/cfg/params.yaml" />
   <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
-  <rosparam command="load" file="$(find calibrateCamera)/src/yaml/calibrate.yaml" />
-  <rosparam command="load" file="$(find calibrateCamera)/src/yaml/pnp_object.yaml" />
   <rosparam command="load" file="$(find calibrateCamera)/src/yaml/battlefield.yaml" />
   <rosparam command="load" file="$(find displayer_app)/cfg/RadarDisplayerRos.yaml" />
   <arg name="lvx_file_path" default="livox_test.lvx"/>
@@ -10,7 +8,7 @@
   <arg name="xfer_format" default="0"/>
   <arg name="multi_topic" default="0"/>
   <arg name="data_src" default="0"/>
-  <arg name="publish_freq" default="5.0"/>
+  <arg name="publish_freq" default="2.5"/>
   <arg name="output_type" default="0"/>
   <arg name="rviz_enable" default="true"/>
   <arg name="rosbag_enable" default="false"/>
@@ -32,16 +30,19 @@
 
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close"/> -->
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far"/> -->
-  <node name="displayer_app" pkg="displayer_app" type="main.py" />
-  <node name="hp_limit_helper" pkg="hp_limit_helper" type="hp_limit_helper_node" />
-  <node name="yolov5"        pkg="yolo"      type="yolov5"  respawn="true"/>
 <!--   <node name="livox_lidar_publisher" -->
 <!--           pkg="livox_ros_driver" -->
 <!--           type="livox_ros_driver_node" required="true" -->
 <!--           output="screen" args="$(arg cmdline_arg)"/> -->
-<!--   <node name="get_depth_node" pkg="get_depth" type="get_depth_node"   respawn="true"/> -->
-<!--   <node pkg="small_map" type="small_map"  name="map_close" output="screen" respawn="true" ns="sensor_close"/> -->
-<!--   <node pkg="small_map" type="small_map"  name="map_far" output="screen" respawn="true" ns="sensor_far"/> -->
-  <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" />
+
+  <node name="displayer_app" pkg="displayer_app" type="main.py" />
+  <node name="hp_limit_helper" pkg="hp_limit_helper" type="hp_limit_helper_node" />
+  <node name="yolov5"        pkg="yolo"      type="yolov5"  respawn="true"/>
+
+  <node name="get_depth_node" pkg="get_depth" type="get_depth_node"   respawn="true"/>
+  <node pkg="small_map" type="small_map"  name="small_map" output="screen" respawn="true"/>
+<!--   <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
+
+
 <!--     <node pkg="detect_kuang" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
 </launch>

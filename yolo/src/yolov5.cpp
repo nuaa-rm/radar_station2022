@@ -16,8 +16,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
-#include <radar_msgs/point.h>
-#include <radar_msgs/points.h>
+#include <radar_msgs/yolo_point.h>
+#include <radar_msgs/yolo_points.h>
+
 
 #define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
@@ -43,7 +44,8 @@ ros::Publisher close_rectangles;
 void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void
-rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::points>::iterator msg_it, cv::Mat &img);
+rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::yolo_points>::iterator msg_it,
+         cv::Mat &img);
 
 static float prob[BATCH_SIZE * OUTPUT_SIZE];
 IExecutionContext *context;
@@ -377,24 +379,27 @@ bool parse_args(int argc, char **argv, std::string &wts, std::string &engine, bo
 }
 
 
-radar_msgs::points
-rect2msg(std::vector<Yolo::Detection>::iterator it, cv::Mat &img) {
-    radar_msgs::points msg_it;
-    cv::Rect r = get_rect(img, it->bbox);
-    msg_it.id = it->class_id;
-    if (msg_it.id == 0)msg_it.color = "red";
-    else msg_it.color = "blue";
-    std::vector<radar_msgs::point> rect_point(2);
-    rect_point[0].x = (float) r.x;
-    rect_point[0].y = (float) r.y;
-    rect_point[1].x = (float) (r.x + r.width);
-    rect_point[1].y = (float) (r.y + r.height);
-    msg_it.data = rect_point;
-    std::cout << r << std::endl;
-    //draw rectangles on img
-    cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 8);
-    cv::putText(img, std::to_string((int) it->class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 2.2,
-                cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+radar_msgs::yolo_points
+rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img) {
+    radar_msgs::yolo_points msg_it;
+    radar_msgs::yolo_point rect_point;
+    for (std::vector<Yolo::Detection>::iterator it = yolo_detection.begin(); it != yolo_detection.end(); it++) {
+        cv::Rect r = get_rect(img, it->bbox);
+        msg_it.id = it->class_id;
+        rect_point.color=it->class_id;
+        rect_point.x = (int) r.x;
+        rect_point.y = (int) r.y;
+        rect_point.width = (int) r.width;
+        rect_point.height = (int) r.height;
+        msg_it.data.push_back(rect_point);
+        std::cout << r << std::endl;
+        cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 3);
+        std::string color;
+        if(rect_point.color==1)color="blue";
+        else color="red";
+        cv::putText(img, color, cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.5,
+                    cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+    }
     return msg_it;
 }
 
@@ -460,8 +465,8 @@ int main(int argc, char **argv) {
     ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &close_imageCB);
 
     //发布识别到的目标坐标
-    far_rectangles = n.advertise<radar_msgs::points>("far_rectangles", 20);
-    close_rectangles = n.advertise<radar_msgs::points>("close_rectangles", 20);
+    far_rectangles = n.advertise<radar_msgs::yolo_points>("far_rectangles", 1);
+    close_rectangles = n.advertise<radar_msgs::yolo_points>("close_rectangles", 1);
     ros::Rate loop_rate(30);
     ros::spin();
 
@@ -514,35 +519,23 @@ void far_imageCB(
 
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-    for (int i = 0; i < res.size(); i++) {
-        if (((int) res[i].class_id) != btl_number) {
-            new_res.push_back(res[i]);
-        }
-    }
+//    for (int i = 0; i < res.size(); i++) {
+//        if (((int) res[i].class_id) != btl_number) {
+//            new_res.push_back(res[i]);
+//        }
+//    }
     //将识别得到的目标框出并发送ROS消息
-    if (new_res.size() != 0) {
-        for (std::vector<Yolo::Detection>::iterator it = new_res.begin(); it != new_res.end(); it++) {
-            radar_msgs::points rect_msg = rect2msg(it, img);
-            if (new_res.size() == 1) {
-                rect_msg.text = "far_first_and_last";
-            } else if (it == new_res.begin())
-                rect_msg.text = "far_first";
-            else if (it == new_res.end() - 1)
-                rect_msg.text = "far_last";
-            else
-                rect_msg.text = "far";
-            far_rectangles.publish(rect_msg);
-        }
+    if (res.size() != 0) {
+        radar_msgs::yolo_points rect_msg = rect2msg(res, img);
+        far_rectangles.publish(rect_msg);
     } else {
-        radar_msgs::points rect_msg;
+        radar_msgs::yolo_points rect_msg;
         rect_msg.text = "none";
         far_rectangles.publish(rect_msg);
     }
-//    std::cout << res.size() << std::endl;
     cv::resize(img, img, cv::Size(640, 512));
     cv::imshow("yolo_far", img);
     cv::waitKey(1);
-
 }
 
 void close_imageCB(
@@ -579,32 +572,22 @@ void close_imageCB(
     auto &res = batch_res[0];
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-    for (int i = 0; i < res.size(); i++) {
-        if (((int) res[i].class_id) != btl_number) {
-            new_res.push_back(res[i]);
-        }
-    }
+    //remove our own cars
+//    for (int i = 0; i < res.size(); i++) {
+//        if (((int) res[i].class_id) != btl_number) {
+//            new_res.push_back(res[i]);
+//        }
+//    }
+
     //将识别得到的目标框出并发送ROS消息
-    if (new_res.size() != 0) {
-        for (std::vector<Yolo::Detection>::iterator it = new_res.begin(); it != new_res.end(); it++) {
-            radar_msgs::points rect_msg = rect2msg(it, img);
-            if (new_res.size() == 1) {
-                rect_msg.text = "close_first_and_last";
-            } else if (it == new_res.begin())
-                rect_msg.text = "close_first";
-            else if (it == new_res.end() - 1)
-                rect_msg.text = "close_last";
-            else
-                rect_msg.text = "close";
-            close_rectangles.publish(rect_msg);
-        }
+    if (res.size() != 0) {
+        radar_msgs::yolo_points rect_msg = rect2msg(res, img);
+        close_rectangles.publish(rect_msg);
     } else {
-        radar_msgs::points rect_msg;
+        radar_msgs::yolo_points rect_msg;
         rect_msg.text = "none";
         close_rectangles.publish(rect_msg);
     }
-
-//    std::cout << res.size() << std::endl;
     cv::resize(img, img, cv::Size(640, 512));
     cv::imshow("yolo_close", img);
     cv::waitKey(1);

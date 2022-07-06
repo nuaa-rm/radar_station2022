@@ -23,6 +23,8 @@
 #include <radar_msgs/points.h>
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
+#include <radar_msgs/yolo_point.h>
+#include <radar_msgs/yolo_points.h>
 #include "project/project.h"
 
 using namespace std;
@@ -77,9 +79,9 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
 
 void minusDepth(Mat &depth_accumulate, Mat depth_now);
 
-void far_yoloCallback(const radar_msgs::points::ConstPtr &input);
+void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
-void close_yoloCallback(const radar_msgs::points::ConstPtr &input);
+void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
 vector<yolobox> far_car_rects(10);
 vector<yolobox> close_car_rects(10);
@@ -226,7 +228,15 @@ double getDepthInRect(Rect rect, Mat &depthImg) {
         return 0;
     } else {
         sort(distances.begin(), distances.end());
-        return distances[(int) round(distances.size() / 2)];
+        int position=distances.size()/2;
+        float mean_distance=0;
+        if(position!=0){
+            for(int i=0;i<position;i++){
+                mean_distance+=distances[i];
+            }
+            mean_distance/=position;
+        }
+        return mean_distance;
     }
 }
 
@@ -293,87 +303,62 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
 }
 
 //update the car_rects
-void far_yoloCallback(const radar_msgs::points::ConstPtr &input) {
-    if ((*input).text == "none") {
-        std::vector<yolobox>().swap(far_car_rects);
-        std::vector<double>().swap(far_distances);
-    } else {
-        if ((*input).text == "far_first" || (*input).text == "far_first_and_last") {
-            std::vector<yolobox>().swap(far_car_rects);
-            std::vector<double>().swap(far_distances);
-            std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
-        }
-        far_car_point = *input;
-        if (far_car_point.data[0].x > 0) {
-            int x = (int) far_car_point.data[0].x;
-            int y = (int) far_car_point.data[0].y;
-            int width = (int) (far_car_point.data[1].x - far_car_point.data[0].x);
-            int height = (int) (far_car_point.data[1].y - far_car_point.data[0].y);
-            yolobox abc;
-            abc.rect = Rect(x, y, width, height);
-            abc.color = (*input).color;
-            far_car_rects.push_back(abc);
-        }
-    }
-
-    if (cloud && ((*input).text == "far_last" || (*input).text == "far_first_and_last")) {
-        far_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-        projectPoints(cloud, far_camera_matrix, far_uni_matrix, far_depthes);
-        close_distance_it.color = far_car_rects[0].color;
-        for (int j = 0; j < far_car_rects.size(); j++) {
+void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
+    far_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+    std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
+    if(cloud)projectPoints(cloud, far_camera_matrix, far_uni_matrix, far_depthes);
+    if ((*input).text != "none") {
+//        close_distance_it.color = (*input).color;
+        for (int j = 0; j < (*input).data.size(); j++) {
             radar_msgs::dist_point point_it;
-            far_distances.push_back(getDepthInRect(far_car_rects[j].rect, far_depthes));
-            point_it.x = far_car_rects[j].rect.x + (far_car_rects[j].rect.width) / 2;
-            point_it.y = far_car_rects[j].rect.y + (far_car_rects[j].rect.height) / 2;
-            point_it.dist = *(far_distances.end() - 1);
-//            point_it.dist=1;
+            point_it.x = (*input).data[j].x + (*input).data[j].width / 2;
+            point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
+            point_it.dist = getDepthInRect(
+                    Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                    far_depthes);
+            point_it.color=(*input).data[j].color;
             point_it.id = j;
+//            rectangle(far_depthes,
+//                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+//                      Scalar(255, 255, 255), 1);
+//            putText(far_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+//                    Scalar(255, 255, 255), 1, 8, 0);
             far_distance_it.data.push_back(point_it);
         }
-        far_distancePointPub.publish(far_distance_it);
     }
+    far_distancePointPub.publish(far_distance_it);
+//    imshow("far_depthes", far_depthes);
+//    waitKey(1);
 }
 
 //update the car_rects
-void close_yoloCallback(const radar_msgs::points::ConstPtr &input) {
-    if ((*input).text == "none") {
-        std::vector<yolobox>().swap(close_car_rects);
-        std::vector<double>().swap(close_distances);
-        std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
-    } else {
-        if ((*input).text == "close_first" || (*input).text == "close_first_and_last") {
-            std::vector<yolobox>().swap(close_car_rects);
-            std::vector<double>().swap(close_distances);
-        }
-        close_car_point = *input;
-        if (close_car_point.data[0].x > 0) {
-            int x = (int) close_car_point.data[0].x;
-            int y = (int) close_car_point.data[0].y;
-            int width = (int) (close_car_point.data[1].x - close_car_point.data[0].x);
-            int height = (int) (close_car_point.data[1].y - close_car_point.data[0].y);
-            yolobox abc;
-            abc.rect = Rect(x, y, width, height);
-            abc.color = (*input).color;
-            close_car_rects.push_back(abc);
-        }
-    }
-    if (cloud && ((*input).text == "close_last" || (*input).text == "close_first_and_last")) {
-//    if (0) {
-        close_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-        projectPoints(cloud, close_camera_matrix, close_uni_matrix, close_depthes);
-        close_distance_it.color = close_car_rects[0].color;
-        for (int j = 0; j < close_car_rects.size(); j++) {
+void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
+    close_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+    std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
+    if(cloud)projectPoints(cloud, close_camera_matrix, close_uni_matrix, close_depthes);
+    if ((*input).text != "none") {
+        for (int j = 0; j < (*input).data.size(); j++) {
             radar_msgs::dist_point point_it;
-            close_distances.push_back(getDepthInRect(close_car_rects[j].rect, close_depthes));
-            point_it.x = close_car_rects[j].rect.x + (close_car_rects[j].rect.width) / 2;
-            point_it.y = close_car_rects[j].rect.y + (close_car_rects[j].rect.height) / 2;
-            point_it.dist = *(close_distances.end() - 1);
-//            point_it.dist = 1;
+            point_it.x = (*input).data[j].x + (*input).data[j].width / 2;
+            point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
+            point_it.dist = getDepthInRect(
+                    Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                    close_depthes);
+            point_it.color=(*input).data[j].color;
             point_it.id = j;
+//            rectangle(close_depthes,
+//                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+//                      Scalar(255, 255, 255), 1);
+//            putText(close_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+//                    Scalar(255, 255, 255), 1, 8, 0);
             close_distance_it.data.push_back(point_it);
         }
-        close_distancePointPub.publish(close_distance_it);
     }
+    close_distancePointPub.publish(close_distance_it);
+//    imshow("close_depthes", close_depthes);
+//    waitKey(1);
 }
 
 int main(int argc, char **argv) {
@@ -457,41 +442,6 @@ int main(int argc, char **argv) {
     int jj = 0;
     while (ros::ok()) {
         ros::spinOnce();
-//        if(!far_distances.empty())far_depthShow(far_depthes, far_distances, far_car_rects);
-//        if(!close_distances.empty())close_depthShow(close_depthes, close_distances, close_car_rects);
-//        far_depthShow(far_depthes, far_distances, far_car_rects);
-//        close_depthShow(close_depthes, close_distances, close_car_rects);
-        Mat far_depthe = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-        Mat close_depthe = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-        uint8_t a = 0;
-        if (!far_distance_it.data.empty()) {
-            for (vector<yolobox>::iterator it = far_car_rects.begin(); it != far_car_rects.end(); it++) {
-                if (!(it->rect.empty())) {
-                    rectangle(far_depthe, it->rect, Scalar(255, 255, 255), 1);
-                    putText(far_depthe, std::to_string(far_distance_it.data[a].dist), Point((*it).rect.x, (*it).rect.y),
-                            FONT_HERSHEY_COMPLEX_SMALL, 1,
-                            Scalar(255, 255, 255), 1, 8, 0);
-                }
-                a++;
-            }
-        }
-        a = 0;
-        if (!close_distance_it.data.empty()) {
-            for (vector<yolobox>::iterator it = close_car_rects.begin(); it != close_car_rects.end(); it++) {
-                if (!(it->rect.empty())) {
-                    rectangle(close_depthe, it->rect, Scalar(255, 255, 255), 1);
-                    putText(close_depthe, std::to_string(close_distance_it.data[a].dist),
-                            Point((*it).rect.x, (*it).rect.y),
-                            FONT_HERSHEY_COMPLEX_SMALL, 1,
-                            Scalar(255, 255, 255), 1, 8, 0);
-                }
-                a++;
-            }
-        }
-        imshow("far_depthes", far_depthe);
-        waitKey(1);
-        imshow("close_depthes", close_depthe);
-        waitKey(1);
         loop_rate.sleep();
     }
     return 0;

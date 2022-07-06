@@ -174,7 +174,7 @@ void worldPointsCallback(const radar_msgs::points& msg)
                 carPoint.id = pub_count;
                 pub_count++;
                 carPoint.color = 0;
-                carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
+                carPoint.point = Point2f((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
             }
             else
@@ -195,7 +195,7 @@ void worldPointsCallback(const radar_msgs::points& msg)
             {
                 car_point carPoint;
                 carPoint.color = 1;
-                carPoint.point = Point(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
+                carPoint.point = Point2f(msg.data[i].x * 15.0, msg.data[i].y * 28.0);
                 worldPoints.insert(worldPoints.begin(), carPoint);
             }
         }

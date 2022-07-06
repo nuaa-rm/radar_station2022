@@ -25,6 +25,8 @@ add_message_files(
         small_map.msg
         dist_point.msg
         dist_points.msg
+        yolo_point.msg
+        yolo_points.msg
 )
 
 ## Generate services in the 'srv' folder
