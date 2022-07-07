@@ -1,29 +1,16 @@
-#include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
-#include <std_msgs/String.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <radar_msgs/points.h>
 #include <radar_msgs/point.h>
-#include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
-#include <radar_msgs/world_point.h>
 
 using namespace std;
 using namespace cv;
 
-void onMouse(int event, int x, int y, int flags, void *ustc);//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
-void imageCB(const sensor_msgs::ImageConstPtr &msg);
-
 void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_); //图像必须提前矫正
-string param_name;
 cv::Mat img;
-int cnt = 0;
-vector<cv::Point2f> reprojectPoints(4);
-vector<string> imagePoints_string(4);
 
 float Ky_right = 0.41;
 float C_right = 550.0;
@@ -32,7 +19,6 @@ float C_left = -200.53;//x+Ky_left*y-C_left;
 int field_width = 28, field_height = 15;
 double imgCols = 1280.0, imgRows = 1024.0;
 ros::Publisher worldPointPub;
-radar_msgs::points worldPoint;
 int red_or_blue = 0;//0 is red, 1 is blue
 
 vector<cv::Point3f> far_objectPoints(4);
@@ -54,16 +40,11 @@ Mat close_T = Mat::zeros(3, 1, CV_64FC1);
 int close_calc_flag = 0;
 vector<radar_msgs::points> far_points;
 vector<radar_msgs::points> close_points;
-vector<radar_msgs::points> world_points(10);
 
 void far_calibration(const radar_msgs::points &msg);//相机标定
 void far_distPointCallback(const radar_msgs::dist_points &input);
-
 void close_calibration(const radar_msgs::points &msg);//相机标定
 void close_distPointCallback(const radar_msgs::dist_points &input);
-
-void remove_duplicates(vector<radar_msgs::points> &far_points, vector<radar_msgs::points> &close_points);
-//void reproject(void);//反投影
 
 int main(int argc, char **argv) {
 
@@ -101,7 +82,6 @@ int main(int argc, char **argv) {
     if (btlcolor == "red")red_or_blue = 0;
     if (btlcolor == "blue") red_or_blue = 1;
 
-    int id = 0;
     ros::param::get("/sensor_far/camera_matrix/zerozero", far_CamMatrix_.at<double>(0, 0));
     ros::param::get("/sensor_far/camera_matrix/zerotwo", far_CamMatrix_.at<double>(0, 2));
     ros::param::get("/sensor_far/camera_matrix/oneone", far_CamMatrix_.at<double>(1, 1));
@@ -146,10 +126,6 @@ int main(int argc, char **argv) {
     else small_map = imread("/home/chris/radar_station2022/src/small_map/src/blue_minimap.png");
     while (ros::ok()) {
         ros::spinOnce();
-//        if (!far_points.empty()&&!close_points.empty()) {
-//            remove_duplicates(far_points, close_points);
-//        }
-
         Mat small_map_copy;
         small_map.copyTo(small_map_copy);
         resize(small_map_copy, small_map_copy, Size(450, 840));
@@ -188,21 +164,6 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-
-void onMouse(int event, int x, int y, int flags, void *ustc)//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
-{
-    if (event == cv::EVENT_LBUTTONDOWN && !img.empty())//左键按下，读取初始坐标，并在图像上该点处划圆
-    {
-        char temp1[16];
-        sprintf(temp1, "(%d,%d)", x, y);
-        string temp = temp1;
-        if (cnt <= 3)
-            imagePoints_string[cnt] = temp;
-        reprojectPoints[cnt] = cv::Point2f((double) x, (double) y);
-        cnt++;
-    }
-}
-
 void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_) //图像必须提前矫正
 {
     double matrix3[4][1] = {x, y, z, 1};//激光雷达系中坐标
@@ -227,17 +188,6 @@ void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMat
     }
 }
 
-void remove_duplicates(vector<radar_msgs::points> &far_points, vector<radar_msgs::points> &close_points) {
-    for (vector<radar_msgs::points>::iterator i = far_points.begin(); i < far_points.end(); i++) {
-        for (vector<radar_msgs::points>::iterator j = close_points.begin(); j < close_points.end(); j++) {
-            float distance = sqrt(pow((i->data[0].x - j->data[0].x), 2) + pow((i->data[0].y - j->data[0].y), 2));
-            if (distance < 1.0) {
-                close_points.erase(j);
-            }
-        }
-    }
-}
-
 void far_distPointCallback(const radar_msgs::dist_points &input) {
     if (far_calc_flag == 1) {
         Mat invR;
@@ -245,7 +195,6 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
         invert(far_CamMatrix_, invM);
         invert(far_R, invR);
         std::vector<radar_msgs::points>().swap(far_points);
-//        far_points = std::vector<radar_msgs::points>(10);
         for (int i = 0; i < input.data.size(); i++) {
             if (input.data[i].dist > 0) {
                 Mat x8_pixel;
@@ -298,7 +247,6 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
         invert(close_CamMatrix_, invM);
         invert(close_R, invR);
         std::vector<radar_msgs::points>().swap(close_points);
-//        close_points = std::vector<radar_msgs::points>(10);
         for (int i = 0; i < input.data.size(); i++) {
             if (input.data[i].dist > 0) {
                 Mat x8_pixel;
@@ -306,7 +254,6 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 x8_pixel *= (1000 * input.data[i].dist);
                 Mat calcWorld = invR * (invM * x8_pixel - close_T);//2D-3D变换
                 calcWorld /= 1000;
-//                cout << calcWorld << endl;
                 double x = calcWorld.at<double>(0, 0);
                 double y = calcWorld.at<double>(1, 0);
                 y = field_width - y;

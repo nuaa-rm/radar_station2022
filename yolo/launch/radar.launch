@@ -42,7 +42,4 @@
   <node name="get_depth_node" pkg="get_depth" type="get_depth_node"   respawn="true"/>
   <node pkg="small_map" type="small_map"  name="small_map" output="screen" respawn="true"/>
 <!--   <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
-
-
-<!--     <node pkg="detect_kuang" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
 </launch>

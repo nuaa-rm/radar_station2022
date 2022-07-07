@@ -2,157 +2,47 @@
 // Created by dovejh on 2022/3/19.
 //
 #include <opencv2/opencv.hpp>
-#include <fstream>
 #include <iostream>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/Image.h>
 #include <ros/ros.h>
 #include <pcl/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>
-#include <tf/transform_broadcaster.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <radar_msgs/point.h>
-#include <radar_msgs/points.h>
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
-#include <radar_msgs/yolo_point.h>
 #include <radar_msgs/yolo_points.h>
-#include "project/project.h"
 
 using namespace std;
 using namespace cv;
 
 int imgRows = 1024, imgCols = 1280;
-//int imgRows = 720, imgCols = 1280;
 
-ros::Publisher depthPub;
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
-vector<double> far_distances;
-vector<double> close_distances;
-vector<radar_msgs::points> far_distance_points;
-vector<radar_msgs::points> close_distance_points;
-Mat far_camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
-Mat close_camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
-Mat far_distortion_coefficient = Mat_<double>(5, 1);
-Mat close_distortion_coefficient = Mat_<double>(5, 1);
-Mat far_uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
-Mat close_uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
-vector<radar_msgs::points> car_points(10);//detected points received from yolo_node
-radar_msgs::points far_car_point;
-radar_msgs::points close_car_point;
 radar_msgs::dist_points far_distance_it;
 radar_msgs::dist_points close_distance_it;
-uint8_t i = 0;//the number of car_points vector
-queue<Mat> depthQueue;
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
 Mat close_depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-class yolobox {
-public:
-    Rect rect;
-    string color;
-};
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-
-
-void depthShow(Mat &input, vector<double> distances, vector<yolobox> box);//将深度图像归一化成灰度图并发布话题进行展示
+Mat far_camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
+Mat far_uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
+Mat far_distortion_coefficient = Mat_<double>(5, 1);
+Mat close_camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
+Mat close_uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
+Mat close_distortion_coefficient = Mat_<double>(5, 1);
+uint8_t i = 0;//the number of car_points vector
 void getTheoreticalUV(double x, double y, double z, Mat Cam_matrix, Mat Uni_matrix, Mat &output);//得到某一点对应图像中的位置
-void cloudFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr output);
 
-void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input,
-                      pcl::PointCloud<pcl::PointXYZ>::Ptr &output);//对点云进行聚类,并挑选点数最多的点云作为返回
 double getDepthInRect(Rect rect, Mat &depthImg);//得到ROI中点的深度
-void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//去除平面
 void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat Cam_matrix, Mat Uni_matrix,
                    Mat &output);//对于每一个点云中的点调用一次getTheoreticalUV函数
-double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input);//显示实时点云,放在程序结尾
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
-
-void minusDepth(Mat &depth_accumulate, Mat depth_now);
 
 void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
 void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
-
-vector<yolobox> far_car_rects(10);
-vector<yolobox> close_car_rects(10);
-
-
-void far_depthShow(Mat &input, vector<double> distances, vector<yolobox> box) {
-    Mat depthsGray(imgRows, imgCols, CV_8U);
-//    double min = 100, max = 0;
-//    for (int i = 0; i < imgRows; i++) {
-//        for (int j = 0; j < imgCols; j++) {
-//            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
-//                min = input.at<Vec3d>(i, j)[0];
-//            } else if (max < input.at<Vec3d>(i, j)[0]) {
-//                max = input.at<Vec3d>(i, j)[0];
-//            }
-//        }
-//    }
-//    for (int i = 0; i < imgRows; i++) {
-//        for (int j = 0; j < imgCols; j++) {
-//            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
-//        }
-//    }
-//    uint8_t a = 0;
-    for (vector<yolobox>::iterator it = box.begin(); it != box.end(); it++) {
-        if (!(it->rect.empty())) {
-            rectangle(depthsGray, it->rect, Scalar(255, 255, 255), 1);
-//            putText(depthsGray, std::to_string(far_distances[a]), Point((*it).rect.x, (*it).rect.y),
-//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-//                    Scalar(255, 255, 255), 1, 8, 0);
-//            cout << it->rect << endl;
-        }
-    }
-    std::vector<double>().swap(far_distances);
-    imshow("far_depthsGray", depthsGray);
-    waitKey(1);
-}
-
-void close_depthShow(Mat &input, vector<double> distances, vector<yolobox> box) {
-    Mat depthsGray(imgRows, imgCols, CV_8U);
-//    double min = 100, max = 0;
-//    for (int i = 0; i < imgRows; i++) {
-//        for (int j = 0; j < imgCols; j++) {
-//            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
-//                min = input.at<Vec3d>(i, j)[0];
-//            } else if (max < input.at<Vec3d>(i, j)[0]) {
-//                max = input.at<Vec3d>(i, j)[0];
-//            }
-//        }
-//    }
-//    for (int i = 0; i < imgRows; i++) {
-//        for (int j = 0; j < imgCols; j++) {
-//            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
-//        }
-//    }
-//    uint8_t a = 0;
-    for (vector<yolobox>::iterator it = box.begin(); it != box.end(); it++) {
-        if (!(it->rect.empty())) {
-            rectangle(depthsGray, it->rect, Scalar(255, 255, 255), 1);
-//            putText(depthsGray, std::to_string(close_distances[a]), Point((*it).rect.x, (*it).rect.y),
-//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-//                    Scalar(255, 255, 255), 1, 8, 0);
-            cout << it->rect << endl;
-        }
-    }
-//    std::vector<double>().swap(close_distances);
-    imshow("close_depthsGray", depthsGray);
-    waitKey(1);
-//    sensor_msgs::ImagePtr gray = cv_bridge::CvImage(std_msgs::Header(), "mono8", depthsGray).toImageMsg();
-//    depthPub.publish(gray);
-
-}
 
 void getTheoreticalUV(double x, double y, double z, Mat Cam_matrix, Mat Uni_matrix, Mat &output) //图像必须提前矫正
 {
@@ -176,42 +66,6 @@ void getTheoreticalUV(double x, double y, double z, Mat Cam_matrix, Mat Uni_matr
         output.at<Vec3d>(y1, x1)[2] = z;
     }
 
-}
-
-void cloudFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr output) {
-    pcl::VoxelGrid<pcl::PointXYZ> sor;
-    sor.setInputCloud(input);
-    sor.setLeafSize(0.05f, 0.05f, 0.05f);
-    sor.filter(*output);
-}
-
-void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr &output) {
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-    tree->setInputCloud(input);
-    vector<pcl::PointIndices> clusterIndices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(0.1);
-    ec.setMinClusterSize(10);
-    ec.setMaxClusterSize(25000);
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(input);
-    ec.extract(clusterIndices);
-
-    int maxPointsNumber = 0;
-    int j = 0;
-
-    for (vector<pcl::PointIndices>::const_iterator it = clusterIndices.begin(); it != clusterIndices.end(); ++it) {
-        if (it->indices.size() > maxPointsNumber) {
-            maxPointsNumber = it->indices.size();
-            output.reset(new pcl::PointCloud<pcl::PointXYZ>);
-            for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
-                output->points.push_back(input->points[*pit]);
-            }
-            output->width = output->points.size();
-            output->height = 1;
-            output->is_dense = true;
-        }
-    }
 }
 
 double getDepthInRect(Rect rect, Mat &depthImg) {
@@ -240,58 +94,9 @@ double getDepthInRect(Rect rect, Mat &depthImg) {
     }
 }
 
-void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-    pcl::PointIndices::Ptr inliners(new pcl::PointIndices);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudT(new pcl::PointCloud<pcl::PointXYZ>);
-
-    pcl::SACSegmentation<pcl::PointXYZ> sac;
-    sac.setOptimizeCoefficients(true);
-    sac.setModelType(pcl::SACMODEL_PLANE);
-    sac.setMethodType(pcl::SAC_RANSAC);
-    sac.setDistanceThreshold(0.1);
-    sac.setMaxIterations(500);
-    int nr_points = (int) input->points.size();
-    while (input->points.size() > 0.7 * nr_points) {
-        sac.setInputCloud(input);
-        sac.segment(*inliners, *coefficients);
-        if (inliners->indices.size() == 0) {
-            cout << "could not remove " << endl;
-            break;
-        }
-        pcl::ExtractIndices<pcl::PointXYZ> extract;
-        extract.setInputCloud(input);
-        extract.setIndices(inliners);
-        extract.setNegative(true);
-        extract.filter(*cloudT);
-        *input = *cloudT;
-    }
-}
-
 void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat Cam_matrix, Mat Uni_matrix, Mat &output) {
     for (unsigned int i = 0; i < input->size(); ++i) {
         getTheoreticalUV(input->points[i].x, input->points[i].y, input->points[i].z, Cam_matrix, Uni_matrix, output);
-    }
-}
-
-double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input) {
-    static boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
-            new pcl::visualization::PCLVisualizer("realtime pcl"));
-    viewer->removeAllPointClouds();  // 移除当前所有点云
-    viewer->addPointCloud(input, "realtime pcl");
-    viewer->updatePointCloud(input, "realtime pcl");
-    viewer->spinOnce(0.001);
-}
-
-void minusDepth(Mat &depth_accumulate, Mat depth_now) {
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            if (depth_now.at<Vec3d>(i, j)[0] != 0) {
-                depth_accumulate.at<Vec3d>(i, j)[0] = 0;
-                depth_accumulate.at<Vec3d>(i, j)[1] = 0;
-                depth_accumulate.at<Vec3d>(i, j)[2] = 0;
-            }
-        }
     }
 }
 
@@ -318,18 +123,18 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     far_depthes);
             point_it.color=(*input).data[j].color;
             point_it.id = j;
-//            rectangle(far_depthes,
-//                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-//                      Scalar(255, 255, 255), 1);
-//            putText(far_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
-//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-//                    Scalar(255, 255, 255), 1, 8, 0);
+            rectangle(far_depthes,
+                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                      Scalar(255, 255, 255), 1);
+            putText(far_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+                    Scalar(255, 255, 255), 1, 8, 0);
             far_distance_it.data.push_back(point_it);
         }
     }
     far_distancePointPub.publish(far_distance_it);
-//    imshow("far_depthes", far_depthes);
-//    waitKey(1);
+    imshow("far_depthes", far_depthes);
+    waitKey(1);
 }
 
 //update the car_rects
@@ -347,18 +152,18 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     close_depthes);
             point_it.color=(*input).data[j].color;
             point_it.id = j;
-//            rectangle(close_depthes,
-//                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-//                      Scalar(255, 255, 255), 1);
-//            putText(close_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
-//                    FONT_HERSHEY_COMPLEX_SMALL, 1,
-//                    Scalar(255, 255, 255), 1, 8, 0);
+            rectangle(close_depthes,
+                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                      Scalar(255, 255, 255), 1);
+            putText(close_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+                    Scalar(255, 255, 255), 1, 8, 0);
             close_distance_it.data.push_back(point_it);
         }
     }
     close_distancePointPub.publish(close_distance_it);
-//    imshow("close_depthes", close_depthes);
-//    waitKey(1);
+    imshow("close_depthes", close_depthes);
+    waitKey(1);
 }
 
 int main(int argc, char **argv) {
@@ -437,9 +242,7 @@ int main(int argc, char **argv) {
     close_yolo_sub = n.subscribe("/close_rectangles", 1, &close_yoloCallback);
     far_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_far/distance_point", 1);
     close_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_close/distance_point", 1);
-//    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
     ros::Rate loop_rate(30);
-    int jj = 0;
     while (ros::ok()) {
         ros::spinOnce();
         loop_rate.sleep();
