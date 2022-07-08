@@ -39,6 +39,7 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and 
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img);
 
+
 static float prob[BATCH_SIZE * OUTPUT_SIZE];
 IExecutionContext *context;
 float *buffers[2];
@@ -213,8 +214,8 @@ void far_imageCB(
         far_rectangles.publish(rect_msg);
     }
     cv::resize(img, img, cv::Size(640, 512));
-    cv::imshow("yolo_far", img);
-    cv::waitKey(1);
+//    cv::imshow("yolo_far", img);
+//    cv::waitKey(1);
 }
 
 void close_imageCB(
@@ -268,7 +269,7 @@ void close_imageCB(
         close_rectangles.publish(rect_msg);
     }
     cv::resize(img, img, cv::Size(640, 512));
-    cv::imshow("yolo_close", img);
-    cv::waitKey(1);
+//    cv::imshow("yolo_close", img);
+//    cv::waitKey(1);
 }
 

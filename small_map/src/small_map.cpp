@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_) //图像必须提前矫正
+void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_)
 {
     double matrix3[4][1] = {x, y, z, 1};//激光雷达系中坐标
 
