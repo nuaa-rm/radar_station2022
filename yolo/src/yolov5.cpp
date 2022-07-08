@@ -199,11 +199,6 @@ void far_imageCB(
 
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-//    for (int i = 0; i < res.size(); i++) {
-//        if (((int) res[i].class_id) != btl_number) {
-//            new_res.push_back(res[i]);
-//        }
-//    }
     //将识别得到的目标框出并发送ROS消息
     if (res.size() != 0) {
         radar_msgs::yolo_points rect_msg = rect2msg(res, img);
@@ -252,13 +247,6 @@ void close_imageCB(
     auto &res = batch_res[0];
     //识别出的车辆坐标被保存至res
     nms(res, &prob[0], CONF_THRESH, NMS_THRESH);
-    //remove our own cars
-//    for (int i = 0; i < res.size(); i++) {
-//        if (((int) res[i].class_id) != btl_number) {
-//            new_res.push_back(res[i]);
-//        }
-//    }
-
     //将识别得到的目标框出并发送ROS消息
     if (res.size() != 0) {
         radar_msgs::yolo_points rect_msg = rect2msg(res, img);

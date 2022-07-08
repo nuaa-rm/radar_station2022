@@ -44,7 +44,7 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//Convert PointCloud to Mat
 
 void
-getUV_Mat(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
+MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
 
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     Mat res = Mat::zeros(4, (int) input->size(), CV_32F);
@@ -56,7 +56,7 @@ Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     return res;
 }
 
-void getUV_Mat(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix) {
+void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix) {
     Mat res = Cam_matrix * Uni_matrix * input_uv;
     for (int i = 0; i < res.cols; i++) {
         int x = round(res.at<float>(0, i) / res.at<float>(2, i));
@@ -73,7 +73,7 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
     if (cloud) {
         Mat far_MatCloud = Cloud2Mat(cloud);
-        getUV_Mat(far_depthes, far_MatCloud, far_camera_matrix, far_uni_matrix);
+        MatProject(far_depthes, far_MatCloud, far_camera_matrix, far_uni_matrix);
     }
     if ((*input).text != "none") {
         for (int j = 0; j < (*input).data.size(); j++) {
@@ -105,7 +105,7 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
     if (cloud){
         Mat close_MatCloud = Cloud2Mat(cloud);
-        getUV_Mat(close_depthes, close_MatCloud, close_camera_matrix, close_uni_matrix);
+        MatProject(close_depthes, close_MatCloud, close_camera_matrix, close_uni_matrix);
     }
     if ((*input).text != "none") {
         for (int j = 0; j < (*input).data.size(); j++) {
