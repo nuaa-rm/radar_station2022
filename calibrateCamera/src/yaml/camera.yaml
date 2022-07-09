@@ -1,3 +1,4 @@
+length_of_cloud_queue: 10
 image_width: 1280
 image_height: 1024
 sensor_far:

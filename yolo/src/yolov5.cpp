@@ -209,8 +209,8 @@ void far_imageCB(
         far_rectangles.publish(rect_msg);
     }
     cv::resize(img, img, cv::Size(640, 512));
-//    cv::imshow("yolo_far", img);
-//    cv::waitKey(1);
+    cv::imshow("yolo_far", img);
+    cv::waitKey(1);
 }
 
 void close_imageCB(
@@ -257,7 +257,7 @@ void close_imageCB(
         close_rectangles.publish(rect_msg);
     }
     cv::resize(img, img, cv::Size(640, 512));
-//    cv::imshow("yolo_close", img);
-//    cv::waitKey(1);
+    cv::imshow("yolo_close", img);
+    cv::waitKey(1);
 }
 

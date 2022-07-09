@@ -8,21 +8,19 @@
 
 using namespace std;
 using namespace cv;
-
-void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_); //图像必须提前矫正
 cv::Mat img;
 
-float Ky_right = 0.41;
-float C_right = 550.0;
-float Ky_left = -0.507;
-float C_left = -200.53;//x+Ky_left*y-C_left;
+double Ky_right = 0.41;
+double C_right = 550.0;
+double Ky_left = -0.507;
+double C_left = -200.53;//x+Ky_left*y-C_left;
 int field_width = 28, field_height = 15;
 double imgCols = 1280.0, imgRows = 1024.0;
 ros::Publisher worldPointPub;
 int red_or_blue = 0;//0 is red, 1 is blue
 
-vector<cv::Point3f> far_objectPoints(4);
-vector<cv::Point2f> far_imagePoints(4);
+vector<cv::Point3d> far_objectPoints(4);
+vector<cv::Point2d> far_imagePoints(4);
 cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
 cv::Mat far_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat far_Rjacob = Mat::zeros(3, 1, CV_64FC1);
@@ -30,8 +28,8 @@ Mat far_R = Mat::eye(3, 3, CV_64FC1);
 Mat far_T = Mat::zeros(3, 1, CV_64FC1);
 int far_calc_flag = 0;
 
-vector<cv::Point3f> close_objectPoints(4);
-vector<cv::Point2f> close_imagePoints(4);
+vector<cv::Point3d> close_objectPoints(4);
+vector<cv::Point2d> close_imagePoints(4);
 cv::Mat close_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
 cv::Mat close_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat close_Rjacob = Mat::zeros(3, 1, CV_64FC1);
@@ -43,6 +41,7 @@ vector<radar_msgs::points> close_points;
 
 void far_calibration(const radar_msgs::points &msg);//相机标定
 void far_distPointCallback(const radar_msgs::dist_points &input);
+
 void close_calibration(const radar_msgs::points &msg);//相机标定
 void close_distPointCallback(const radar_msgs::dist_points &input);
 
@@ -141,8 +140,8 @@ int main(int argc, char **argv) {
             worldPointPub.publish(far_points[i]);
         }
         for (int i = 0; i < close_points.size(); i++) {
-            float x = close_points[i].data[0].x;
-            float y = close_points[i].data[0].y;
+            double x = close_points[i].data[0].x;
+            double y = close_points[i].data[0].y;
             x *= 450;
             y *= 840;
             if (x + Ky_right * y - C_right > 0 || x + Ky_left * y - C_left < 0) {
@@ -164,29 +163,6 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void project(double x, double y, double z, Mat &output, Mat R, Mat T, Mat CamMatrix_)
-{
-    double matrix3[4][1] = {x, y, z, 1};//激光雷达系中坐标
-
-    // transform into the opencv matrix*/
-    Mat coordinate(4, 1, CV_64F, matrix3);
-    Mat uni_matrix(3, 4, CV_64FC1);
-    hconcat(R, T, uni_matrix);
-    // calculate the result of u and v
-    Mat result = CamMatrix_ * uni_matrix * coordinate;
-    float u = result.at<double>(0, 0);
-    float v = result.at<double>(1, 0);
-    float depth = result.at<double>(2, 0);
-    u /= depth;
-    v /= depth;
-    int x1 = floor(u + 0.5);
-    int y1 = floor(v + 0.5);
-    cout << CamMatrix_ << endl << uni_matrix << endl << coordinate << endl;
-    cout << "project point:   " << Point(x1, y1) << endl;
-    if (x1 < imgCols && x1 >= 0 && y1 < imgRows && y1 >= 0) {
-        circle(output, Point(x1, y1), 2, Scalar(255, 0, 0), 2, 2, 0);
-    }
-}
 
 void far_distPointCallback(const radar_msgs::dist_points &input) {
     if (far_calc_flag == 1) {

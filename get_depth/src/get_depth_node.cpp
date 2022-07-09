@@ -18,22 +18,23 @@ using namespace std;
 using namespace cv;
 
 int imgRows = 1024, imgCols = 1280;
+int length_of_cloud_queue=5;//default length is 5
 
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
 radar_msgs::dist_points far_distance_it;
 radar_msgs::dist_points close_distance_it;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
-Mat close_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+vector<Mat> far_depth_queue;
 Mat far_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
 Mat far_uni_matrix = Mat_<float>(3, 4);//相机和雷达的变换矩阵
 Mat far_distortion_coefficient = Mat_<float>(5, 1);
+vector<Mat> close_depth_queue;
 Mat close_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
 Mat close_uni_matrix = Mat_<float>(3, 4);//相机和雷达的变换矩阵
 Mat close_distortion_coefficient = Mat_<float>(5, 1);
 
-float getDepthInRect(Rect rect, Mat &depthImg);//得到ROI中点的深度
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue);//得到ROI中点的深度
 
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
 
@@ -44,7 +45,8 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//Convert PointCloud to Mat
 
 void
-MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
+MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
+           Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
 
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     Mat res = Mat::zeros(4, (int) input->size(), CV_32F);
@@ -69,11 +71,17 @@ void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matri
 
 //update the car_rects
 void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
-    far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat far_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
     std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
     if (cloud) {
         Mat far_MatCloud = Cloud2Mat(cloud);
         MatProject(far_depthes, far_MatCloud, far_camera_matrix, far_uni_matrix);
+        far_depthes.copyTo(far_depth_show);
+        far_depth_queue.push_back(far_depthes);
+        if (far_depth_queue.size() == length_of_cloud_queue) {
+            far_depth_queue.erase(far_depth_queue.begin());
+        }
     }
     if ((*input).text != "none") {
         for (int j = 0; j < (*input).data.size(); j++) {
@@ -82,30 +90,36 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-                    far_depthes);
+                    far_depth_queue);
             point_it.color = (*input).data[j].color;
             point_it.id = j;
             far_distance_it.data.push_back(point_it);
-            rectangle(far_depthes,
+            rectangle(far_depth_show,
                       Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
                       Scalar(255, 255, 255), 1);
-            putText(far_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+            putText(far_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
         }
     }
     far_distancePointPub.publish(far_distance_it);
-//    imshow("far_depthes", far_depthes);
-//    waitKey(1);
+    imshow("far_depth_show", far_depth_show);
+    waitKey(1);
 }
 
 //update the car_rects
 void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
-    close_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat close_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat close_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
     std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
-    if (cloud){
+    if (cloud) {
         Mat close_MatCloud = Cloud2Mat(cloud);
         MatProject(close_depthes, close_MatCloud, close_camera_matrix, close_uni_matrix);
+        close_depthes.copyTo(close_depth_show);
+        close_depth_queue.push_back(close_depthes);
+        if (close_depth_queue.size() == length_of_cloud_queue) {
+            close_depth_queue.erase(close_depth_queue.begin());
+        }
     }
     if ((*input).text != "none") {
         for (int j = 0; j < (*input).data.size(); j++) {
@@ -114,37 +128,43 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-                    close_depthes);
+                    close_depth_queue);
             point_it.color = (*input).data[j].color;
             point_it.id = j;
             close_distance_it.data.push_back(point_it);
             close_distance_it.data.push_back(point_it);
-            rectangle(close_depthes,
+            rectangle(close_depth_show,
                       Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
                       Scalar(255, 255, 255), 1);
-            putText(close_depthes, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+            putText(close_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
         }
     }
     close_distancePointPub.publish(close_distance_it);
-//    imshow("close_depthes", close_depthes);
-//    waitKey(1);
+    imshow("close_depth_show", close_depth_show);
+    waitKey(1);
 }
 
 //update the dethes_img by pointcloud
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
-    //obtain the depth image by project
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
 }
 
-float getDepthInRect(Rect rect, Mat &depthImg) {
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue) {
     vector<float> distances;
     for (int i = rect.y; i < (rect.y + rect.height); i++) {
         for (int j = rect.x; j < (rect.x + rect.width); j++) {
-            if (depthImg.at<float>(i, j) != 0) {
-                distances.push_back(depthImg.at<float>(i, j));
+            for (uint8_t k = 0; k < depth_queue.size(); k++) {
+                if (depth_queue[depth_queue.size() - 1].at<float>(i, j) > 0) {
+                    distances.push_back(depth_queue[depth_queue.size() - 1].at<float>(i, j));
+                    break;
+                } else if (k < depth_queue.size() - 1 && depth_queue[k + 1].at<float>(i, j) == 0 &&
+                           depth_queue[k].at<float>(i, j) > 0) {
+                    distances.push_back(depth_queue[k].at<float>(i, j));
+                    break;
+                }
             }
         }
     }
@@ -153,7 +173,7 @@ float getDepthInRect(Rect rect, Mat &depthImg) {
         return 0;
     } else {
         sort(distances.begin(), distances.end());
-        int position = distances.size() / 2;
+        int position =5;
         float mean_distance = 0;
         if (position != 0) {
             for (int i = 0; i < position; i++) {
@@ -161,6 +181,7 @@ float getDepthInRect(Rect rect, Mat &depthImg) {
             }
             mean_distance /= position;
         }
+        cout<<"the number of scanned points:"<<distances.size()<<endl;
         return mean_distance;
     }
 }
@@ -169,9 +190,9 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "get_depth_node");
     ros::NodeHandle n;
 
+    ros::param::get("/length_of_cloud_queue", length_of_cloud_queue);
     ros::param::get("/image_width", imgCols);
     ros::param::get("/image_height", imgRows);
-
     ros::param::get("/sensor_far/camera_matrix/zerozero", far_camera_matrix.at<float>(0, 0));
     ros::param::get("/sensor_far/camera_matrix/zerotwo", far_camera_matrix.at<float>(0, 2));
     ros::param::get("/sensor_far/camera_matrix/oneone", far_camera_matrix.at<float>(1, 1));
