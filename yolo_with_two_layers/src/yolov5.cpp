@@ -40,7 +40,6 @@ static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detect
 const char *INPUT_BLOB_NAME = "data";
 const char *OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
-static Logger gLogger;
 ros::Publisher far_rectangles;
 ros::Publisher close_rectangles;
 
@@ -57,8 +56,7 @@ float *buffers_number[2];
 float *buffers_car[2];
 ICudaEngine *engine_number;
 ICudaEngine *engine_car;
-IRuntime *runtime_number;
-IRuntime *runtime_car;
+IRuntime *runtime;
 cudaStream_t stream_number;
 cudaStream_t stream_car;
 uint8_t *img_host_number = nullptr;
@@ -103,42 +101,41 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    char *trtModelStream_number = nullptr;
+    char *trtModelStream = nullptr;
     size_t size_number = 0;
     file_number.seekg(0, file_number.end);
     size_number = file_number.tellg();
     file_number.seekg(0, file_number.beg);
-    trtModelStream_number = new char[size_number];
-    assert(trtModelStream_number);
-    file_number.read(trtModelStream_number, size_number);
+    trtModelStream = new char[size_number];
+    assert(trtModelStream);
+    file_number.read(trtModelStream, size_number);
     file_number.close();
 
-    char *trtModelStream_car = nullptr;
+    runtime = createInferRuntime(gLogger);
+    assert(runtime != nullptr);
+    engine_number = runtime->deserializeCudaEngine(trtModelStream, size_number);
+    assert(engine_number != nullptr);
+    context_number = engine_number->createExecutionContext();
+    assert(context_number != nullptr);
+    delete[] trtModelStream;
+    assert(engine_number->getNbBindings() == 2);
+
     size_t size_car = 0;
     file_car.seekg(0, file_car.end);
     size_car = file_car.tellg();
     file_car.seekg(0, file_car.beg);
-    trtModelStream_car = new char[size_car];
-    assert(trtModelStream_car);
-    file_car.read(trtModelStream_car, size_car);
+    trtModelStream = new char[size_car];
+    assert(trtModelStream);
+    file_car.read(trtModelStream, size_car);
     file_car.close();
 
-    runtime_number = createInferRuntime(gLogger);
-    assert(runtime_number != nullptr);
-    engine_number = runtime_number->deserializeCudaEngine(trtModelStream_number, size_number);
-    assert(engine_number != nullptr);
-    context_number = engine_number->createExecutionContext();
-    assert(context_number != nullptr);
-    delete[] trtModelStream_number;
-    assert(engine_number->getNbBindings() == 2);
-
-    runtime_car = createInferRuntime(gLogger);
-    assert(runtime_car != nullptr);
-    engine_car = runtime_car->deserializeCudaEngine(trtModelStream_car, size_car);
+    runtime = createInferRuntime(gLogger);
+    assert(runtime != nullptr);
+    engine_car = runtime->deserializeCudaEngine(trtModelStream, size_car);
     assert(engine_car != nullptr);
     context_car = engine_car->createExecutionContext();
     assert(context_car != nullptr);
-    delete[] trtModelStream_car;
+    delete[] trtModelStream;
     assert(engine_car->getNbBindings() == 2);
 
     // In order to bind the buffers, we need to know the names of the input and output tensors.
@@ -206,11 +203,10 @@ int main(int argc, char **argv) {
     // Destroy the engine
     context_car->destroy();
     engine_car->destroy();
-    runtime_car->destroy();
 
     context_number->destroy();
     engine_number->destroy();
-    runtime_number->destroy();
+    runtime->destroy();
 
     return 0;
 }
@@ -307,11 +303,32 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
                 number_in_img.x += rr.x;
                 number_in_img.y += rr.y;
                 cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
-                cv::putText(img, std::to_string((int)res[j].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
-                std::cout << res[j].class_id << std::endl;
+                if((int)res[m].class_id <= 4)
+                {
+                    cv::putText(img, std::string("red") + std::to_string((int)res[m].class_id + 1), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                }
+                else if((int)res[m].class_id == 5)
+                {
+                    cv::putText(img, "red guard", cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                }
+                else if((int)res[m].class_id == 11)
+                {
+                    cv::putText(img, "blue guard", cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                }
+                else
+                {
+                    cv::putText(img, std::string("blue") + std::to_string((int)res[m].class_id - 5), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                }
             }
             cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            cv::putText(img, std::to_string((int)res_car[j].class_id), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            if((int)res_car[j].class_id == 0)
+            {
+                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else
+            {
+                cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
         }
         fcount = 0;
     }
@@ -329,7 +346,7 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
     cv::imshow("yolo_far", img);
     cv::waitKey(1);*/
     auto end = std::chrono::system_clock::now();
-    //std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
     cv::imshow("yolo_far", img);
     cv::waitKey(1);
 }
