@@ -24,7 +24,7 @@
 #define DEVICE 0  // GPU id
 #define NMS_THRESH 0.4
 #define CONF_THRESH 0.5
-#define BATCH_SIZE_NUMBER 12
+#define BATCH_SIZE_NUMBER 8
 #define BATCH_SIZE_CAR 1
 #define MAX_IMAGE_INPUT_SIZE_THRESH 3000 * 3000 // ensure it exceed the maximum size in the input images !
 
@@ -79,6 +79,32 @@ void doInference(IExecutionContext &context, cudaStream_t &stream, void **buffer
     CUDA_CHECK(cudaMemcpyAsync(output, buffers[1], batchSize * OUTPUT_SIZE * sizeof(float), cudaMemcpyDeviceToHost,
                                stream));
     cudaStreamSynchronize(stream);
+}
+
+radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img)
+{
+    radar_msgs::yolo_points msg_it;
+    radar_msgs::yolo_point rect_point;
+    for (std::vector<Yolo::Detection>::iterator it = yolo_detection.begin(); it != yolo_detection.end(); it++) {
+        cv::Rect r = get_rect_car(img, it->bbox);
+        rect_point.id = it->class_id;
+        //std::cout << it->class_id << std::endl;
+        if(it->class_id <= 5 || it->class_id ==12)
+        {
+            rect_point.color = false;
+        }
+        else
+        {
+            rect_point.color = true;
+        }
+        rect_point.x = (int) r.x;
+        rect_point.y = (int) r.y;
+        rect_point.width = (int) r.width;
+        rect_point.height = (int) r.height;
+        msg_it.data.push_back(rect_point);
+        //std::cout << r << std::endl;
+    }
+    return msg_it;
 }
 
 int main(int argc, char **argv) {
@@ -296,6 +322,9 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
         {
             auto& res = batch_res_number[b];
             cv::Rect rr = get_rect_car(img_raw, res_car[j - fcount + 1 + b].bbox);
+            Yolo::Detection real_res;
+            real_res.conf = 0;
+            real_res.class_id = 14;
             for(size_t m = 0; m < res.size(); m++)
             {
                 cv::Rect number_in_roi = get_rect_number(imgs_buffer[b], res[m].bbox);
@@ -303,48 +332,83 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
                 number_in_img.x += rr.x;
                 number_in_img.y += rr.y;
                 cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
-                if((int)res[m].class_id <= 4)
+                cv::putText(img, std::to_string((int)res[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+                if(res[m].conf > real_res.conf)
                 {
-                    cv::putText(img, std::string("red") + std::to_string((int)res[m].class_id + 1), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                    real_res = res[m];
                 }
-                else if((int)res[m].class_id == 5)
+            }
+
+            //根据装甲板ID修改车的ID
+            if((int)real_res.class_id == 14)
+            {
+                if((int)res_car[j - fcount + 1 + b].class_id == 0)
                 {
-                    cv::putText(img, "red guard", cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
-                }
-                else if((int)res[m].class_id == 11)
-                {
-                    cv::putText(img, "blue guard", cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                    res_car[j - fcount + 1 + b].class_id = 12;
                 }
                 else
                 {
-                    cv::putText(img, std::string("blue") + std::to_string((int)res[m].class_id - 5), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                    res_car[j - fcount + 1 + b].class_id = 13;
                 }
-            }
-            cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            if((int)res_car[j].class_id == 0)
-            {
-                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
             }
             else
             {
+                res_car[j - fcount + 1 + b].class_id = real_res.class_id;
+            }
+            //根据装甲板的bbox修改车的bbox
+            if(res.size() == 0)
+            {
+
+            }
+            else if(res.size() == 1)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
+            if((int)res_car[j].class_id <= 4)
+            {
+                cv::putText(img, std::string("red") + std::to_string((int)res_car[j].class_id + 1), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else if((int)res_car[j].class_id == 5)
+            {
+                cv::putText(img, "red guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else if((int)res_car[j].class_id == 11)
+            {
+                cv::putText(img, "blue guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else if((int)res_car[j].class_id == 12)
+            {
+                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else if((int)res_car[j].class_id == 13)
+            {
                 cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
+            else
+            {
+                cv::putText(img, std::string("blue") + std::to_string((int)res_car[j].class_id - 5), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
             }
         }
         fcount = 0;
     }
-
-    /*//将识别得到的目标框出并发送ROS消息
-    if (res.size() != 0) {
-        radar_msgs::yolo_points rect_msg = rect2msg(res, img);
+    //将识别得到的目标框出并发送ROS消息
+    if (res_car.size() != 0)
+    {
+        radar_msgs::yolo_points rect_msg = rect2msg(res_car, img);
         far_rectangles.publish(rect_msg);
-    } else {
+    }
+    else
+    {
         radar_msgs::yolo_points rect_msg;
         rect_msg.text = "none";
         far_rectangles.publish(rect_msg);
     }
-    cv::resize(img, img, cv::Size(640, 512));
-    cv::imshow("yolo_far", img);
-    cv::waitKey(1);*/
     auto end = std::chrono::system_clock::now();
     std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
     cv::imshow("yolo_far", img);
