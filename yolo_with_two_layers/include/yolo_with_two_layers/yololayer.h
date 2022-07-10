@@ -21,8 +21,8 @@ namespace Yolo
     static constexpr int CLASS_NUM_NUMBER = 12;
     static constexpr int INPUT_H_CAR = 512;  // yolov5's input height and width must be divisible by 32.
     static constexpr int INPUT_W_CAR = 640;
-    static constexpr int INPUT_H_NUMBER = 256;  // yolov5's input height and width must be divisible by 32.
-    static constexpr int INPUT_W_NUMBER = 256;
+    static constexpr int INPUT_H_NUMBER = 128;  // yolov5's input height and width must be divisible by 32.
+    static constexpr int INPUT_W_NUMBER = 128;
 
     static constexpr int LOCATIONS = 4;
     struct alignas(float) Detection {

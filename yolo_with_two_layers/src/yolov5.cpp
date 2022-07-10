@@ -24,10 +24,10 @@
 #define DEVICE 0  // GPU id
 #define NMS_THRESH 0.4
 #define CONF_THRESH 0.5
-#define BATCH_SIZE 1
+#define BATCH_SIZE_NUMBER 12
+#define BATCH_SIZE_CAR 1
 #define MAX_IMAGE_INPUT_SIZE_THRESH 3000 * 3000 // ensure it exceed the maximum size in the input images !
-//using namespace std;
-//using namespace cv;
+
 // stuff we know about the network and the input/output blobs
 static const int INPUT_H_NUMBER = Yolo::INPUT_H_NUMBER;
 static const int INPUT_W_NUMBER = Yolo::INPUT_W_NUMBER;
@@ -40,6 +40,7 @@ static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detect
 const char *INPUT_BLOB_NAME = "data";
 const char *OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
+static Logger gLogger;
 ros::Publisher far_rectangles;
 ros::Publisher close_rectangles;
 
@@ -48,8 +49,8 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and 
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::yolo_points>::iterator msg_it, cv::Mat &img);
 
-static float prob_number[BATCH_SIZE * OUTPUT_SIZE];
-static float prob_car[BATCH_SIZE * OUTPUT_SIZE];
+static float prob_number[BATCH_SIZE_NUMBER * OUTPUT_SIZE];
+static float prob_car[BATCH_SIZE_CAR * OUTPUT_SIZE];
 IExecutionContext *context_number;
 IExecutionContext *context_car;
 float *buffers_number[2];
@@ -82,32 +83,6 @@ void doInference(IExecutionContext &context, cudaStream_t &stream, void **buffer
     cudaStreamSynchronize(stream);
 }
 
-
-/*radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img)
-{
-    radar_msgs::yolo_points msg_it;
-    radar_msgs::yolo_point rect_point;
-    for (std::vector<Yolo::Detection>::iterator it = yolo_detection.begin(); it != yolo_detection.end(); it++)
-    {
-        cv::Rect r = get_rect(img, it->bbox);
-        msg_it.id = it->class_id;
-        rect_point.color=it->class_id;
-        rect_point.x = (int) r.x;
-        rect_point.y = (int) r.y;
-        rect_point.width = (int) r.width;
-        rect_point.height = (int) r.height;
-        msg_it.data.push_back(rect_point);
-        std::cout << r << std::endl;
-        cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 3);
-        std::string color;
-        if(rect_point.color==1)color="blue";
-        else color="red";
-        cv::putText(img, color, cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.5,
-                    cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-    }
-    return msg_it;
-}*/
-
 int main(int argc, char **argv) {
     cudaSetDevice(DEVICE);
 
@@ -116,12 +91,14 @@ int main(int argc, char **argv) {
 
     // deserialize the .engine and run inference
     std::ifstream file_car(engine_name_car, std::ios::binary);
-    if (!file_car.good()) {
+    if (!file_car.good())
+    {
         std::cerr << "read " << engine_name_car << " error!" << std::endl;
         return -1;
     }
     std::ifstream file_number(engine_name_number, std::ios::binary);
-    if (!file_number.good()) {
+    if (!file_number.good())
+    {
         std::cerr << "read " << engine_name_number << " error!" << std::endl;
         return -1;
     }
@@ -177,11 +154,11 @@ int main(int argc, char **argv) {
     assert(outputIndex_car == 1);
 
     // Create GPU buffers on device
-    CUDA_CHECK(cudaMalloc((void **) &buffers_number[inputIndex_number], BATCH_SIZE * 3 * INPUT_H_NUMBER * INPUT_W_NUMBER * sizeof(float)));
-    CUDA_CHECK(cudaMalloc((void **) &buffers_number[outputIndex_number], BATCH_SIZE * OUTPUT_SIZE * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_number[inputIndex_number], BATCH_SIZE_NUMBER * 3 * INPUT_H_NUMBER * INPUT_W_NUMBER * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_number[outputIndex_number], BATCH_SIZE_NUMBER * OUTPUT_SIZE * sizeof(float)));
 
-    CUDA_CHECK(cudaMalloc((void **) &buffers_car[inputIndex_car], BATCH_SIZE * 3 * INPUT_H_CAR * INPUT_W_CAR * sizeof(float)));
-    CUDA_CHECK(cudaMalloc((void **) &buffers_car[outputIndex_car], BATCH_SIZE * OUTPUT_SIZE * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_car[inputIndex_car], BATCH_SIZE_CAR * 3 * INPUT_H_CAR * INPUT_W_CAR * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_car[outputIndex_car], BATCH_SIZE_CAR * OUTPUT_SIZE * sizeof(float)));
 
     // Create stream
     CUDA_CHECK(cudaStreamCreate(&stream_car));
@@ -203,59 +180,6 @@ int main(int argc, char **argv) {
     ros::start();
     ros::NodeHandle n;
 
-
-
-
-
-
-
-
-
-    cv::String path = "/home/dovejh/project/tensorrtx -v6.0/yolov5/samples";
-    std::vector<cv::String> filenames;
-    cv::glob(path, filenames);
-    for(int i = 0; i < filenames.size(); i ++)
-    {
-        cv::Mat roi;
-        roi = cv::imread(filenames[i]);
-        cv::imshow("haha", roi);
-        cv::waitKey(1);
-        float *buffer_idx_number = (float *) buffers_number[inputIndex_number];
-        if (roi.empty())
-        {
-            printf("roi empty!!!!\t");
-            assert(!roi.empty());
-        }
-
-        size_t size_roi = roi.cols * roi.rows * 3;
-        size_t size_roi_dst = INPUT_H_NUMBER * INPUT_W_NUMBER * 3;
-        //copy data to pinned memory
-        memcpy(img_host_number, roi.data, size_roi);
-        //copy data to device memory
-        CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice, stream_number));
-        preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER, INPUT_H_NUMBER, stream_number);
-
-        // Run inference
-        buffer_idx_number += size_roi_dst;
-        std::vector<Yolo::Detection> batch_res_number;
-        doInference(*context_number, stream_number, (void **) buffers_number, prob_number, BATCH_SIZE);
-
-        //识别出的车辆坐标被保存至res
-        nms(batch_res_number, &prob_number[0], CONF_THRESH, NMS_THRESH);
-        for(int j = 0; j < batch_res_number.size(); i++)
-        {
-            cv::Rect r;
-            r = get_rect_number(roi, batch_res_number[i].bbox);
-            cv::rectangle(roi, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            filenames[i][45] = '1';
-            cv::imwrite(filenames[i], roi);
-            std::cout << filenames[i] << '\t' << batch_res_number.size() << std::endl;
-        }
-
-    }
-
-
-
 //    ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &imageCB);
     ros::Subscriber farImageSub = n.subscribe("/sensor_far/image_raw", 1, &far_imageCB);
     ros::Subscriber closeImageSub = n.subscribe("/sensor_close/image_raw", 1, &close_imageCB);
@@ -264,7 +188,7 @@ int main(int argc, char **argv) {
     far_rectangles = n.advertise<radar_msgs::yolo_points>("far_rectangles", 1);
     close_rectangles = n.advertise<radar_msgs::yolo_points>("close_rectangles", 1);
     //ros::Rate loop_rate(30);
-    //ros::spin();
+    ros::spin();
 
     // Release stream and buffers
     cudaStreamDestroy(stream_car);
@@ -293,6 +217,7 @@ int main(int argc, char **argv) {
 
 void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
 {
+    auto start = std::chrono::system_clock::now();
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
     float *buffer_idx_car = (float *) buffers_car[inputIndex_car];
     if (img.empty())
@@ -311,71 +236,86 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
     CUDA_CHECK(cudaMemcpyAsync(img_device_car, img_host_car, size_image, cudaMemcpyHostToDevice, stream_car));
     preprocess_kernel_img(img_device_car, img.cols, img.rows, buffer_idx_car, INPUT_W_CAR, INPUT_H_CAR, stream_car);
     buffer_idx_car += size_images_dst;
-    std::vector<Yolo::Detection> batch_res_car;
+    std::vector<Yolo::Detection> res_car;
     // Run inference
-    doInference(*context_car, stream_car, (void **) buffers_car, prob_car, BATCH_SIZE);
-    nms(batch_res_car, &prob_car[0], CONF_THRESH, NMS_THRESH);
-
+    doInference(*context_car, stream_car, (void **) buffers_car, prob_car, BATCH_SIZE_CAR);
+    nms(res_car, &prob_car[0], CONF_THRESH, NMS_THRESH);
     //识别出的车辆坐标被保存至res
-
-    //std::cout <<"res_car.size()" << res_car.size() << std::endl;
-    for (size_t j = 0; j < batch_res_car.size(); j++)
+    int fcount = 0;
+    std::vector<cv::Mat>imgs_buffer(BATCH_SIZE_NUMBER);
+    for (size_t j = 0; j < res_car.size(); j++)
     {
-        cv::Rect r = get_rect_car(img, batch_res_car[j].bbox);
-        cv::Mat roi;
-        if(r.x < 0)
+        fcount ++;
+        if(fcount < BATCH_SIZE_NUMBER && j + 1 != res_car.size())
         {
-            r.x = 0;
+            continue;
         }
-        else if(r.y < 0)
-        {
-            r.y = 0;
-        }
-        else if((r.x + r.width) > img.cols)
-        {
-            r.width = img.cols - r.x;
-        }
-        else if((r.y + r.height) > img.rows)
-        {
-            r.height = img.rows - r.y;
-        }
-        roi = img_raw(r);
         float *buffer_idx_number = (float *) buffers_number[inputIndex_number];
-        if (roi.empty())
+        for(int b = 0; b < fcount; b++)
         {
-            printf("roi empty!!!!\t");
-            assert(!roi.empty());
+            cv::Rect r = get_rect_car(img, res_car[j - fcount + 1 + b].bbox);
+            cv::Mat roi;
+            if(r.x < 0)
+            {
+                r.x = 0;
+            }
+            else if(r.y < 0)
+            {
+                r.y = 0;
+            }
+            else if((r.x + r.width) > img.cols)
+            {
+                r.width = img.cols - r.x;
+            }
+            else if((r.y + r.height) > img.rows)
+            {
+                r.height = img.rows - r.y;
+            }
+            img_raw(r).copyTo(roi);
+            if(roi.empty())
+            {
+                continue;
+            }
+            imgs_buffer[b] = roi;
+            size_t size_roi = roi.cols * roi.rows * 3;
+            size_t size_roi_dst = INPUT_H_NUMBER * INPUT_W_NUMBER * 3;
+            //copy data to pinned memory
+            memcpy(img_host_number, roi.data, size_roi);
+            //copy data to device memory
+            CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice, stream_number));
+            preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER, INPUT_H_NUMBER, stream_number);
+
+            // Run inference
+            buffer_idx_number += size_roi_dst;
         }
 
-        size_t size_roi = roi.cols * roi.rows * 3;
-        size_t size_roi_dst = INPUT_H_NUMBER * INPUT_W_NUMBER * 3;
-        //copy data to pinned memory
-        memcpy(img_host_number, roi.data, size_roi);
-        //copy data to device memory
-        CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice, stream_number));
-        preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER, INPUT_H_NUMBER, stream_number);
-
-        // Run inference
-        buffer_idx_number += size_roi_dst;
-        std::vector<Yolo::Detection> batch_res_number;
-        doInference(*context_number, stream_number, (void **) buffers_number, prob_number, BATCH_SIZE);
-
-        //识别出的车辆坐标被保存至res
-        nms(batch_res_number, &prob_number[0], CONF_THRESH, NMS_THRESH);
-        cv::rectangle(img, r, cv::Scalar(0x27, 0xC1, 0x36), 2);
-        cv::putText(img, std::to_string((int)batch_res_car[j].class_id), cv::Point(r.x, r.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-        for (size_t k = 0; k < batch_res_number.size(); k++) {
-            std::cout << "success!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-            cv::Rect number_in_roi = get_rect_number(roi, batch_res_number[k].bbox);
-            cv::Rect number_in_img = number_in_roi;
-            number_in_img.x += r.x;
-            number_in_img.y += r.y;
-            cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
-            cv::putText(img, std::to_string((int)batch_res_number[j].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+        doInference(*context_number, stream_number, (void **) buffers_number, prob_number, BATCH_SIZE_NUMBER);
+        std::vector<std::vector<Yolo::Detection>>batch_res_number(fcount);
+        for(int b = 0; b < fcount; b++)
+        {
+            auto& res = batch_res_number[b];
+            nms(res, &prob_number[b*OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
         }
+        for(int b = 0; b < fcount; b++)
+        {
+            auto& res = batch_res_number[b];
+            cv::Rect rr = get_rect_car(img_raw, res_car[j - fcount + 1 + b].bbox);
+            for(size_t m = 0; m < res.size(); m++)
+            {
+                cv::Rect number_in_roi = get_rect_number(imgs_buffer[b], res[m].bbox);
+                cv::Rect number_in_img = number_in_roi;
+                number_in_img.x += rr.x;
+                number_in_img.y += rr.y;
+                cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
+                cv::putText(img, std::to_string((int)res[j].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0xFF, 0xFF, 0xFF), 1);
+                std::cout << res[j].class_id << std::endl;
+            }
+            cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
+            cv::putText(img, std::to_string((int)res_car[j].class_id), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+        }
+        fcount = 0;
     }
-    cv::imshow("yolo_far", img);
-    cv::waitKey(1);
+
     /*//将识别得到的目标框出并发送ROS消息
     if (res.size() != 0) {
         radar_msgs::yolo_points rect_msg = rect2msg(res, img);
@@ -388,6 +328,10 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
     cv::resize(img, img, cv::Size(640, 512));
     cv::imshow("yolo_far", img);
     cv::waitKey(1);*/
+    auto end = std::chrono::system_clock::now();
+    //std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    cv::imshow("yolo_far", img);
+    cv::waitKey(1);
 }
 
 void close_imageCB(
