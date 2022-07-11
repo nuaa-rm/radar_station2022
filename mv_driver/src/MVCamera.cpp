@@ -19,6 +19,7 @@ MVCamera::MVCamera()
 {
 
     iCameraCounts = 4;
+
     iStatus = 0;
     hCamera = 0;
     channel = 3;
