@@ -8,15 +8,15 @@ project(yolo_with_two_layers)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  mv_driver
-  rospy
-  sensor_msgs
-  image_transport
-  cv_bridge
-  std_msgs
-)
+        roscpp
+        rospy
+        mv_driver
+        rospy
+        sensor_msgs
+        image_transport
+        cv_bridge
+        std_msgs
+        )
 catkin_package(
         DEPENDS
 )
@@ -41,7 +41,7 @@ include_directories(
         include
         ${catkin_INCLUDE_DIRS}
         "/usr/include/eigen3"
-        ../../../devel/include/
+        ${PROJECT_INIT_PATH}/devel/include/
 )# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
 
 include_directories(${CUDA_INCLUDE_DIRS})
