@@ -2,7 +2,7 @@ if_red: False
 is_record: False
 ifshow: True
 fps_mode: 0
-exp_time: 30000
+exp_time: 29000
 
 sensor_far:
   deviceID: 0

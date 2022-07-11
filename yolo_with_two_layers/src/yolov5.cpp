@@ -1,16 +1,11 @@
 #include <iostream>
 #include <chrono>
-#include <cmath>
 #include "yolo_with_two_layers/cuda_utils.h"
 #include "yolo_with_two_layers/logging.h"
 #include "yolo_with_two_layers/common.hpp"
-#include "yolo_with_two_layers/utils.h"
 #include "yolo_with_two_layers/calibrator.h"
 #include "yolo_with_two_layers/preprocess.h"
 #include <ros/ros.h>
-#include <opencv2/opencv.hpp>
-#include <std_msgs/String.h>
-#include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -20,7 +15,6 @@
 #include <radar_msgs/yolo_points.h>
 
 
-#define USE_FP16  // set USE_INT8 or USE_FP16 or USE_FP32
 #define DEVICE 0  // GPU id
 #define NMS_THRESH 0.4
 #define CONF_THRESH 0.5
@@ -46,7 +40,7 @@ ros::Publisher close_rectangles;
 //std::vector<radar_msgs::points> car_points;//the 2 points of a rectangle, saved in one member of the car_points
 void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
-void rect2msg(std::vector<Yolo::Detection>::iterator it, std::vector<radar_msgs::yolo_points>::iterator msg_it, cv::Mat &img);
+radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img);
 
 static float prob_number[BATCH_SIZE_NUMBER * OUTPUT_SIZE];
 static float prob_car[BATCH_SIZE_CAR * OUTPUT_SIZE];
