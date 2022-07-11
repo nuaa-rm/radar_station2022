@@ -92,7 +92,7 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
                     far_depth_queue);
             point_it.color = (*input).data[j].color;
-            point_it.id = j;
+            point_it.id = (*input).data[j].id;
             far_distance_it.data.push_back(point_it);
             rectangle(far_depth_show,
                       Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
@@ -130,7 +130,7 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
                     close_depth_queue);
             point_it.color = (*input).data[j].color;
-            point_it.id = j;
+            point_it.id = (*input).data[j].id;
             close_distance_it.data.push_back(point_it);
             close_distance_it.data.push_back(point_it);
             rectangle(close_depth_show,

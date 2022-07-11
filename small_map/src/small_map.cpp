@@ -129,14 +129,23 @@ int main(int argc, char **argv) {
         small_map.copyTo(small_map_copy);
         resize(small_map_copy, small_map_copy, Size(450, 840));
         for (int i = 0; i < far_points.size(); i++) {
-            if (far_points[i].color == "red")
+            if (far_points[i].color == "red") {
                 circle(small_map_copy, Point((int) (450 * far_points[i].data[0].x),
                                              (int) (840 * far_points[i].data[0].y)), 10,
                        Scalar(0, 0, 255), -1, LINE_8, 0);
-            else if (far_points[i].color == "blue")
+                putText(small_map_copy, to_string(far_points[i].id),
+                        Point((int) (450 * far_points[i].data[0].x) - 2,
+                              (int) (840 * far_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            } else if (far_points[i].color == "blue") {
                 circle(small_map_copy, Point((int) (450 * far_points[i].data[0].x),
                                              (int) (840 * far_points[i].data[0].y)), 10,
                        Scalar(255, 0, 0), -1, LINE_8, 0);
+                putText(small_map_copy, to_string(far_points[i].id),
+                        Point((int) (450 * far_points[i].data[0].x) - 2,
+                              (int) (840 * far_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
+                        cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            }
             worldPointPub.publish(far_points[i]);
         }
         for (int i = 0; i < close_points.size(); i++) {
@@ -145,14 +154,23 @@ int main(int argc, char **argv) {
             x *= 450;
             y *= 840;
             if (x + Ky_right * y - C_right > 0 || x + Ky_left * y - C_left < 0) {
-                if (close_points[i].color == "blue")
+                if (close_points[i].color == "blue") {
                     circle(small_map_copy, Point((int) x,
                                                  (int) y), 10,
                            Scalar(255, 0, 0), -1, LINE_8, 0);
-                else if (close_points[i].color == "red")
+                    putText(small_map_copy, to_string(close_points[i].id),
+                            Point((int) (450 * close_points[i].data[0].x) - 2,
+                                  (int) (840 * close_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
+                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+                } else if (close_points[i].color == "red") {
                     circle(small_map_copy, Point((int) x,
                                                  (int) y), 10,
                            Scalar(0, 0, 255), -1, LINE_8, 0);
+                    putText(small_map_copy, to_string(close_points[i].id),
+                            Point((int) (450 * close_points[i].data[0].x) - 2,
+                                  (int) (840 * close_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
+                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+                }
                 worldPointPub.publish(close_points[i]);
             }
         }
@@ -188,7 +206,7 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                 point.x = x;
                 point.y = y;
                 points.data.push_back(point);
-                points.id = i;
+                points.id = input.data[i].id;
                 if (input.data[i].color == 0)points.color = string("red");
                 else points.color = string("blue");
                 far_points.push_back(points);
@@ -240,7 +258,7 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 point.x = x;
                 point.y = y;
                 points.data.push_back(point);
-                points.id = i;
+                points.id = input.data[i].id;
                 if (input.data[i].color == 0)points.color = string("red");
                 else points.color = string("blue");
                 close_points.push_back(points);
