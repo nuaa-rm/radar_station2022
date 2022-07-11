@@ -437,40 +437,46 @@ int main (int argc, char** argv)
         sp.is_enemy_red = true;
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
-    ros::Rate loop(10);
+    ros::Rate loop(1000);
     ROS_INFO_STREAM("Looping! ");
+    int count = 0;
     while(ros::ok())
     {
-        if(!worldPoints.empty())
+        count++;
+        if(count >= 100)
         {
-            if(worldPoints[0].color)
+            if(!worldPoints.empty())
             {
-                sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-            }
-            else
-            {
-                sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-            }
-            worldPoints.erase(worldPoints.begin());
-        }
-        else
-        {
-            ros::spinOnce();
-            /*for(int i = 0; i < 10; i++)
-            {
-                car_point carPoint;
-                carPoint.point = Point2f(1.4 * i, 2.8 * i);
-                if(i < 5)
+                if(worldPoints[0].color)
                 {
-                    carPoint.color = true;
+                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
                 }
                 else
                 {
-                    carPoint.color = false;
+                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
                 }
-                worldPoints.push_back(carPoint);
-            }*/
-            //测试用
+                worldPoints.erase(worldPoints.begin());
+            }
+            else
+            {
+                ros::spinOnce();
+                /*for(int i = 0; i < 10; i++)
+                {
+                    car_point carPoint;
+                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+                    if(i < 5)
+                    {
+                        carPoint.color = true;
+                    }
+                    else
+                    {
+                        carPoint.color = false;
+                    }
+                    worldPoints.push_back(carPoint);
+                }*/
+                //测试用
+            }
+            count = 0;
         }
         uint8_t test[113] = {1};
         sp.receiveMsgs();
