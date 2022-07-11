@@ -10,6 +10,9 @@
 #include "radar_msgs/small_map.h"
 #include <opencv2/opencv.hpp>
 #include "std_msgs/Int8.h"
+#include "radar_msgs/game_state.h"
+#include "radar_msgs/supply_projectile_action.h"
+#include "radar_msgs/referee_warning.h"
 using namespace std;
 using namespace cv;
 
@@ -204,6 +207,12 @@ public:
     referee_warning_msg refereeWarningMsg;
     dart_remaining_time_msg dartRemainingTimeMsg;
     game_status_msgs gameStatusMsgs;
+    ros::Publisher gameStatePub = n.advertise<radar_msgs::game_state>("game_state", 1);
+    ros::Publisher supplyProjectileActionPub = n.advertise<radar_msgs::supply_projectile_action>("supply_projectile_action", 1);
+    ros::Publisher refereeWarningPub = n.advertise<radar_msgs::referee_warning>("referee_warning", 1);
+    radar_msgs::game_state gameStateRosMsg;
+    radar_msgs::supply_projectile_action supplyProjectileActionRosMsg;
+    radar_msgs::referee_warning refereeWarningRosMsg;
     uint8_t receiveData[1024];
     bool is_enemy_red = false;
     int serial_port_init()
@@ -260,6 +269,7 @@ public:
     {
         if(ser.available())
         {
+            bool if_pub = false;
             ser.read(receiveData, ser.available());
             gameStatusMsgs = (*(game_status_msgs*)receiveData);
             dartRemainingTimeMsg = (*(dart_remaining_time_msg*)receiveData);
@@ -269,47 +279,86 @@ public:
             supplyProjectileActionMsg = (*(supply_projectile_action_msg*)receiveData);
             refereeWarningMsg = (*(referee_warning_msg*)receiveData);
             dartRemainingTimeMsg = (*(dart_remaining_time_msg*)receiveData);
+            gameStateRosMsg.dart_remaining_time = 16;
+            gameStateRosMsg.winner = 3;
             if((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs.head) - sizeof(gameStatusMsgs.head.crc)), 0xff)) && (gameStatusMsgs.crc == get_CRC16_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)), 0xffff)))
             {
+
                 cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.game_progress = gameStatusMsgs.data.game_progress;
+                gameStateRosMsg.game_type = gameStatusMsgs.data.game_type;
+                gameStateRosMsg.stage_remain_time = gameStatusMsgs.data.stage_remain_time;
+                if_pub = true;
             }
             if((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg.head) - sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) && (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg) - sizeof(dartRemainingTimeMsg.crc)), 0xffff)))
             {
-                //cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.dart_remaining_time = dartRemainingTimeMsg.data.dart_remaining_time;
+                if_pub = true;
             }
             if((robotHealthMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&robotHealthMsgs, (sizeof(robotHealthMsgs.head) - sizeof(robotHealthMsgs.head.crc)), 0xff)) && (robotHealthMsgs.crc == get_CRC16_check_sum((uint8_t*)&robotHealthMsgs, (sizeof(robotHealthMsgs) - sizeof(robotHealthMsgs.crc)), 0xffff)))
             {
-                //cout << robotHealthMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.blue_1_robot_HP = robotHealthMsgs.data.blue_1_robot_HP;
+                gameStateRosMsg.blue_2_robot_HP = robotHealthMsgs.data.blue_2_robot_HP;
+                gameStateRosMsg.blue_3_robot_HP = robotHealthMsgs.data.blue_3_robot_HP;
+                gameStateRosMsg.blue_4_robot_HP = robotHealthMsgs.data.blue_4_robot_HP;
+                gameStateRosMsg.blue_5_robot_HP = robotHealthMsgs.data.blue_5_robot_HP;
+                gameStateRosMsg.blue_7_robot_HP = robotHealthMsgs.data.blue_7_robot_HP;
+                gameStateRosMsg.blue_base_HP = robotHealthMsgs.data.blue_base_HP;
+                gameStateRosMsg.blue_outpose_HP = robotHealthMsgs.data.blue_outpose_HP;
+                gameStateRosMsg.red_1_robot_HP = robotHealthMsgs.data.red_1_robot_HP;
+                gameStateRosMsg.red_2_robot_HP = robotHealthMsgs.data.red_2_robot_HP;
+                gameStateRosMsg.red_3_robot_HP = robotHealthMsgs.data.red_3_robot_HP;
+                gameStateRosMsg.red_4_robot_HP = robotHealthMsgs.data.red_4_robot_HP;
+                gameStateRosMsg.red_5_robot_HP = robotHealthMsgs.data.red_5_robot_HP;
+                gameStateRosMsg.red_7_robot_HP = robotHealthMsgs.data.red_7_robot_HP;
+                gameStateRosMsg.red_base_HP = robotHealthMsgs.data.red_base_HP;
+                gameStateRosMsg.red_outpose_HP = robotHealthMsgs.data.red_outpose_HP;
+                if_pub = true;
             }
             if((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg.head) - sizeof(gameResultMsg.head.crc)), 0xff)) && (gameResultMsg.crc == get_CRC16_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg) - sizeof(gameResultMsg.crc)), 0xffff)))
             {
-                //cout << gameResultMsg.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.winner = gameResultMsg.data.winner;
+                if_pub = true;
             }
             if((siteEventMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&siteEventMsgs, (sizeof(siteEventMsgs.head) - sizeof(siteEventMsgs.head.crc)), 0xff)) && (siteEventMsgs.crc == get_CRC16_check_sum((uint8_t*)&siteEventMsgs, (sizeof(siteEventMsgs) - sizeof(siteEventMsgs.crc)), 0xffff)))
             {
-                //cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.if_supply_projectile_one_occupied = (siteEventMsgs.data.event_type | 0x80000000);
+                gameStateRosMsg.if_supply_projectile_two_occupied = (siteEventMsgs.data.event_type | 0x40000000);
+                gameStateRosMsg.if_supply_projectile_three_occupied = (siteEventMsgs.data.event_type | 0x20000000);
+                gameStateRosMsg.if_wind_mill_hit_place_occupied = (siteEventMsgs.data.event_type | 0x10000000);
+                gameStateRosMsg.if_wind_mill_big_lighted = (siteEventMsgs.data.event_type | 0x80000000);
+                gameStateRosMsg.if_wind_mill_small_lighted = (siteEventMsgs.data.event_type | 0x08000000);
+                gameStateRosMsg.if_RB2_occupied = (siteEventMsgs.data.event_type | 0x04000000);
+                gameStateRosMsg.if_RB3_occupied = (siteEventMsgs.data.event_type | 0x02000000);
+                gameStateRosMsg.if_RB4_occupied = (siteEventMsgs.data.event_type | 0x01000000);
+                gameStateRosMsg.if_base_protected = (siteEventMsgs.data.event_type | 0x00800000);
+                gameStateRosMsg.if_outpose_alive = (siteEventMsgs.data.event_type | 0x00400000);
+                if_pub = true;
             }
             if((supplyProjectileActionMsg.head.crc == get_CRC8_check_sum((uint8_t*)&supplyProjectileActionMsg, (sizeof(supplyProjectileActionMsg.head) - sizeof(supplyProjectileActionMsg.head.crc)), 0xff)) && (supplyProjectileActionMsg.crc == get_CRC16_check_sum((uint8_t*)&supplyProjectileActionMsg, (sizeof(supplyProjectileActionMsg) - sizeof(supplyProjectileActionMsg.crc)), 0xffff)))
             {
-                //cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                supplyProjectileActionRosMsg.supply_projectile_id = supplyProjectileActionMsg.data.supply_projectile_id;
+                supplyProjectileActionRosMsg.supply_robot_id = supplyProjectileActionMsg.data.supply_robot_id;
+                supplyProjectileActionRosMsg.supply_projectile_step = supplyProjectileActionMsg.data.supply_projectile_step;
+                supplyProjectileActionRosMsg.supply_projectile_num = supplyProjectileActionMsg.data.supply_projectile_num;
+                if_pub = true;
             }
             if((refereeWarningMsg.head.crc == get_CRC8_check_sum((uint8_t*)&refereeWarningMsg, (sizeof(refereeWarningMsg.head) - sizeof(refereeWarningMsg.head.crc)), 0xff)) && (refereeWarningMsg.crc == get_CRC16_check_sum((uint8_t*)&refereeWarningMsg, (sizeof(refereeWarningMsg) - sizeof(refereeWarningMsg.crc)), 0xffff)))
             {
-                //cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                refereeWarningRosMsg.level = refereeWarningMsg.data.level;
+                refereeWarningRosMsg.foul_robot_id = refereeWarningMsg.data.foul_robot_id;
+                if_pub = true;
             }
             if((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg.head) - sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) && (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg) - sizeof(dartRemainingTimeMsg.crc)), 0xffff)))
             {
-                //cout << gameStatusMsgs.data.game_progress << endl;
-                //这里还没写完，需要新的消息。
+                gameStateRosMsg.dart_remaining_time = dartRemainingTimeMsg.data.dart_remaining_time;
+                if_pub = true;
             }
-            return true;
+            if(if_pub)
+            {
+                return true;
+            }
+            return false;
         }
         return false;
     }
