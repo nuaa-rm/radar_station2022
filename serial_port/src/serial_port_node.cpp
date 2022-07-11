@@ -416,7 +416,7 @@ int main (int argc, char** argv)
 
     sp.gameStatePub = nh.advertise<radar_msgs::game_state>("game_state", 1);
     sp.supplyProjectileActionPub = nh.advertise<radar_msgs::supply_projectile_action>("supply_projectile_action", 1);
-    sp.refereeWarningPub = nh.advertise<radar_msgs::referee_warning>("referee_warning", 1)
+    sp.refereeWarningPub = nh.advertise<radar_msgs::referee_warning>("referee_warning", 1);
     if(!sp.ser.isOpen())
     {
         ROS_ERROR_STREAM("Unable to open port, please check USB2TTL! ");
