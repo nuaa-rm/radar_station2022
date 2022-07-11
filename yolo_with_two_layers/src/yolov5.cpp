@@ -29,7 +29,7 @@ static const int INPUT_H_CAR = Yolo::INPUT_H_CAR;
 static const int INPUT_W_CAR = Yolo::INPUT_W_CAR;
 static const int CLASS_NUM_NUMBER = Yolo::CLASS_NUM_NUMBER;
 static const int CLASS_NUM_CAR = Yolo::CLASS_NUM_CAR;
-static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) +1;
+static const int OUTPUT_SIZE = Yolo::MAX_OUTPUT_BBOX_COUNT * sizeof(Yolo::Detection) / sizeof(float) + 1;
 // we assume the yololayer outputs no more than MAX_OUTPUT_BBOX_COUNT boxes that conf >= 0.1
 const char *INPUT_BLOB_NAME = "data";
 const char *OUTPUT_BLOB_NAME = "prob";
@@ -75,20 +75,16 @@ void doInference(IExecutionContext &context, cudaStream_t &stream, void **buffer
     cudaStreamSynchronize(stream);
 }
 
-radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img)
-{
+radar_msgs::yolo_points rect2msg(std::vector<Yolo::Detection> yolo_detection, cv::Mat &img) {
     radar_msgs::yolo_points msg_it;
     radar_msgs::yolo_point rect_point;
     for (std::vector<Yolo::Detection>::iterator it = yolo_detection.begin(); it != yolo_detection.end(); it++) {
         cv::Rect r = get_rect_car(img, it->bbox);
         rect_point.id = it->class_id;
         //std::cout << it->class_id << std::endl;
-        if(it->class_id <= 5 || it->class_id ==12)
-        {
+        if (it->class_id <= 5 || it->class_id == 12) {
             rect_point.color = false;
-        }
-        else
-        {
+        } else {
             rect_point.color = true;
         }
         rect_point.x = (int) r.x;
@@ -109,14 +105,12 @@ int main(int argc, char **argv) {
 
     // deserialize the .engine and run inference
     std::ifstream file_car(engine_name_car, std::ios::binary);
-    if (!file_car.good())
-    {
+    if (!file_car.good()) {
         std::cerr << "read " << engine_name_car << " error!" << std::endl;
         return -1;
     }
     std::ifstream file_number(engine_name_number, std::ios::binary);
-    if (!file_number.good())
-    {
+    if (!file_number.good()) {
         std::cerr << "read " << engine_name_number << " error!" << std::endl;
         return -1;
     }
@@ -171,10 +165,13 @@ int main(int argc, char **argv) {
     assert(outputIndex_car == 1);
 
     // Create GPU buffers on device
-    CUDA_CHECK(cudaMalloc((void **) &buffers_number[inputIndex_number], BATCH_SIZE_NUMBER * 3 * INPUT_H_NUMBER * INPUT_W_NUMBER * sizeof(float)));
-    CUDA_CHECK(cudaMalloc((void **) &buffers_number[outputIndex_number], BATCH_SIZE_NUMBER * OUTPUT_SIZE * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_number[inputIndex_number],
+                          BATCH_SIZE_NUMBER * 3 * INPUT_H_NUMBER * INPUT_W_NUMBER * sizeof(float)));
+    CUDA_CHECK(
+            cudaMalloc((void **) &buffers_number[outputIndex_number], BATCH_SIZE_NUMBER * OUTPUT_SIZE * sizeof(float)));
 
-    CUDA_CHECK(cudaMalloc((void **) &buffers_car[inputIndex_car], BATCH_SIZE_CAR * 3 * INPUT_H_CAR * INPUT_W_CAR * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **) &buffers_car[inputIndex_car],
+                          BATCH_SIZE_CAR * 3 * INPUT_H_CAR * INPUT_W_CAR * sizeof(float)));
     CUDA_CHECK(cudaMalloc((void **) &buffers_car[outputIndex_car], BATCH_SIZE_CAR * OUTPUT_SIZE * sizeof(float)));
 
     // Create stream
@@ -231,13 +228,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
-{
+void far_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto start = std::chrono::system_clock::now();
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
     float *buffer_idx_car = (float *) buffers_car[inputIndex_car];
-    if (img.empty())
-    {
+    if (img.empty()) {
         printf("img empty!!!!\t");
         assert(!img.empty());
     }
@@ -259,38 +254,30 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
     //识别出的车辆坐标被保存至res
     radar_msgs::yolo_points rect_msg;
     int fcount = 0;
-    std::vector<cv::Mat>imgs_buffer(BATCH_SIZE_NUMBER);
-    for (size_t j = 0; j < res_car.size(); j++)
-    {
-        fcount ++;
-        if(fcount < BATCH_SIZE_NUMBER && j + 1 != res_car.size())
-        {
+    std::vector<cv::Mat> imgs_buffer(BATCH_SIZE_NUMBER);
+    for (size_t j = 0; j < res_car.size(); j++) {
+        fcount++;
+        if (fcount < BATCH_SIZE_NUMBER && j + 1 != res_car.size()) {
             continue;
         }
         float *buffer_idx_number = (float *) buffers_number[inputIndex_number];
-        for(int b = 0; b < fcount; b++)
-        {
+        for (int b = 0; b < fcount; b++) {
             cv::Rect r = get_rect_car(img, res_car[j - fcount + 1 + b].bbox);
             cv::Mat roi;
-            if(r.x < 0)
-            {
+            if (r.x < 0) {
                 r.x = 0;
             }
-            if(r.y < 0)
-            {
+            if (r.y < 0) {
                 r.y = 0;
             }
-            if((r.x + r.width) > img.cols)
-            {
+            if ((r.x + r.width) > img.cols) {
                 r.width = img.cols - r.x;
             }
-            if((r.y + r.height) > img.rows)
-            {
+            if ((r.y + r.height) > img.rows) {
                 r.height = img.rows - r.y;
             }
             img_raw(r).copyTo(roi);
-            if(roi.empty())
-            {
+            if (roi.empty()) {
                 continue;
             }
             imgs_buffer[b] = roi;
@@ -299,101 +286,83 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
             //copy data to pinned memory
             memcpy(img_host_number, roi.data, size_roi);
             //copy data to device memory
-            CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice, stream_number));
-            preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER, INPUT_H_NUMBER, stream_number);
+            CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice,
+                                       stream_number));
+            preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER,
+                                  INPUT_H_NUMBER, stream_number);
 
             // Run inference
             buffer_idx_number += size_roi_dst;
         }
 
         doInference(*context_number, stream_number, (void **) buffers_number, prob_number, BATCH_SIZE_NUMBER);
-        std::vector<std::vector<Yolo::Detection>>batch_res_number(fcount);
-        for(int b = 0; b < fcount; b++)
-        {
-            auto& res = batch_res_number[b];
-            nms(res, &prob_number[b*OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
+        std::vector<std::vector<Yolo::Detection>> batch_res_number(fcount);
+        for (int b = 0; b < fcount; b++) {
+            auto &res = batch_res_number[b];
+            nms(res, &prob_number[b * OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
         }
-        for(int b = 0; b < fcount; b++)
-        {
-            auto& res = batch_res_number[b];
+        for (int b = 0; b < fcount; b++) {
+            auto &res = batch_res_number[b];
             cv::Rect rr = get_rect_car(img_raw, res_car[j - fcount + 1 + b].bbox);
             Yolo::Detection real_res;
             real_res.conf = 0;
             real_res.class_id = 14;
-            cv::Rect real_rect(0 ,0, 0, 0);
-            for(size_t m = 0; m < res.size(); m++)
-            {
+            cv::Rect real_rect(0, 0, 0, 0);
+            for (size_t m = 0; m < res.size(); m++) {
                 cv::Rect number_in_roi = get_rect_number(imgs_buffer[b], res[m].bbox);
                 cv::Rect number_in_img = number_in_roi;
                 number_in_img.x += rr.x;
                 number_in_img.y += rr.y;
-                if(real_rect.area() < number_in_img.area())
-                {
+                if (real_rect.area() < number_in_img.area()) {
                     real_rect = number_in_img;
                 }
                 cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
                 //cv::putText(img, std::to_string((int)res[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-                if(res[m].conf > real_res.conf)
-                {
+                if (res[m].conf > real_res.conf) {
                     real_res = res[m];
                 }
             }
 
             //根据装甲板ID修改车的ID
             std::cout << real_res.class_id << std::endl;
-            if((int)real_res.class_id == 14)
-            {
-                if((int)res_car[j - fcount + 1 + b].class_id == 0)
-                {
+            if ((int) real_res.class_id == 14) {
+                if ((int) res_car[j - fcount + 1 + b].class_id == 0) {
                     res_car[j - fcount + 1 + b].class_id = 12;
-                }
-                else
-                {
+                } else {
                     res_car[j - fcount + 1 + b].class_id = 13;
                 }
-            }
-            else
-            {
+            } else {
                 res_car[j - fcount + 1 + b].class_id = real_res.class_id;
             }
             //根据装甲板的rect修改车的rect
-            if(real_rect.area() > 0)
-            {
+            if (real_rect.area() > 0) {
                 rr = real_rect;
             }
             cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            if((int)res_car[j - fcount + 1 + b].class_id <= 4)
-            {
-                cv::putText(img, std::string("red") + std::to_string((int)res_car[j - fcount + 1 + b].class_id + 1), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 5)
-            {
-                cv::putText(img, "red guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 11)
-            {
-                cv::putText(img, "blue guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 12)
-            {
-                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 13)
-            {
-                cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else
-            {
-                cv::putText(img, std::string("blue") + std::to_string((int)res_car[j - fcount + 1 + b].class_id - 5), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            if ((int) res_car[j - fcount + 1 + b].class_id <= 4) {
+                cv::putText(img, std::string("red") + std::to_string((int) res_car[j - fcount + 1 + b].class_id + 1),
+                            cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 5) {
+                cv::putText(img, "red guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 11) {
+                cv::putText(img, "blue guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 12) {
+                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 13) {
+                cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else {
+                cv::putText(img, std::string("blue") + std::to_string((int) res_car[j - fcount + 1 + b].class_id - 5),
+                            cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0x27, 0xC1, 0x36), 2);
             }
             radar_msgs::yolo_point msg;
             msg.id = res_car[j - fcount + 1 + b].class_id;
-            if(msg.id <= 5 || msg.id ==12)
-            {
+            if (msg.id <= 5 || msg.id == 12) {
                 msg.color = false;
-            }
-            else
-            {
+            } else {
                 msg.color = true;
             }
             msg.x = (int) rr.x;
@@ -405,29 +374,25 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg)
         fcount = 0;
     }
     //将识别得到的目标框出并发送ROS消息
-    if (rect_msg.data.size() != 0)
-    {
+    if (rect_msg.data.size() != 0) {
         far_rectangles.publish(rect_msg);
-    }
-    else
-    {
+    } else {
         radar_msgs::yolo_points rect_msg;
         rect_msg.text = "none";
         far_rectangles.publish(rect_msg);
     }
     auto end = std::chrono::system_clock::now();
-    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << "ms" << std::endl;
     cv::imshow("yolo_close", img);
     cv::waitKey(1);
 }
 
-void close_imageCB(const sensor_msgs::ImageConstPtr &msg)
-{
+void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto start = std::chrono::system_clock::now();
     cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
     float *buffer_idx_car = (float *) buffers_car[inputIndex_car];
-    if (img.empty())
-    {
+    if (img.empty()) {
         printf("img empty!!!!\t");
         assert(!img.empty());
     }
@@ -449,38 +414,30 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg)
     //识别出的车辆坐标被保存至res
     radar_msgs::yolo_points rect_msg;
     int fcount = 0;
-    std::vector<cv::Mat>imgs_buffer(BATCH_SIZE_NUMBER);
-    for (size_t j = 0; j < res_car.size(); j++)
-    {
-        fcount ++;
-        if(fcount < BATCH_SIZE_NUMBER && j + 1 != res_car.size())
-        {
+    std::vector<cv::Mat> imgs_buffer(BATCH_SIZE_NUMBER);
+    for (size_t j = 0; j < res_car.size(); j++) {
+        fcount++;
+        if (fcount < BATCH_SIZE_NUMBER && j + 1 != res_car.size()) {
             continue;
         }
         float *buffer_idx_number = (float *) buffers_number[inputIndex_number];
-        for(int b = 0; b < fcount; b++)
-        {
+        for (int b = 0; b < fcount; b++) {
             cv::Rect r = get_rect_car(img, res_car[j - fcount + 1 + b].bbox);
             cv::Mat roi;
-            if(r.x < 0)
-            {
+            if (r.x < 0) {
                 r.x = 0;
             }
-            if(r.y < 0)
-            {
+            if (r.y < 0) {
                 r.y = 0;
             }
-            if((r.x + r.width) > img.cols)
-            {
+            if ((r.x + r.width) > img.cols) {
                 r.width = img.cols - r.x;
             }
-            if((r.y + r.height) > img.rows)
-            {
+            if ((r.y + r.height) > img.rows) {
                 r.height = img.rows - r.y;
             }
             img_raw(r).copyTo(roi);
-            if(roi.empty())
-            {
+            if (roi.empty()) {
                 continue;
             }
             imgs_buffer[b] = roi;
@@ -489,101 +446,83 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg)
             //copy data to pinned memory
             memcpy(img_host_number, roi.data, size_roi);
             //copy data to device memory
-            CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice, stream_number));
-            preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER, INPUT_H_NUMBER, stream_number);
+            CUDA_CHECK(cudaMemcpyAsync(img_device_number, img_host_number, size_roi, cudaMemcpyHostToDevice,
+                                       stream_number));
+            preprocess_kernel_img(img_device_number, roi.cols, roi.rows, buffer_idx_number, INPUT_W_NUMBER,
+                                  INPUT_H_NUMBER, stream_number);
 
             // Run inference
             buffer_idx_number += size_roi_dst;
         }
 
         doInference(*context_number, stream_number, (void **) buffers_number, prob_number, BATCH_SIZE_NUMBER);
-        std::vector<std::vector<Yolo::Detection>>batch_res_number(fcount);
-        for(int b = 0; b < fcount; b++)
-        {
-            auto& res = batch_res_number[b];
-            nms(res, &prob_number[b*OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
+        std::vector<std::vector<Yolo::Detection>> batch_res_number(fcount);
+        for (int b = 0; b < fcount; b++) {
+            auto &res = batch_res_number[b];
+            nms(res, &prob_number[b * OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
         }
-        for(int b = 0; b < fcount; b++)
-        {
-            auto& res = batch_res_number[b];
+        for (int b = 0; b < fcount; b++) {
+            auto &res = batch_res_number[b];
             cv::Rect rr = get_rect_car(img_raw, res_car[j - fcount + 1 + b].bbox);
             Yolo::Detection real_res;
             real_res.conf = 0;
             real_res.class_id = 14;
-            cv::Rect real_rect(0 ,0, 0, 0);
-            for(size_t m = 0; m < res.size(); m++)
-            {
+            cv::Rect real_rect(0, 0, 0, 0);
+            for (size_t m = 0; m < res.size(); m++) {
                 cv::Rect number_in_roi = get_rect_number(imgs_buffer[b], res[m].bbox);
                 cv::Rect number_in_img = number_in_roi;
                 number_in_img.x += rr.x;
                 number_in_img.y += rr.y;
-                if(real_rect.area() < number_in_img.area())
-                {
+                if (real_rect.area() < number_in_img.area()) {
                     real_rect = number_in_img;
                 }
                 cv::rectangle(img, number_in_img, cv::Scalar(0x27, 0xC1, 0x36), 1);
                 //cv::putText(img, std::to_string((int)res[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-                if(res[m].conf > real_res.conf)
-                {
+                if (res[m].conf > real_res.conf) {
                     real_res = res[m];
                 }
             }
 
             //根据装甲板ID修改车的ID
             std::cout << real_res.class_id << std::endl;
-            if((int)real_res.class_id == 14)
-            {
-                if((int)res_car[j - fcount + 1 + b].class_id == 0)
-                {
+            if ((int) real_res.class_id == 14) {
+                if ((int) res_car[j - fcount + 1 + b].class_id == 0) {
                     res_car[j - fcount + 1 + b].class_id = 12;
-                }
-                else
-                {
+                } else {
                     res_car[j - fcount + 1 + b].class_id = 13;
                 }
-            }
-            else
-            {
+            } else {
                 res_car[j - fcount + 1 + b].class_id = real_res.class_id;
             }
             //根据装甲板的rect修改车的rect
-            if(real_rect.area() > 0)
-            {
+            if (real_rect.area() > 0) {
                 rr = real_rect;
             }
             cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
-            if((int)res_car[j - fcount + 1 + b].class_id <= 4)
-            {
-                cv::putText(img, std::string("red") + std::to_string((int)res_car[j - fcount + 1 + b].class_id + 1), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 5)
-            {
-                cv::putText(img, "red guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 11)
-            {
-                cv::putText(img, "blue guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 12)
-            {
-                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else if((int)res_car[j - fcount + 1 + b].class_id == 13)
-            {
-                cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
-            else
-            {
-                cv::putText(img, std::string("blue") + std::to_string((int)res_car[j - fcount + 1 + b].class_id - 5), cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+            if ((int) res_car[j - fcount + 1 + b].class_id <= 4) {
+                cv::putText(img, std::string("red") + std::to_string((int) res_car[j - fcount + 1 + b].class_id + 1),
+                            cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 5) {
+                cv::putText(img, "red guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 11) {
+                cv::putText(img, "blue guard", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 12) {
+                cv::putText(img, "red", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else if ((int) res_car[j - fcount + 1 + b].class_id == 13) {
+                cv::putText(img, "blue", cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2,
+                            cv::Scalar(0x27, 0xC1, 0x36), 2);
+            } else {
+                cv::putText(img, std::string("blue") + std::to_string((int) res_car[j - fcount + 1 + b].class_id - 5),
+                            cv::Point(rr.x, rr.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0x27, 0xC1, 0x36), 2);
             }
             radar_msgs::yolo_point msg;
             msg.id = res_car[j - fcount + 1 + b].class_id;
-            if(msg.id <= 5 || msg.id ==12)
-            {
+            if (msg.id <= 5 || msg.id == 12) {
                 msg.color = false;
-            }
-            else
-            {
+            } else {
                 msg.color = true;
             }
             msg.x = (int) rr.x;
@@ -595,18 +534,16 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg)
         fcount = 0;
     }
     //将识别得到的目标框出并发送ROS消息
-    if (rect_msg.data.size() != 0)
-    {
-        far_rectangles.publish(rect_msg);
-    }
-    else
-    {
+    if (rect_msg.data.size() != 0) {
+        close_rectangles.publish(rect_msg);
+    } else {
         radar_msgs::yolo_points rect_msg;
         rect_msg.text = "none";
-        far_rectangles.publish(rect_msg);
+        close_rectangles.publish(rect_msg);
     }
     auto end = std::chrono::system_clock::now();
-    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+    std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << "ms" << std::endl;
     cv::imshow("yolo_far", img);
     cv::waitKey(1);
 }
