@@ -27,6 +27,9 @@ add_message_files(
         dist_points.msg
         yolo_point.msg
         yolo_points.msg
+        game_state.msg
+        referee_warning.msg
+        supply_projectile_action.msg
 )
 
 ## Generate services in the 'srv' folder
