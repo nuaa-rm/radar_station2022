@@ -38,12 +38,17 @@ Mat close_T = Mat::zeros(3, 1, CV_64FC1);
 int close_calc_flag = 0;
 vector<radar_msgs::points> far_points;
 vector<radar_msgs::points> close_points;
+int X_shift=0;
+int Y_shift=0;
 
+void onMouse(int event, int x, int y, int flags, void *userdata);//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
 void far_calibration(const radar_msgs::points &msg);//相机标定
 void far_distPointCallback(const radar_msgs::dist_points &input);
 
 void close_calibration(const radar_msgs::points &msg);//相机标定
 void close_distPointCallback(const radar_msgs::dist_points &input);
+
+void draw_on_map(radar_msgs::points &points, Mat &image);
 
 int main(int argc, char **argv) {
 
@@ -51,6 +56,9 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "small_map");
     ros::NodeHandle n;
 
+    /*小地图解算偏移量*/
+    ros::param::get("/small_map_shift_X", X_shift);
+    ros::param::get("/small_map_shift_Y", Y_shift);
     /*相机标定 Camera Calibration*/
     ros::param::get("/sensor_far/point1/x", far_objectPoints[0].x);
     ros::param::get("/sensor_far/point1/y", far_objectPoints[0].y);
@@ -114,6 +122,7 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_close/distortion_coefficient/three", close_distCoeffs_.at<double>(3, 0));
     ros::param::get("/sensor_close/distortion_coefficient/four", close_distCoeffs_.at<double>(4, 0));
     cout << close_distCoeffs_ << endl;
+
     ros::Subscriber far_imageSub = n.subscribe("/sensor_far/calibration", 1, &far_calibration);
     ros::Subscriber far_distPointSub = n.subscribe("/sensor_far/distance_point", 1, &far_distPointCallback);
     ros::Subscriber close_imageSub = n.subscribe("/sensor_close/calibration", 1, &close_calibration);
@@ -129,51 +138,37 @@ int main(int argc, char **argv) {
         small_map.copyTo(small_map_copy);
         resize(small_map_copy, small_map_copy, Size(450, 840));
         for (int i = 0; i < far_points.size(); i++) {
-            if (far_points[i].color == "red") {
-                circle(small_map_copy, Point((int) (450 * far_points[i].data[0].x),
-                                             (int) (840 * far_points[i].data[0].y)), 10,
-                       Scalar(0, 0, 255), -1, LINE_8, 0);
-                putText(small_map_copy, to_string(far_points[i].id),
-                        Point((int) (450 * far_points[i].data[0].x) - 2,
-                              (int) (840 * far_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            } else if (far_points[i].color == "blue") {
-                circle(small_map_copy, Point((int) (450 * far_points[i].data[0].x),
-                                             (int) (840 * far_points[i].data[0].y)), 10,
-                       Scalar(255, 0, 0), -1, LINE_8, 0);
-                putText(small_map_copy, to_string(far_points[i].id),
-                        Point((int) (450 * far_points[i].data[0].x) - 2,
-                              (int) (840 * far_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
-                        cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-            }
+            draw_on_map(far_points[i],small_map_copy);
             worldPointPub.publish(far_points[i]);
         }
-        for (int i = 0; i < close_points.size(); i++) {
-            double x = close_points[i].data[0].x;
-            double y = close_points[i].data[0].y;
-            x *= 450;
-            y *= 840;
-            if (x + Ky_right * y - C_right > 0 || x + Ky_left * y - C_left < 0) {
-                if (close_points[i].color == "blue") {
-                    circle(small_map_copy, Point((int) x,
-                                                 (int) y), 10,
-                           Scalar(255, 0, 0), -1, LINE_8, 0);
-                    putText(small_map_copy, to_string(close_points[i].id),
-                            Point((int) (450 * close_points[i].data[0].x) - 2,
-                                  (int) (840 * close_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
-                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-                } else if (close_points[i].color == "red") {
-                    circle(small_map_copy, Point((int) x,
-                                                 (int) y), 10,
-                           Scalar(0, 0, 255), -1, LINE_8, 0);
-                    putText(small_map_copy, to_string(close_points[i].id),
-                            Point((int) (450 * close_points[i].data[0].x) - 2,
-                                  (int) (840 * close_points[i].data[0].y) - 2), cv::FONT_HERSHEY_SIMPLEX, 1,
-                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-                }
-                worldPointPub.publish(close_points[i]);
-            }
-        }
+//        for (int i = 0; i < close_points.size(); i++) {
+//            double x = close_points[i].data[0].x;
+//            double y = close_points[i].data[0].y;
+//            x *= 450;
+//            y *= 840;
+//            if (x + Ky_right * y - C_right > 0 || x + Ky_left * y - C_left < 0) {
+//                if (close_points[i].color == "blue") {
+//                    circle(small_map_copy, Point((int) x-15,
+//                                                 (int) y), 10,
+//                           Scalar(255, 0, 0), -1, LINE_8, 0);
+//                    if(close_points[i].id!=12&&close_points[i].id!=13)putText(small_map_copy, to_string(close_points[i].id),
+//                            Point((int) (450 * close_points[i].data[0].x) - 22,
+//                                  (int) (840 * close_points[i].data[0].y) +7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+//                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+//                } else if (close_points[i].color == "red") {
+//                    circle(small_map_copy, Point((int) x-15,
+//                                                 (int) y), 10,
+//                           Scalar(0, 0, 255), -1, LINE_8, 0);
+//                    if(close_points[i].id!=12&&close_points[i].id!=13)putText(small_map_copy, to_string(close_points[i].id),
+//                            Point((int) (450 * close_points[i].data[0].x) - 22,
+//                                  (int) (840 * close_points[i].data[0].y) +7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+//                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+//                }
+//                worldPointPub.publish(close_points[i]);
+//            }
+//        }
+        namedWindow("small_map");
+        setMouseCallback("small_map", onMouse, &small_map_copy);
         imshow("small_map", small_map_copy);
         waitKey(1);
         loop_rate.sleep();
@@ -181,6 +176,35 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void onMouse(int event, int x, int y, int flags, void *userdata)//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
+{
+    if (event == cv::EVENT_LBUTTONDOWN)//左键按下，读取初始坐标，并在图像上该点处划圆
+    {
+        circle(*(Mat *) userdata, Point2i(x, y), 5, Scalar(0x27, 0xc1, 0x36), -1);
+        imshow("small_map", *(Mat *) userdata);
+        cout << Point(x, y) << endl;
+    }
+}
+
+void draw_on_map(radar_msgs::points &points, Mat &image) {
+    Scalar scalar;
+    string id;
+    if (points.color == "red")scalar = Scalar(0, 0, 255);
+    else if (points.color == "blue")scalar = Scalar(255, 0, 0);
+    circle(image, Point((int) (450 * points.data[0].x - X_shift),
+                        (int) (840 * points.data[0].y-Y_shift)), 10,
+           scalar, -1, LINE_8, 0);
+    if (points.id != 12 && points.id != 13) {
+        if (points.id <= 5)id = to_string(points.id + 1);
+        if (points.id == 5)id = "G";
+        if (points.id >= 6)id = to_string(points.id - 5);
+        if (points.id == 11)id = "G";
+        putText(image, id,
+                Point((int) (450 * points.data[0].x) - X_shift-7,
+                      (int) (840 * points.data[0].y-Y_shift) + 7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+    }
+}
 
 void far_distPointCallback(const radar_msgs::dist_points &input) {
     if (far_calc_flag == 1) {
@@ -205,6 +229,10 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                 radar_msgs::points points;
                 point.x = x;
                 point.y = y;
+                if (input.data[i].id == 5) {
+                    point.y = 0.80952;
+                    cout << "far 5:" << input.data[i].dist << endl;
+                }
                 points.data.push_back(point);
                 points.id = input.data[i].id;
                 if (input.data[i].color == 0)points.color = string("red");
@@ -257,6 +285,9 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 radar_msgs::points points;
                 point.x = x;
                 point.y = y;
+                if (input.data[i].id == 5) {
+                    cout << "close 5:" << input.data[i].dist << endl;
+                }
                 points.data.push_back(point);
                 points.id = input.data[i].id;
                 if (input.data[i].color == 0)points.color = string("red");

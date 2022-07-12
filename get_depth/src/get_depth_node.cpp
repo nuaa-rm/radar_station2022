@@ -105,8 +105,8 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     }
     far_distancePointPub.publish(far_distance_it);
     resize(far_depth_show, far_depth_show, Size(960, 768));
-    imshow("far_depth_show", far_depth_show);
-    waitKey(1);
+//    imshow("far_depth_show", far_depth_show);
+//    waitKey(1);
 }
 
 //update the car_rects
@@ -145,8 +145,8 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     }
     close_distancePointPub.publish(close_distance_it);
     resize(close_depth_show, close_depth_show, Size(960, 768));
-    imshow("close_depth_show", close_depth_show);
-    waitKey(1);
+//    imshow("close_depth_show", close_depth_show);
+//    waitKey(1);
 }
 
 //update the dethes_img by pointcloud
