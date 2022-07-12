@@ -1,4 +1,6 @@
 length_of_cloud_queue: 10
+small_map_shift_X: 20
+small_map_shift_Y: 0
 image_width: 1280
 image_height: 1024
 sensor_far:

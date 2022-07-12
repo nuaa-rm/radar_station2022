@@ -1,12 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(yolo_with_two_layers)
-
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
-
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         rospy
@@ -36,13 +29,11 @@ find_package(CUDA REQUIRED)
 message('CUDA FOUND:${CUDA_FOUND}')
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-string(REGEX REPLACE "(.+)\\src/yolo.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
         "/usr/include/eigen3"
-        ${PROJECT_INIT_PATH}/devel/include/
-        ../../../devel/include/
+        "${CATKIN_DEVEL_PREFIX}/include"
 )# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
 
 include_directories(${CUDA_INCLUDE_DIRS})

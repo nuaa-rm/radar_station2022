@@ -13,10 +13,9 @@ find_package(OpenCV 4 REQUIRED)
 catkin_package(
 
 )
-string(REGEX REPLACE "(.+)\\src/small_map.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 include_directories(
         ${catkin_INCLUDE_DIRS}
-        "${PROJECT_INIT_PATH}/devel/include"
+        "${CATKIN_DEVEL_PREFIX}/include"
 )
 
 add_compile_options(-std=c++17)
