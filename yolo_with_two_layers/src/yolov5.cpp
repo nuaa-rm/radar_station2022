@@ -36,7 +36,8 @@ const char *OUTPUT_BLOB_NAME = "prob";
 static Logger gLogger;
 ros::Publisher far_rectangles;
 ros::Publisher close_rectangles;
-
+ros::Publisher far_yoloPub;
+ros::Publisher close_yoloPub;
 //std::vector<radar_msgs::points> car_points;//the 2 points of a rectangle, saved in one member of the car_points
 void far_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg);//ake car detection and send the rect points
@@ -201,6 +202,8 @@ int main(int argc, char **argv) {
     //发布识别到的目标坐标
     far_rectangles = n.advertise<radar_msgs::yolo_points>("far_rectangles", 1);
     close_rectangles = n.advertise<radar_msgs::yolo_points>("close_rectangles", 1);
+    far_yoloPub = n.advertise<sensor_msgs::Image>("/yolo_far", 1);
+    close_yoloPub = n.advertise<sensor_msgs::Image>("/yolo_close", 1);
     //ros::Rate loop_rate(30);
     ros::spin();
 
@@ -324,7 +327,7 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg) {
             }
 
             //根据装甲板ID修改车的ID
-            std::cout << real_res.class_id << std::endl;
+            //std::cout << real_res.class_id << std::endl;
             if ((int) real_res.class_id == 14) {
                 if ((int) res_car[j - fcount + 1 + b].class_id == 0) {
                     res_car[j - fcount + 1 + b].class_id = 12;
@@ -384,8 +387,8 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto end = std::chrono::system_clock::now();
     std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "ms" << std::endl;
-    cv::imshow("yolo_close", img);
-    cv::waitKey(1);
+    sensor_msgs::ImagePtr yolo_result = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    far_yoloPub.publish(yolo_result);
 }
 
 void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
@@ -484,7 +487,7 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
             }
 
             //根据装甲板ID修改车的ID
-            std::cout << real_res.class_id << std::endl;
+            //std::cout << real_res.class_id << std::endl;
             if ((int) real_res.class_id == 14) {
                 if ((int) res_car[j - fcount + 1 + b].class_id == 0) {
                     res_car[j - fcount + 1 + b].class_id = 12;
@@ -544,7 +547,7 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto end = std::chrono::system_clock::now();
     std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "ms" << std::endl;
-    cv::imshow("yolo_far", img);
-    cv::waitKey(1);
+    sensor_msgs::ImagePtr yolo_result = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    close_yoloPub.publish(yolo_result);
 }
 

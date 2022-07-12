@@ -42,6 +42,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         "/usr/include/eigen3"
         ${PROJECT_INIT_PATH}/devel/include/
+        ../../../devel/include/
 )# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
 
 include_directories(${CUDA_INCLUDE_DIRS})
