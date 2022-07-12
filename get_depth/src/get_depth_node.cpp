@@ -13,12 +13,13 @@
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
 #include <radar_msgs/yolo_points.h>
+#include <numeric>
 
 using namespace std;
 using namespace cv;
 
 int imgRows = 1024, imgCols = 1280;
-int length_of_cloud_queue=5;//default length is 5
+int length_of_cloud_queue = 5;//default length is 5
 
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
@@ -34,7 +35,7 @@ Mat close_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
 Mat close_uni_matrix = Mat_<float>(3, 4);//相机和雷达的变换矩阵
 Mat close_distortion_coefficient = Mat_<float>(5, 1);
 
-float getDepthInRect(Rect rect, vector<Mat> &depth_queue);//得到ROI中点的深度
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id);//得到ROI中点的深度
 
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
 
@@ -90,7 +91,7 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-                    far_depth_queue);
+                    far_depth_queue,(*input).data[j].id);
             point_it.color = (*input).data[j].color;
             point_it.id = (*input).data[j].id;
             far_distance_it.data.push_back(point_it);
@@ -103,6 +104,7 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
         }
     }
     far_distancePointPub.publish(far_distance_it);
+    resize(far_depth_show, far_depth_show, Size(960, 768));
     imshow("far_depth_show", far_depth_show);
     waitKey(1);
 }
@@ -128,7 +130,7 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-                    close_depth_queue);
+                    close_depth_queue, (*input).data[j].id);
             point_it.color = (*input).data[j].color;
             point_it.id = (*input).data[j].id;
             close_distance_it.data.push_back(point_it);
@@ -142,6 +144,7 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
         }
     }
     close_distancePointPub.publish(close_distance_it);
+    resize(close_depth_show, close_depth_show, Size(960, 768));
     imshow("close_depth_show", close_depth_show);
     waitKey(1);
 }
@@ -152,7 +155,7 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
     pcl::fromROSMsg(*input, *cloud);
 }
 
-float getDepthInRect(Rect rect, vector<Mat> &depth_queue) {
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
     vector<float> distances;
     for (int i = rect.y; i < (rect.y + rect.height); i++) {
         for (int j = rect.x; j < (rect.x + rect.width); j++) {
@@ -172,17 +175,27 @@ float getDepthInRect(Rect rect, vector<Mat> &depth_queue) {
         cout << "No Livox points in ROI" << rect << endl;
         return 0;
     } else {
-        sort(distances.begin(), distances.end());
-        int position =5;
-        float mean_distance = 0;
-        if (position != 0) {
-            for (int i = 0; i < position; i++) {
-                mean_distance += distances[i];
+        float mean_distance;
+        float sum=0;
+        if (id != 12 && id != 13) {
+            for(float distance : distances){
+                sum+=distance;
             }
-            mean_distance /= position;
+            mean_distance = sum/distances.size();
+            return mean_distance;
+        } else {
+            sort(distances.begin(), distances.end());
+            if (distances.size() >= 5){
+                for(uint8_t j=0;j<5;j++){
+                    sum+=distances[j];
+                }
+                mean_distance=sum/5;
+                return mean_distance;
+            }
+            else {
+                return distances[0];
+            }
         }
-        cout<<"the number of scanned points:"<<distances.size()<<endl;
-        return mean_distance;
     }
 }
 

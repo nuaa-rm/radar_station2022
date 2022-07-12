@@ -384,7 +384,8 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto end = std::chrono::system_clock::now();
     std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "ms" << std::endl;
-    cv::imshow("yolo_close", img);
+    cv::resize(img,img,cv::Size(960,768));
+    cv::imshow("yolo_far", img);
     cv::waitKey(1);
 }
 
@@ -544,7 +545,8 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
     auto end = std::chrono::system_clock::now();
     std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << "ms" << std::endl;
-    cv::imshow("yolo_far", img);
+    cv::resize(img,img,cv::Size(960,768));
+    cv::imshow("yolo_close", img);
     cv::waitKey(1);
 }
 
