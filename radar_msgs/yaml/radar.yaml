@@ -1,9 +1,23 @@
+battle_color: red
+
+if_red: False
+is_record: False
+ifshow: True
+fps_mode: 0
+exp_time: 29000
+
 length_of_cloud_queue: 10
 small_map_shift_X: 20
 small_map_shift_Y: 0
 image_width: 1280
 image_height: 1024
+
 sensor_far:
+  deviceID: 0
+  exp_time: 27000
+  rows: 1200
+  cols: 1600
+  fps: 400
   camera_name: changjiao
   camera_matrix:
     zerozero: 1868.347943
@@ -30,7 +44,26 @@ sensor_far:
     twoone: -0.0445649
     twotwo: 0.0747129
     twothree: -0.00996694
+  point1:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 12539.0
+    y: 11294.0
+    z: 1581.0
+
 sensor_close:
+  deviceID: 1
+  exp_time: 27000
   camera_name: guangjiao
   camera_matrix:
     zerozero: 833.605838
@@ -57,3 +90,24 @@ sensor_close:
     twoone: -0.118093
     twotwo: -0.147251
     twothree: -0.390916
+  point1:
+    x: 2461.0
+    y: 16706.0
+    z: 1581.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0
+
+
+
+#llj:change paramaters in this file, don't need to cmake again
+#bglbannery

@@ -1,7 +1,5 @@
 <launch>
-  <rosparam command="load" file="$(find mv_driver)/cfg/params.yaml" />
-  <rosparam command="load" file="$(find calibrateCamera)/src/yaml/camera.yaml" />
-  <rosparam command="load" file="$(find calibrateCamera)/src/yaml/battlefield.yaml" />
+  <rosparam command="load" file="$(find radar_msgs)/yaml/radar.yaml" />
   <rosparam command="load" file="$(find displayer_app)/cfg/RadarDisplayerRos.yaml" />
   <arg name="lvx_file_path" default="livox_test.lvx"/>
   <arg name="bd_list" default="100000000000000"/>
