@@ -6,6 +6,7 @@ exp_time: 29000
 
 sensor_far:
   deviceID: 0
+  exp_time: 27000
   rows: 1200
   cols: 1600
   fps: 400
@@ -34,6 +35,7 @@ sensor_far:
 
 sensor_close:
   deviceID: 1
+  exp_time: 27000
   cx: 856.0181
   cy: 677.7472
   fx: 1770.0599

@@ -53,6 +53,7 @@ public:
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
+        ros::param::get("exp_time", exposure_);
         image_pub_ = it.advertise("image_raw", 1);
 
         node_.param("image_width", image_width_, 640);
@@ -80,7 +81,6 @@ public:
             rcd_path_ = std::string(PROJECT_PATH) + "/sensor_close";
         }
         node_.getParam("/fps_mode", fps_mode);
-        node_.param("/exp_time", exposure_);
         //init camera param
         mv_driver=new MVCamera;
 
