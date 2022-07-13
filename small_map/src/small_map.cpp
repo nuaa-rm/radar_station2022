@@ -137,7 +137,14 @@ int main(int argc, char **argv) {
         Mat small_map_copy;
         small_map.copyTo(small_map_copy);
         resize(small_map_copy, small_map_copy, Size(450, 840));
-        for (int i = 0; i < far_points.size(); i++) {
+        vector<Point> sibianxing;
+        sibianxing.push_back(Point(31,572));
+        sibianxing.push_back(Point(31,705));
+        sibianxing.push_back(Point(157,705));
+        sibianxing.push_back(Point(157,654));
+        polylines(small_map_copy,sibianxing,1,Scalar(0,0,255),2);
+        for (int i = 0; i < far_points.size(); i++)
+        {
             draw_on_map(far_points[i],small_map_copy);
             worldPointPub.publish(far_points[i]);
         }
