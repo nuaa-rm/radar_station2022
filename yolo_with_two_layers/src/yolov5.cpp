@@ -341,6 +341,14 @@ void far_imageCB(const sensor_msgs::ImageConstPtr &msg) {
             if (real_rect.area() > 0) {
                 rr = real_rect;
             }
+            else{
+                int change = rr.width * 0.2;
+                rr.x += change;
+                rr.width -= 2 * change;
+                change = rr.height * 0.2;
+                rr.y += change;
+                rr.height -= 2 * change;
+            }
             cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
             if ((int) res_car[j - fcount + 1 + b].class_id <= 4) {
                 cv::putText(img, std::string("red") + std::to_string((int) res_car[j - fcount + 1 + b].class_id + 1),
@@ -500,6 +508,14 @@ void close_imageCB(const sensor_msgs::ImageConstPtr &msg) {
             //根据装甲板的rect修改车的rect
             if (real_rect.area() > 0) {
                 rr = real_rect;
+            }
+            else{
+                int change = rr.width * 0.2;
+                rr.x += change;
+                rr.width -= 2 * change;
+                change = rr.height * 0.2;
+                rr.y += change;
+                rr.height -= 2 * change;
             }
             cv::rectangle(img, rr, cv::Scalar(0x27, 0xC1, 0x36), 2);
             if ((int) res_car[j - fcount + 1 + b].class_id <= 4) {
