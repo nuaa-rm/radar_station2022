@@ -1,14 +1,12 @@
-battle_color: red
-
-if_red: False
-is_record: False
-ifshow: True
-fps_mode: 0
-exp_time: 29000
+battle_state:
+  battle_color: blue
+  if_red: False
+  is_record: False
+  ifshow: True
+  fps_mode: 0
+  exp_time: 29000
 
 length_of_cloud_queue: 10
-small_map_shift_X: 15
-small_map_shift_Y: 0
 image_width: 1280
 image_height: 1024
 
@@ -104,4 +102,8 @@ sensor_close:
     x: 12539.0
     y: 11294.0
     z: 1581.0
+
+small_map:
+  small_map_shift_X: 15
+  small_map_shift_Y: 0
 
