@@ -5,6 +5,8 @@
 #include <radar_msgs/points.h>
 #include <radar_msgs/point.h>
 #include <radar_msgs/dist_points.h>
+#include <radar_msgs/small_map.h>
+#include <bitset>
 
 using namespace std;
 using namespace cv;
@@ -36,8 +38,10 @@ Mat close_Rjacob = Mat::zeros(3, 1, CV_64FC1);
 Mat close_R = Mat::eye(3, 3, CV_64FC1);
 Mat close_T = Mat::zeros(3, 1, CV_64FC1);
 int close_calc_flag = 0;
-vector<radar_msgs::points> far_points;
-vector<radar_msgs::points> close_points;
+radar_msgs::points far_points;
+radar_msgs::points close_points;
+radar_msgs::small_map far_map_info;
+radar_msgs::small_map close_map_info;
 int X_shift = 0;
 int Y_shift = 0;
 vector<Point> our_R1 = {Point(0, 395), Point(0, 562), Point(33, 562), Point(33, 395)};
@@ -58,13 +62,13 @@ void far_distPointCallback(const radar_msgs::dist_points &input);
 void close_calibration(const radar_msgs::points &msg);//相机标定
 void close_distPointCallback(const radar_msgs::dist_points &input);
 
-void draw_point_on_map(const radar_msgs::points &points, Mat &image);
+void draw_point_on_map(const radar_msgs::point &point, Mat &image);
 
 vector<Point> transfer_region(const vector<Point> &input);
 
 void draw_warn_region(Mat &image, const vector<vector<Point>> &our_regions, const vector<vector<Point>> &enemy_regions);
 
-void warn_on_map(const radar_msgs::points &point, Mat &image);
+void warn_on_map(const radar_msgs::point &point, Mat &image);
 
 int main(int argc, char **argv) {
     /*预警区域多边形角点初始化*/
@@ -76,7 +80,6 @@ int main(int argc, char **argv) {
     for (const vector<Point> &points: our_warn_regions) {
         enemy_warn_regions.emplace_back(transfer_region(points));
     }
-
     /*solvePnP求解相机外参矩阵*/
     ros::init(argc, argv, "small_map");
     ros::NodeHandle n;
@@ -152,7 +155,7 @@ int main(int argc, char **argv) {
     ros::Subscriber far_distPointSub = n.subscribe("/sensor_far/distance_point", 1, &far_distPointCallback);
     ros::Subscriber close_imageSub = n.subscribe("/sensor_close/calibration", 1, &close_calibration);
     ros::Subscriber close_distPointSub = n.subscribe("/sensor_close/distance_point", 1, &close_distPointCallback);
-    worldPointPub = n.advertise<radar_msgs::points>("/world_point", 50);
+    worldPointPub = n.advertise<radar_msgs::points>("/world_point", 10);
     ros::Rate loop_rate(20);
     Mat small_map;
     if (red_or_blue == 0)small_map = imread("/home/chris/radar_station2022/src/small_map/src/red_minimap.png");
@@ -166,11 +169,11 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
-        for (int i = 0; i < far_points.size(); i++) {
-            warn_on_map(far_points[i], small_map_copy);
-            draw_point_on_map(far_points[i], small_map_copy);
-            worldPointPub.publish(far_points[i]);
+        for (int i = 0; i < far_points.data.size(); i++) {
+            warn_on_map(far_points.data[i], small_map_copy);
+            draw_point_on_map(far_points.data[i], small_map_copy);
         }
+        worldPointPub.publish(far_points);
 //        for (int i = 0; i < close_points.size(); i++) {
 //            double x = close_points[i].data[0].x;
 //            double y = close_points[i].data[0].y;
@@ -219,37 +222,65 @@ void onMouse(int event, int x, int y, int flags, void *userdata)//event鼠标事
     }
 }
 
-void warn_on_map(const radar_msgs::points &point, Mat &image) {
+void warn_on_map(const radar_msgs::point &point, Mat &image) {
     Scalar light_green = Scalar(0xcc, 0xff, 0xcc);
+    far_points.id = 0;
     for (int i = 0; i < our_warn_regions.size(); i++) {
         if (pointPolygonTest(our_warn_regions[i],
-                             Point(450 * point.data[0].x - X_shift, 840 * point.data[0].y - Y_shift),
+                             Point(450 * point.x - X_shift, 840 * point.y - Y_shift),
                              false) > 0) {
             drawContours(image, our_warn_regions, i, light_green, -1);
+            if (i == 0) {
+                far_points.id |= 0x01;
+            }
+            if (i == 1) {
+                far_points.id |= 0x02;
+            }
+            if (i == 2) {
+                far_points.id |= 0x04;
+            }
+            if (i == 4) {
+                far_points.id |= 0x08;
+            }
+            cout<<bitset<8>(far_points.id)<<endl;
         }
         if (pointPolygonTest(enemy_warn_regions[i],
-                             Point(450 * point.data[0].x - X_shift, 840 * point.data[0].y - Y_shift), false) > 0) {
+                             Point(450 * point.x - X_shift, 840 * point.y - Y_shift), false) > 0) {
             drawContours(image, enemy_warn_regions, i, light_green, -1);
+            if (i == 0) {
+                far_points.id |= 0x10;
+            }
+            if (i == 2) {
+                far_points.id |= 0x20;
+            }
+            if (i == 3) {
+                far_points.id |= 0x40;
+            }
+            if (i == 4) {
+                far_points.id |= 0x80;
+            }
+            cout<<bitset<8>(far_points.id)<<endl;
         }
     }
+
 }
 
-void draw_point_on_map(const radar_msgs::points &points, Mat &image) {
+void draw_point_on_map(const radar_msgs::point &point, Mat &image) {
     Scalar scalar;
     string id;
-    if (points.color == "red")scalar = Scalar(0, 0, 255);
-    else if (points.color == "blue")scalar = Scalar(255, 0, 0);
-    circle(image, Point((int) (450 * points.data[0].x - X_shift),
-                        (int) (840 * points.data[0].y - Y_shift)), 10,
+    if (point.id <= 5 || point.id == 12)scalar = Scalar(0, 0, 255);
+    else scalar = Scalar(255, 0, 0);
+    circle(image, Point((int) (450 * point.x - X_shift),
+                        (int) (840 * point.y - Y_shift)), 10,
            scalar, -1, LINE_8, 0);
-    if (points.id != 12 && points.id != 13) {
-        if (points.id <= 5)id = to_string(points.id + 1);
-        if (points.id == 5)id = "G";
-        if (points.id >= 6)id = to_string(points.id - 5);
-        if (points.id == 11)id = "G";
+    if (point.id != 12 && point.id != 13) {
+        if (point.id <= 5)id = to_string(point.id + 1);
+        if (point.id == 5)id = "G";
+        if (point.id >= 6)id = to_string(point.id - 5);
+        if (point.id == 11)id = "G";
         putText(image, id,
-                Point((int) (450 * points.data[0].x) - X_shift - 7,
-                      (int) (840 * points.data[0].y - Y_shift) + 7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                Point((int) (450 * point.x) - X_shift - 7,
+                      (int) (840 * point.y - Y_shift) + 7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
                 cv::Scalar(0xFF, 0xFF, 0xFF), 2);
     }
 }
@@ -287,7 +318,7 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
         Mat invM;
         invert(far_CamMatrix_, invM);
         invert(far_R, invR);
-        std::vector<radar_msgs::points>().swap(far_points);
+        std::vector<radar_msgs::point>().swap(far_points.data);
         for (int i = 0; i < input.data.size(); i++) {
             if (input.data[i].dist > 0) {
                 Mat x8_pixel;
@@ -301,18 +332,13 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                 x /= field_height;
                 y /= field_width;
                 radar_msgs::point point;
-                radar_msgs::points points;
                 point.x = x;
                 point.y = y;
                 if (input.data[i].id == 5) {
                     point.y = 0.80952;
-//                    cout << "far 5:" << input.data[i].dist << endl;
                 }
-                points.data.push_back(point);
-                points.id = input.data[i].id;
-                if (input.data[i].color == 0)points.color = string("red");
-                else points.color = string("blue");
-                far_points.push_back(points);
+                point.id = input.data[i].id;
+                far_points.data.push_back(point);
             }
         }
     }
@@ -344,7 +370,7 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
         Mat invM;
         invert(close_CamMatrix_, invM);
         invert(close_R, invR);
-        std::vector<radar_msgs::points>().swap(close_points);
+        std::vector<radar_msgs::point>().swap(close_points.data);
         for (int i = 0; i < input.data.size(); i++) {
             if (input.data[i].dist > 0) {
                 Mat x8_pixel;
@@ -358,16 +384,16 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 x /= field_height;
                 y /= field_width;
                 radar_msgs::point point;
-                radar_msgs::points points;
                 point.x = x;
                 point.y = y;
-                points.data.push_back(point);
-                points.id = input.data[i].id;
-                if (input.data[i].color == 0)points.color = string("red");
-                else points.color = string("blue");
-                close_points.push_back(points);
+                if (input.data[i].id == 5) {
+                    point.y = 0.80952;
+                }
+                point.id = input.data[i].id;
+                close_points.data.push_back(point);
             }
         }
+
     }
 }
 

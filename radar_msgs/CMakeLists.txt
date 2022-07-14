@@ -26,6 +26,7 @@ add_message_files(
         game_state.msg
         referee_warning.msg
         supply_projectile_action.msg
+        small_map.msg
 )
 
 ## Generate services in the 'srv' folder
