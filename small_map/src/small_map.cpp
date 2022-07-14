@@ -361,9 +361,6 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 radar_msgs::points points;
                 point.x = x;
                 point.y = y;
-//                if (input.data[i].id == 5) {
-//                    cout << "close 5:" << input.data[i].dist << endl;
-//                }
                 points.data.push_back(point);
                 points.id = input.data[i].id;
                 if (input.data[i].color == 0)points.color = string("red");

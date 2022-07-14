@@ -7,9 +7,7 @@
 #include "CRC8_CRC16.h"
 #include "CRC.h"
 #include "radar_msgs/points.h"
-#include "radar_msgs/small_map.h"
 #include <opencv2/opencv.hpp>
-#include "std_msgs/Int8.h"
 #include "radar_msgs/game_state.h"
 #include "radar_msgs/supply_projectile_action.h"
 #include "radar_msgs/referee_warning.h"

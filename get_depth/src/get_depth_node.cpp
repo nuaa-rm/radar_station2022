@@ -13,7 +13,6 @@
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
 #include <radar_msgs/yolo_points.h>
-#include <numeric>
 
 using namespace std;
 using namespace cv;
