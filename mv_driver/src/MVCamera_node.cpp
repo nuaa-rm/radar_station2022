@@ -46,13 +46,14 @@ public:
     string rcd_path_;
     VideoSaver saver;
     MVCamNode():
-        node_("~")
+        node_()
     {
         image_transport::ImageTransport it(node_);
         cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
+        ros::param::get("/battle_state/exp_time", exposure_);
         image_pub_ = it.advertise("image_raw", 1);
 
         node_.param("image_width", image_width_, 640);
@@ -79,8 +80,7 @@ public:
         {
             rcd_path_ = std::string(PROJECT_PATH) + "/sensor_close";
         }
-        node_.getParam("/fps_mode", fps_mode);
-        node_.param("/exp_time", exposure_);
+        node_.getParam("/battle_state/fps_mode", fps_mode);
         //init camera param
         mv_driver=new MVCamera;
 
@@ -158,27 +158,39 @@ public:
         }
         if(large_resolution_)
             resize(rawImg,rawImg,dist_size);
-//        imshow("raw_img",rawImg);
-//        int k = waitKey(30);
-//        if(k == 'q' && !rawImg.empty())
-//        {
-//            ROS_INFO("Get %d far pictures!", count);
-//            cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
-//            stringstream ss;
-//            ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/"<<count<<".bmp";
-//            cv::imwrite(ss.str(),rawImg);
-//            count++;
-//        }
+
         std_msgs::Header imgHead;
 
         //DoveJH：用于在订阅者节点区分两个相机。
         if(deviceID == FARCAM)
         {
             imgHead.frame_id = "sensor_far";
+//            imshow("far_img",rawImg);
+//            int k = waitKey(30);
+//            if(k == 'f' && !rawImg.empty())
+//            {
+//                ROS_INFO("Get %d far pictures!", count);
+//                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//                stringstream ss;
+//                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/far"<<count<<".bmp";
+//                cv::imwrite(ss.str(),rawImg);
+//                count++;
+//            }
         }
         else if(deviceID == CLOSECAM)
         {
             imgHead.frame_id = "sensor_close";
+//            imshow("close_img",rawImg);
+//            int k = waitKey(30);
+//            if(k == 'c' && !rawImg.empty())
+//            {
+//                ROS_INFO("Get %d far pictures!", count);
+//                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//                stringstream ss;
+//                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/close"<<count<<".bmp";
+//                cv::imwrite(ss.str(),rawImg);
+//                count++;
+//            }
         }
         imgHead.stamp=imgTime;
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();

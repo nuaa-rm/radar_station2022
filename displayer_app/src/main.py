@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from rosNode import RosNode, fixLogging
 ros = RosNode()
-fixLogging(logging.INFO)
+# fixLogging(logging.INFO)
 
 from app import app, socketio
 from views import camera, httpApi, wsApi, webView

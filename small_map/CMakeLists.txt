@@ -13,20 +13,19 @@ find_package(OpenCV 4 REQUIRED)
 catkin_package(
 
 )
-string(REGEX REPLACE "(.+)\\src/small_map.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 include_directories(
         ${catkin_INCLUDE_DIRS}
-        "${PROJECT_INIT_PATH}/devel/include"
+        "${CATKIN_DEVEL_PREFIX}/include"
 )
 
 add_compile_options(-std=c++17)
-add_executable(${PROJECT_NAME}_node
+add_executable(${PROJECT_NAME}
         src/small_map.cpp
         )
 
-add_dependencies(${PROJECT_NAME}_node radar_msgs_generate_messages)#调用同一工作空间的自定义消息类型时注明依赖关系，防止发生头文件找不到的报错
+add_dependencies(${PROJECT_NAME} radar_msgs_generate_messages)#调用同一工作空间的自定义消息类型时注明依赖关系，防止发生头文件找不到的报错
 
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
         ${OpenCV_LIBRARIES}
         )

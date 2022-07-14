@@ -2,369 +2,282 @@
 // Created by dovejh on 2022/3/19.
 //
 #include <opencv2/opencv.hpp>
-#include <fstream>
 #include <iostream>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/Image.h>
 #include <ros/ros.h>
 #include <pcl/point_cloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>
-#include <tf/transform_broadcaster.h>
-#include <Eigen/Geometry>
-#include <Eigen/Dense>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/approximate_voxel_grid.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/common/transforms.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <radar_msgs/point.h>
-#include <radar_msgs/points.h>
-#include <radar_msgs/distance_point.h>
+#include <radar_msgs/dist_point.h>
+#include <radar_msgs/dist_points.h>
+#include <radar_msgs/yolo_points.h>
 
 using namespace std;
 using namespace cv;
 
 int imgRows = 1024, imgCols = 1280;
-//int imgRows = 720, imgCols = 1280;
+int length_of_cloud_queue = 5;//default length is 5
 
-ros::Publisher depthPub;
-ros::Publisher distancePointPub;
+ros::Publisher far_distancePointPub;
+ros::Publisher close_distancePointPub;
+radar_msgs::dist_points far_distance_it;
+radar_msgs::dist_points close_distance_it;
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+vector<Mat> far_depth_queue;
+Mat far_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
+Mat far_uni_matrix = Mat_<float>(3, 4);//相机和雷达的变换矩阵
+Mat far_distortion_coefficient = Mat_<float>(5, 1);
+vector<Mat> close_depth_queue;
+Mat close_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
+Mat close_uni_matrix = Mat_<float>(3, 4);//相机和雷达的变换矩阵
+Mat close_distortion_coefficient = Mat_<float>(5, 1);
 
-vector<radar_msgs::points> distance_points;
-Mat camera_matrix = Mat_<double>(3, 3);//相机内参矩阵
-Mat distortion_coefficient = Mat_<double>(5, 1);
-Mat uni_matrix = Mat_<double>(3, 4);//相机和雷达的变换矩阵
-vector<radar_msgs::points> car_points(10);//detected points received from yolo_node
-vector<Rect> car_rects(10);
-radar_msgs::points car_point;
-uint8_t i = 0;//the number of car_points vector
-queue<Mat> depthQueue;
-Mat depthes = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id);//得到ROI中点的深度
 
-void depthShow(Mat &input, vector<double> distances);//将深度图像归一化成灰度图并发布话题进行展示
-void getTheoreticalUV(double x, double y, double z, Mat &output);//得到某一点对应图像中的位置
-void cloudFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr output);
-
-void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input,
-                      pcl::PointCloud<pcl::PointXYZ>::Ptr &output);//对点云进行聚类,并挑选点数最多的点云作为返回
-double getDepthInRect(Rect rect, Mat &depthImg);//得到ROI中点的深度
-void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//去除平面
-void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat &output);//对于每一个点云中的点调用一次getTheoreticalUV函数
-double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input);//显示实时点云,放在程序结尾
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input);
 
-void minusDepth(Mat &depth_accumulate, Mat depth_now);
+void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
-void yoloCallback(const radar_msgs::points::ConstPtr &input);
+void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
-void depthShow(Mat &input, vector<double> distances) {
-    Mat depthsGray(imgRows, imgCols, CV_8U);
-    double min = 100, max = 0;
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            if (min > input.at<Vec3d>(i, j)[0] && input.at<Vec3d>(i, j)[0] != 0) {
-                min = input.at<Vec3d>(i, j)[0];
-            } else if (max < input.at<Vec3d>(i, j)[0]) {
-                max = input.at<Vec3d>(i, j)[0];
-            }
+Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//Convert PointCloud to Mat
+
+void
+MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
+           Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
+
+Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
+    Mat res = Mat::zeros(4, (int) input->size(), CV_32F);
+    for (int k = 0; k < res.cols; k++) {
+        for (int j = 0; j < 4; j++) {
+            res.at<float>(j, k) = input->points[k].data[j];
         }
     }
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            depthsGray.at<uchar>(i, j) = (input.at<Vec3d>(i, j)[0] / (max - min) * 255.0);
+    return res;
+}
+
+void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix) {
+    Mat res = Cam_matrix * Uni_matrix * input_uv;
+    for (int i = 0; i < res.cols; i++) {
+        int x = round(res.at<float>(0, i) / res.at<float>(2, i));
+        int y = round(res.at<float>(1, i) / res.at<float>(2, i));
+        if (x >= 0 && x < imgCols && y >= 0 && y < imgRows) {
+            input_depth.at<float>(y, x) = res.at<float>(2, i);
         }
     }
-//    circle(depthsGray, Point(320, 180), 5, Scalar(255, 255, 255), 1);
-//    circle(depthsGray, Point(450, 260), 5, Scalar(255, 255, 255), 1);
-//    rectangle(depthsGray, Point(320, 180), Point(450, 260), Scalar(255, 255, 255), 1);
-    uint8_t a = 0;
+}
 
-    for (vector<Rect>::iterator it = car_rects.begin(); it != car_rects.end(); it++) {
-        if (!it->empty()) {
-            rectangle(depthsGray, *it, Scalar(255, 255, 255), 1);
-            putText(depthsGray, std::to_string(distances[a]), Point((*it).x, (*it).y), FONT_HERSHEY_COMPLEX_SMALL, 1,
+//update the car_rects
+void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
+    Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat far_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
+    std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
+    if (cloud) {
+        Mat far_MatCloud = Cloud2Mat(cloud);
+        MatProject(far_depthes, far_MatCloud, far_camera_matrix, far_uni_matrix);
+        far_depthes.copyTo(far_depth_show);
+        far_depth_queue.push_back(far_depthes);
+        if (far_depth_queue.size() == length_of_cloud_queue) {
+            far_depth_queue.erase(far_depth_queue.begin());
+        }
+    }
+    if ((*input).text != "none") {
+        for (int j = 0; j < (*input).data.size(); j++) {
+            radar_msgs::dist_point point_it;
+            point_it.x = (*input).data[j].x + (*input).data[j].width / 2;
+            point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
+            point_it.dist = getDepthInRect(
+                    Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                    far_depth_queue,(*input).data[j].id);
+            point_it.color = (*input).data[j].color;
+            point_it.id = (*input).data[j].id;
+            far_distance_it.data.push_back(point_it);
+            rectangle(far_depth_show,
+                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                      Scalar(255, 255, 255), 1);
+            putText(far_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+                    FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
-        } else cout << "empty car_rects!" << endl;
-    }
-    imshow("depthsGray", depthsGray);
-    waitKey(30);
-    sensor_msgs::ImagePtr gray = cv_bridge::CvImage(std_msgs::Header(), "mono8", depthsGray).toImageMsg();
-//    depthPub.publish(gray);
-
-
-}
-
-void getTheoreticalUV(double x, double y, double z, Mat &output) //图像必须提前矫正
-{
-    double matrix3[4][1] = {x, y, z, 1};//激光雷达系中坐标
-
-    // transform into the opencv matrix*/
-    Mat coordinate(4, 1, CV_64F, matrix3);
-
-    // calculate the result of u and v
-    Mat result = camera_matrix * uni_matrix * coordinate;
-    float u = result.at<double>(0, 0);
-    float v = result.at<double>(1, 0);
-    float depth = result.at<double>(2, 0);
-    u /= depth;
-    v /= depth;
-    int x1 = floor(u + 0.5);
-    int y1 = floor(v + 0.5);
-    if (x1 < imgCols && x1 >= 0 && y1 < imgRows && y1 >= 0) {
-        output.at<Vec3d>(y1, x1)[0] = x;
-        output.at<Vec3d>(y1, x1)[1] = y;
-        output.at<Vec3d>(y1, x1)[2] = z;
-    }
-
-}
-
-void cloudFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr output) {
-    pcl::VoxelGrid<pcl::PointXYZ> sor;
-    sor.setInputCloud(input);
-    sor.setLeafSize(0.05f, 0.05f, 0.05f);
-    sor.filter(*output);
-}
-
-void clusterAndSelect(pcl::PointCloud<pcl::PointXYZ>::Ptr input, pcl::PointCloud<pcl::PointXYZ>::Ptr &output) {
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-    tree->setInputCloud(input);
-    vector<pcl::PointIndices> clusterIndices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(0.1);
-    ec.setMinClusterSize(10);
-    ec.setMaxClusterSize(25000);
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(input);
-    ec.extract(clusterIndices);
-
-    int maxPointsNumber = 0;
-    int j = 0;
-
-    for (vector<pcl::PointIndices>::const_iterator it = clusterIndices.begin(); it != clusterIndices.end(); ++it) {
-        if (it->indices.size() > maxPointsNumber) {
-            maxPointsNumber = it->indices.size();
-            output.reset(new pcl::PointCloud<pcl::PointXYZ>);
-            for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
-                output->points.push_back(input->points[*pit]);
-            }
-            output->width = output->points.size();
-            output->height = 1;
-            output->is_dense = true;
         }
     }
+    far_distancePointPub.publish(far_distance_it);
+    resize(far_depth_show, far_depth_show, Size(960, 768));
+//    imshow("far_depth_show", far_depth_show);
+//    waitKey(1);
 }
 
-double getDepthInRect(Rect rect, Mat &depthImg) {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudROI(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointXYZ point;
-    for (int i = rect.y; i < (rect.y + rect.height); i++) {
-        for (int j = rect.x; j < (rect.x + rect.width); j++) {
-            if (depthImg.at<Vec3d>(i, j)[0] != 0) {
-                point.x = depthImg.at<Vec3d>(i, j)[0];
-                point.y = depthImg.at<Vec3d>(i, j)[1];
-                point.z = depthImg.at<Vec3d>(i, j)[2];
-                cloudROI->points.push_back(point);
-            }
+//update the car_rects
+void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
+    Mat close_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
+    Mat close_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
+    std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
+    if (cloud) {
+        Mat close_MatCloud = Cloud2Mat(cloud);
+        MatProject(close_depthes, close_MatCloud, close_camera_matrix, close_uni_matrix);
+        close_depthes.copyTo(close_depth_show);
+        close_depth_queue.push_back(close_depthes);
+        if (close_depth_queue.size() == length_of_cloud_queue) {
+            close_depth_queue.erase(close_depth_queue.begin());
         }
     }
-    cloudROI->width = cloudROI->points.size();
-    cloudROI->height = 1;
-    cloudROI->is_dense = true;
-    if (cloudROI->size() <= 0) {
-        cout << "No Livox points in ROI" << rect << endl;
-        return 0;
-    } else {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr mostClusterInROI(new pcl::PointCloud<pcl::PointXYZ>);
-        clusterAndSelect(cloudROI, mostClusterInROI);
-        double distance = 0;
-        if (mostClusterInROI->size() <= 0) {
-            cout << "No points in cluster selected! The points number in ROI is" << cloudROI->size() << endl;
-            return 0;
-        } else {
-            for (int i = 0; i < mostClusterInROI->points.size(); i++) {
-                distance += mostClusterInROI->points[i].x;
-            }
-            distance /= mostClusterInROI->points.size();
-            pointCloudShower(mostClusterInROI);
-            return distance;
+    if ((*input).text != "none") {
+        for (int j = 0; j < (*input).data.size(); j++) {
+            radar_msgs::dist_point point_it;
+            point_it.x = (*input).data[j].x + (*input).data[j].width / 2;
+            point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
+            point_it.dist = getDepthInRect(
+                    Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                    close_depth_queue, (*input).data[j].id);
+            point_it.color = (*input).data[j].color;
+            point_it.id = (*input).data[j].id;
+            close_distance_it.data.push_back(point_it);
+            close_distance_it.data.push_back(point_it);
+            rectangle(close_depth_show,
+                      Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
+                      Scalar(255, 255, 255), 1);
+            putText(close_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
+                    FONT_HERSHEY_COMPLEX_SMALL, 1,
+                    Scalar(255, 255, 255), 1, 8, 0);
         }
     }
-}
-
-void removeFlat(pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-    pcl::PointIndices::Ptr inliners(new pcl::PointIndices);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudT(new pcl::PointCloud<pcl::PointXYZ>);
-
-    pcl::SACSegmentation<pcl::PointXYZ> sac;
-    sac.setOptimizeCoefficients(true);
-    sac.setModelType(pcl::SACMODEL_PLANE);
-    sac.setMethodType(pcl::SAC_RANSAC);
-    sac.setDistanceThreshold(0.1);
-    sac.setMaxIterations(500);
-    int nr_points = (int) input->points.size();
-    while (input->points.size() > 0.7 * nr_points) {
-        sac.setInputCloud(input);
-        sac.segment(*inliners, *coefficients);
-        if (inliners->indices.size() == 0) {
-            cout << "could not remove " << endl;
-            break;
-        }
-        pcl::ExtractIndices<pcl::PointXYZ> extract;
-        extract.setInputCloud(input);
-        extract.setIndices(inliners);
-        extract.setNegative(true);
-        extract.filter(*cloudT);
-        *input = *cloudT;
-    }
-}
-
-void projectPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input, Mat &output) {
-    for (unsigned int i = 0; i < input->size(); ++i) {
-        getTheoreticalUV(input->points[i].x, input->points[i].y, input->points[i].z, output);
-    }
-}
-
-double pointCloudShower(pcl::PointCloud<pcl::PointXYZ>::Ptr input) {
-    static boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
-            new pcl::visualization::PCLVisualizer("realtime pcl"));
-    viewer->removeAllPointClouds();  // 移除当前所有点云
-    viewer->addPointCloud(input, "realtime pcl");
-    viewer->updatePointCloud(input, "realtime pcl");
-    viewer->spinOnce(0.001);
-}
-
-void minusDepth(Mat &depth_accumulate, Mat depth_now) {
-    for (int i = 0; i < imgRows; i++) {
-        for (int j = 0; j < imgCols; j++) {
-            if (depth_now.at<Vec3d>(i, j)[0] != 0) {
-                depth_accumulate.at<Vec3d>(i, j)[0] = 0;
-                depth_accumulate.at<Vec3d>(i, j)[1] = 0;
-                depth_accumulate.at<Vec3d>(i, j)[2] = 0;
-            }
-        }
-    }
+    close_distancePointPub.publish(close_distance_it);
+    resize(close_depth_show, close_depth_show, Size(960, 768));
+//    imshow("close_depth_show", close_depth_show);
+//    waitKey(1);
 }
 
 //update the dethes_img by pointcloud
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
-    //obtain the depth image by project
-    Mat depth_now = Mat::zeros(imgRows, imgCols, CV_64FC3);//initialize the depth img
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-    std::vector<int> index;
-
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
-
-//    removeFlat(cloud);
-//    projectPoints(cloud, depthes);
-    projectPoints(cloud, depth_now);
-//    if (depthQueue.size() == 10) {
-//        minusDepth(depthes, depthQueue.front());
-//        depthQueue.pop();
-//    }
-//    depthQueue.push(depth_now);
-
-    //obtain the distance by clustering
-    vector<double> distances(car_rects.size());
-    radar_msgs::points distance_it;
-    radar_msgs::point point_it;
-    std::vector<radar_msgs::points>().swap(distance_points);
-    for (int j = 0; j < car_rects.size(); j++) {
-        distances[j] = getDepthInRect(car_rects[j], depth_now);
-        point_it.x = car_rects[j].x;
-        point_it.y = car_rects[j].y;
-        distance_it.data.push_back(point_it);
-        point_it.x = car_rects[j].x + car_rects[j].width;
-        point_it.y = car_rects[j].y + car_rects[j].height;
-        distance_it.data.push_back(point_it);
-        point_it.x = distances[j];
-        point_it.y = 1;
-        distance_it.data.push_back(point_it);
-        distance_it.id = j;
-        distancePointPub.publish(distance_it);
-    }
-    depthShow(depth_now, distances);
-
 }
 
-//update the car_rects
-void yoloCallback(const radar_msgs::points::ConstPtr &input) {
-    if ((*input).text == "first") {
-        std::vector<cv::Rect>().swap(car_rects);
+float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
+    vector<float> distances;
+    for (int i = rect.y; i < (rect.y + rect.height); i++) {
+        for (int j = rect.x; j < (rect.x + rect.width); j++) {
+            for (uint8_t k = 0; k < depth_queue.size(); k++) {
+                if (depth_queue[depth_queue.size() - 1].at<float>(i, j) > 0) {
+                    distances.push_back(depth_queue[depth_queue.size() - 1].at<float>(i, j));
+                    break;
+                } else if (k < depth_queue.size() - 1 && depth_queue[k + 1].at<float>(i, j) == 0 &&
+                           depth_queue[k].at<float>(i, j) > 0) {
+                    distances.push_back(depth_queue[k].at<float>(i, j));
+                    break;
+                }
+            }
+        }
     }
-    if ((*input).text == "last") {
+    if (distances.empty()) {
+        cout << "No Livox points in ROI" << rect << endl;
+        return 0;
+    } else {
+        float mean_distance;
+        float sum=0;
+        if (id != 12 && id != 13) {
+            for(float distance : distances){
+                sum+=distance;
+            }
+            mean_distance = sum/distances.size();
+            return mean_distance;
+        } else {
+            sort(distances.begin(), distances.end());
+            if (distances.size() >= 5){
+                for(uint8_t j=0;j<5;j++){
+                    sum+=distances[j];
+                }
+                mean_distance=sum/5;
+                return mean_distance;
+            }
+            else {
+                return distances[0];
+            }
+        }
     }
-    car_point = *input;
-    if (car_point.text == "none") {
-        std::vector<cv::Rect>().swap(car_rects);
-    } else if (car_point.data[0].x > 0) {
-        int x = (int) car_point.data[0].x;
-        int y = (int) car_point.data[0].y;
-        int width = (int) (car_point.data[1].x - car_point.data[0].x);
-        int height = (int) (car_point.data[1].y - car_point.data[0].y);
-        car_rects.push_back(Rect(x, y, width, height));
-    }
-
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "get_depth_node");
     ros::NodeHandle n;
 
+    ros::param::get("/length_of_cloud_queue", length_of_cloud_queue);
     ros::param::get("/image_width", imgCols);
     ros::param::get("/image_height", imgRows);
+    ros::param::get("/sensor_far/camera_matrix/zerozero", far_camera_matrix.at<float>(0, 0));
+    ros::param::get("/sensor_far/camera_matrix/zerotwo", far_camera_matrix.at<float>(0, 2));
+    ros::param::get("/sensor_far/camera_matrix/oneone", far_camera_matrix.at<float>(1, 1));
+    ros::param::get("/sensor_far/camera_matrix/onetwo", far_camera_matrix.at<float>(1, 2));
+    ros::param::get("/sensor_far/camera_matrix/twotwo", far_camera_matrix.at<float>(2, 2));
+    far_camera_matrix.at<float>(0, 1) = 0;
+    far_camera_matrix.at<float>(1, 0) = 0;
+    far_camera_matrix.at<float>(2, 0) = 0;
+    far_camera_matrix.at<float>(2, 1) = 0;
+    cout << "far_Camera matrix load done!" << far_camera_matrix << endl;
+    ros::param::get("/sensor_far/distortion_coefficient/zero", far_distortion_coefficient.at<float>(0, 0));
+    ros::param::get("/sensor_far/distortion_coefficient/one", far_distortion_coefficient.at<float>(1, 0));
+    ros::param::get("/sensor_far/distortion_coefficient/two", far_distortion_coefficient.at<float>(2, 0));
+    ros::param::get("/sensor_far/distortion_coefficient/three", far_distortion_coefficient.at<float>(3, 0));
+    ros::param::get("/sensor_far/distortion_coefficient/four", far_distortion_coefficient.at<float>(4, 0));
+    cout << "far_Distortion coefficient load done!" << far_distortion_coefficient << endl;
+    ros::param::get("/sensor_far/uni_matrix/zerozero", far_uni_matrix.at<float>(0, 0));
+    ros::param::get("/sensor_far/uni_matrix/zeroone", far_uni_matrix.at<float>(0, 1));
+    ros::param::get("/sensor_far/uni_matrix/zerotwo", far_uni_matrix.at<float>(0, 2));
+    ros::param::get("/sensor_far/uni_matrix/zerothree", far_uni_matrix.at<float>(0, 3));
+    ros::param::get("/sensor_far/uni_matrix/onezero", far_uni_matrix.at<float>(1, 0));
+    ros::param::get("/sensor_far/uni_matrix/oneone", far_uni_matrix.at<float>(1, 1));
+    ros::param::get("/sensor_far/uni_matrix/onetwo", far_uni_matrix.at<float>(1, 2));
+    ros::param::get("/sensor_far/uni_matrix/onethree", far_uni_matrix.at<float>(1, 3));
+    ros::param::get("/sensor_far/uni_matrix/twozero", far_uni_matrix.at<float>(2, 0));
+    ros::param::get("/sensor_far/uni_matrix/twoone", far_uni_matrix.at<float>(2, 1));
+    ros::param::get("/sensor_far/uni_matrix/twotwo", far_uni_matrix.at<float>(2, 2));
+    ros::param::get("/sensor_far/uni_matrix/twothree", far_uni_matrix.at<float>(2, 3));
+    cout << "far Uni matrix load done!" << far_uni_matrix << endl;
 
-    ros::param::get("/camera_matrix/zerozero", camera_matrix.at<double>(0, 0));
-    ros::param::get("/camera_matrix/zerotwo", camera_matrix.at<double>(0, 2));
-    ros::param::get("/camera_matrix/oneone", camera_matrix.at<double>(1, 1));
-    ros::param::get("/camera_matrix/onetwo", camera_matrix.at<double>(1, 2));
-    ros::param::get("/camera_matrix/twotwo", camera_matrix.at<double>(2, 2));
-    camera_matrix.at<double>(0, 1) = 0;
-    camera_matrix.at<double>(1, 0) = 0;
-    camera_matrix.at<double>(2, 0) = 0;
-    camera_matrix.at<double>(2, 1) = 0;
-    cout << "Camera matrix load done!" << camera_matrix << endl;
 
-    /*ros::param::get("/distortion_coefficient/zero", distortion_coefficient.at<float>(0, 0));
-    ros::param::get("/distortion_coefficient/one", distortion_coefficient.at<float>(0, 1));
-    ros::param::get("/distortion_coefficient/two", distortion_coefficient.at<float>(0, 2));
-    ros::param::get("/distortion_coefficient/three", distortion_coefficient.at<float>(0, 3));
-    ros::param::get("/distortion_coefficient/four", distortion_coefficient.at<float>(0, 4));*/
-    distortion_coefficient.at<double>(0, 0) = 0;
-    distortion_coefficient.at<double>(0, 1) = 0;
-    distortion_coefficient.at<double>(0, 2) = 0;
-    distortion_coefficient.at<double>(0, 3) = 0;
-    distortion_coefficient.at<double>(0, 4) = 0;
-    cout << "Distortion coefficient load done!" << distortion_coefficient << endl;
-
-    ros::param::get("/uni_matrix/zerozero", uni_matrix.at<double>(0, 0));
-    ros::param::get("/uni_matrix/zeroone", uni_matrix.at<double>(0, 1));
-    ros::param::get("/uni_matrix/zerotwo", uni_matrix.at<double>(0, 2));
-    ros::param::get("/uni_matrix/zerothree", uni_matrix.at<double>(0, 3));
-    ros::param::get("/uni_matrix/onezero", uni_matrix.at<double>(1, 0));
-    ros::param::get("/uni_matrix/oneone", uni_matrix.at<double>(1, 1));
-    ros::param::get("/uni_matrix/onetwo", uni_matrix.at<double>(1, 2));
-    ros::param::get("/uni_matrix/onethree", uni_matrix.at<double>(1, 3));
-    ros::param::get("/uni_matrix/twozero", uni_matrix.at<double>(2, 0));
-    ros::param::get("/uni_matrix/twoone", uni_matrix.at<double>(2, 1));
-    ros::param::get("/uni_matrix/twotwo", uni_matrix.at<double>(2, 2));
-    ros::param::get("/uni_matrix/twothree", uni_matrix.at<double>(2, 3));
-    cout << "Uni matrix load done!" << uni_matrix << endl;
+    ros::param::get("/sensor_close/camera_matrix/zerozero", close_camera_matrix.at<float>(0, 0));
+    ros::param::get("/sensor_close/camera_matrix/zerotwo", close_camera_matrix.at<float>(0, 2));
+    ros::param::get("/sensor_close/camera_matrix/oneone", close_camera_matrix.at<float>(1, 1));
+    ros::param::get("/sensor_close/camera_matrix/onetwo", close_camera_matrix.at<float>(1, 2));
+    ros::param::get("/sensor_close/camera_matrix/twotwo", close_camera_matrix.at<float>(2, 2));
+    close_camera_matrix.at<float>(0, 1) = 0;
+    close_camera_matrix.at<float>(1, 0) = 0;
+    close_camera_matrix.at<float>(2, 0) = 0;
+    close_camera_matrix.at<float>(2, 1) = 0;
+    cout << "close_Camera matrix load done!" << close_camera_matrix << endl;
+    ros::param::get("/sensor_close/distortion_coefficient/zero", close_distortion_coefficient.at<float>(0, 0));
+    ros::param::get("/sensor_close/distortion_coefficient/one", close_distortion_coefficient.at<float>(1, 0));
+    ros::param::get("/sensor_close/distortion_coefficient/two", close_distortion_coefficient.at<float>(2, 0));
+    ros::param::get("/sensor_close/distortion_coefficient/three", close_distortion_coefficient.at<float>(3, 0));
+    ros::param::get("/sensor_close/distortion_coefficient/four", close_distortion_coefficient.at<float>(4, 0));
+    cout << "close_Distortion coefficient load done!" << close_distortion_coefficient << endl;
+    ros::param::get("/sensor_close/uni_matrix/zerozero", close_uni_matrix.at<float>(0, 0));
+    ros::param::get("/sensor_close/uni_matrix/zeroone", close_uni_matrix.at<float>(0, 1));
+    ros::param::get("/sensor_close/uni_matrix/zerotwo", close_uni_matrix.at<float>(0, 2));
+    ros::param::get("/sensor_close/uni_matrix/zerothree", close_uni_matrix.at<float>(0, 3));
+    ros::param::get("/sensor_close/uni_matrix/onezero", close_uni_matrix.at<float>(1, 0));
+    ros::param::get("/sensor_close/uni_matrix/oneone", close_uni_matrix.at<float>(1, 1));
+    ros::param::get("/sensor_close/uni_matrix/onetwo", close_uni_matrix.at<float>(1, 2));
+    ros::param::get("/sensor_close/uni_matrix/onethree", close_uni_matrix.at<float>(1, 3));
+    ros::param::get("/sensor_close/uni_matrix/twozero", close_uni_matrix.at<float>(2, 0));
+    ros::param::get("/sensor_close/uni_matrix/twoone", close_uni_matrix.at<float>(2, 1));
+    ros::param::get("/sensor_close/uni_matrix/twotwo", close_uni_matrix.at<float>(2, 2));
+    ros::param::get("/sensor_close/uni_matrix/twothree", close_uni_matrix.at<float>(2, 3));
+    cout << "close Uni matrix load done!" << close_uni_matrix << endl;
 
     ros::Subscriber cloud_sub;
-    cloud_sub = n.subscribe("/livox/lidar", 10, &pointCloudCallback);
-    ros::Subscriber yolo_sub;
-    yolo_sub = n.subscribe("/rectangles", 20, &yoloCallback);
-    distancePointPub = n.advertise<radar_msgs::points>("distance_point", 100);
-//    depthPub = n.advertise<sensor_msgs::Image>("/depthGray", 10);
-    ros::spin();
+    cloud_sub = n.subscribe("/livox/lidar", 1, &pointCloudCallback);
+    ros::Subscriber far_yolo_sub;
+    far_yolo_sub = n.subscribe("/far_rectangles", 1, &far_yoloCallback);
+    ros::Subscriber close_yolo_sub;
+    close_yolo_sub = n.subscribe("/close_rectangles", 1, &close_yoloCallback);
+    far_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_far/distance_point", 1);
+    close_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_close/distance_point", 1);
+    ros::Rate loop_rate(30);
+    while (ros::ok()) {
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
     return 0;
 }

@@ -87,6 +87,15 @@ class BaseMinimapShapeSubscriber:
         socketio.emit('minimapShape', data, namespace='/api/ws')
 
 
+class BaseMinimapClearSubscriber:
+    """
+    @brief: 小地图信息订阅器基类
+    @fn sendInfo: 将小地图信息发送给前端
+    """
+    def sendInfo(self):
+        socketio.emit('minimapClear', {'clear': True}, namespace='/api/ws')
+
+
 class BaseCameraShapeSubscriber:
     """
     @brief: 相机界面多边形订阅器基类

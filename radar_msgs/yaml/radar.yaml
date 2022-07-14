@@ -1,0 +1,109 @@
+battle_state:
+  battle_color: blue
+  if_red: False
+  is_record: False
+  ifshow: True
+  fps_mode: 0
+  exp_time: 29000
+
+length_of_cloud_queue: 10
+image_width: 1280
+image_height: 1024
+
+sensor_far:
+  deviceID: 0
+  exp_time: 27000
+  fps: 400
+  camera_name: changjiao
+  camera_matrix:
+    zerozero: 1868.347943
+    zerotwo: 629.827908
+    oneone: 1856.753122
+    onetwo: 545.682949
+    twotwo: 1.0
+  distortion_coefficient:
+    zero: -0.077960
+    one: 0.113295
+    two: 0.004178
+    three: -0.000990
+    four: 0.000000
+  uni_matrix:
+    zerozero: -0.0452149
+    zeroone: -0.998953
+    zerotwo: 0.00703073
+    zerothree: 0.110467
+    onezero: 0.0743213
+    oneone: -0.0103822
+    onetwo: -0.99718
+    onethree: -0.000591812
+    twozero: 0.996209
+    twoone: -0.0445649
+    twotwo: 0.0747129
+    twothree: -0.00996694
+  point1:
+    x: 2461.0
+    y: 16706.0
+    z: 1581.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0
+
+sensor_close:
+  deviceID: 1
+  exp_time: 27000
+  camera_name: guangjiao
+  camera_matrix:
+    zerozero: 833.605838
+    zerotwo: 596.964448
+    oneone: 818.771189
+    onetwo: 523.955168
+    twotwo: 1.0
+  distortion_coefficient:
+    zero: -0.100300
+    one: 0.083467
+    two: 0.000241
+    three: 0.001856
+    four: 0.000000
+  uni_matrix:
+    zerozero: -0.10946
+    zeroone: -0.991835
+    zerotwo: 0.0654427
+    zerothree: -0.0294182
+    onezero: -0.153777
+    oneone: -0.0481481
+    onetwo: -0.986932
+    onethree: -0.152883
+    twozero: 0.982024
+    twoone: -0.118093
+    twotwo: -0.147251
+    twothree: -0.390916
+  point1:
+    x: 7500.0
+    y: 26302.0
+    z: 1118.0
+  point2:
+    x: 6321.0
+    y: 8805.0
+    z: 615.0
+  point3:
+    x: 6981.0
+    y: 8805.0
+    z: 615.0
+  point4:
+    x: 12539.0
+    y: 11294.0
+    z: 1581.0
+
+small_map:
+  small_map_shift_X: 15
+  small_map_shift_Y: 0
+

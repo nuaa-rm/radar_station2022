@@ -7,9 +7,7 @@
 #include "CRC8_CRC16.h"
 #include "CRC.h"
 #include "radar_msgs/points.h"
-#include "radar_msgs/small_map.h"
 #include <opencv2/opencv.hpp>
-#include "std_msgs/Int8.h"
 #include "radar_msgs/game_state.h"
 #include "radar_msgs/supply_projectile_action.h"
 #include "radar_msgs/referee_warning.h"
@@ -378,7 +376,7 @@ void worldPointsCallback(const radar_msgs::points& msg)
                 car_point carPoint;
                 carPoint.id = msg.data[i].id + 1;
                 carPoint.color = 0;
-                carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
+                carPoint.point = Point2f((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
             }
             else if(msg.data[i].id == 5)
