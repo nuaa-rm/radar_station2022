@@ -14,7 +14,7 @@
    <string>QRosApp</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../resources/images.qrc">
+   <iconset>
     <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
   </property>
   <property name="locale">
@@ -53,8 +53,15 @@
            <string>Logging</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="0">
+           <item row="1" column="0">
             <widget class="QListView" name="view_logging"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_camera">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -71,7 +78,7 @@
      <x>0</x>
      <y>0</y>
      <width>944</width>
-     <height>21</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -98,7 +105,7 @@
    <property name="minimumSize">
     <size>
      <width>325</width>
-     <height>368</height>
+     <height>461</height>
     </size>
    </property>
    <property name="allowedAreas">
@@ -313,9 +320,7 @@
    </property>
   </action>
  </widget>
- <resources>
-  <include location="../resources/images.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>action_Quit</sender>

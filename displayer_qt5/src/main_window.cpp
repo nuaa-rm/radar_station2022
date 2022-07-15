@@ -32,7 +32,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 {
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
-
+    QObject::connect(&qnode,SIGNAL(loggingCamera()),this,SLOT(updateLogcamera()));
     ReadSettings();
 	setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
@@ -100,7 +100,22 @@ void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
 	}
 	ui.line_edit_master->setEnabled(enabled);
 	ui.line_edit_host->setEnabled(enabled);
-	//ui.line_edit_topic->setEnabled(enabled);
+    //ui.line_edit_topic->setEnabled(enabled);
+}
+
+void MainWindow::updateLogcamera()
+{
+    displayCamera(qnode.image);
+}
+
+void MainWindow::displayCamera(const QImage &image)
+{
+    qimage_mutex_.lock();
+    qimage_ = image.copy();
+    ui.label_camera->setPixmap(QPixmap::fromImage(qimage_));
+    ui.label_camera->resize(ui.label_camera->pixmap()->size());
+    qimage_mutex_.unlock();
+
 }
 
 /*****************************************************************************

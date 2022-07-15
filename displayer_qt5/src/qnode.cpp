@@ -16,7 +16,7 @@
 #include <std_msgs/String.h>
 #include <sstream>
 #include "../include/displayer_qt5/qnode.hpp"
-
+#include "sensor_msgs/image_encodings.h"
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -40,6 +40,22 @@ QNode::~QNode() {
 	wait();
 }
 
+void QNode::myCallback_img(const sensor_msgs::ImageConstPtr &msg)
+{
+  try
+  {
+    cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
+    img = cv_ptr->image;
+    image = QImage(img.data,img.cols,img.rows,img.step[0],QImage::Format_RGB888);//change  to QImage format
+    ROS_INFO("I'm setting picture in mul_t callback function!");
+    Q_EMIT loggingCamera();
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+  }
+}
+
 bool QNode::init() {
 	ros::init(init_argc,init_argv,"displayer_qt5");
 	if ( ! ros::master::check() ) {
@@ -48,6 +64,8 @@ bool QNode::init() {
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 	// Add your ros communications here.
+    image_transport::ImageTransport it(n);
+    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::myCallback_img,this);
 	chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
 	start();
 	return true;
@@ -64,14 +82,17 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 	// Add your ros communications here.
+    image_transport::ImageTransport it(n);
+    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::myCallback_img,this);
 	chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
 	start();
 	return true;
 }
 
 void QNode::run() {
-	ros::Rate loop_rate(1);
+    ros::Rate loop_rate(100);
 	int count = 0;
+    log(Info,"I'm running!");
 	while ( ros::ok() ) {
 
 		std_msgs::String msg;

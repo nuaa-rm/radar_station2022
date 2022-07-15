@@ -15,6 +15,8 @@
 #include <QMainWindow>
 #include "ui_main_window.h"
 #include "qnode.hpp"
+#include <QImage>
+#include <QMutex>
 
 /*****************************************************************************
 ** Namespace
@@ -48,7 +50,8 @@ public Q_SLOTS:
 	void on_actionAbout_triggered();
 	void on_button_connect_clicked(bool check );
 	void on_checkbox_use_environment_stateChanged(int state);
-
+    void updateLogcamera();
+    void displayCamera(const QImage& image);
     /******************************************
     ** Manual connections
     *******************************************/
@@ -57,6 +60,8 @@ public Q_SLOTS:
 private:
 	Ui::MainWindowDesign ui;
 	QNode qnode;
+    QImage qimage_;
+    mutable QMutex qimage_mutex_;
 };
 
 }  // namespace displayer_qt5
