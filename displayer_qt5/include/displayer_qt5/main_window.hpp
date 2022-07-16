@@ -45,13 +45,12 @@ public Q_SLOTS:
 	/******************************************
 	** Auto-connections (connectSlotsByName())
 	*******************************************/
-	void on_actionAbout_triggered();
-	void on_checkbox_use_environment_stateChanged(int state);
-    void updateLogcamera();
-    void displayCamera(const QImage& image);
+
     /******************************************
     ** Manual connections
     *******************************************/
+    void updateLogcamera();
+    void displayCamera(const QImage& image);
     void updateLoggingView(); // no idea why this can't connect automatically
 
 private:

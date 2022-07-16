@@ -71,17 +71,7 @@ void MainWindow::showNoMasterMessage() {
 
 
 
-void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
-	bool enabled;
-	if ( state == 0 ) {
-		enabled = true;
-	} else {
-		enabled = false;
-	}
-	ui.line_edit_master->setEnabled(enabled);
-	ui.line_edit_host->setEnabled(enabled);
-    //ui.line_edit_topic->setEnabled(enabled);
-}
+
 
 void MainWindow::updateLogcamera()
 {
@@ -115,9 +105,7 @@ void MainWindow::updateLoggingView() {
 ** Implementation [Menu]
 *****************************************************************************/
 
-void MainWindow::on_actionAbout_triggered() {
-    QMessageBox::about(this, tr("About ..."),tr("<h2>PACKAGE_NAME Test Program 0.10</h2><p>Copyright Yujin Robot</p><p>This package needs an about description.</p>"));
-}
+
 
 /*****************************************************************************
 ** Implementation [Configuration]
