@@ -50,7 +50,7 @@ public:
 	bool init();
 	bool init(const std::string &master_url, const std::string &host_url);
 	void run();
-    void myCallback_img(const sensor_msgs::ImageConstPtr& msg);//camera callback function
+    void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
     QImage image;
 	/*********************
 	** Logging

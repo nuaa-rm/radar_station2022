@@ -40,7 +40,7 @@ QNode::~QNode() {
 	wait();
 }
 
-void QNode::myCallback_img(const sensor_msgs::ImageConstPtr &msg)
+void QNode::imgShowCallback(const sensor_msgs::ImageConstPtr &msg)
 {
   try
   {
@@ -65,7 +65,7 @@ bool QNode::init() {
 	ros::NodeHandle n;
 	// Add your ros communications here.
     image_transport::ImageTransport it(n);
-    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::myCallback_img,this);
+    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::imgShowCallback,this);
 	start();
 	return true;
 }
@@ -82,7 +82,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	ros::NodeHandle n;
 	// Add your ros communications here.
     image_transport::ImageTransport it(n);
-    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::myCallback_img,this);
+    image_sub = it.subscribe("/sensor_far/image_raw",1,&QNode::imgShowCallback,this);
 	start();
 	return true;
 }
