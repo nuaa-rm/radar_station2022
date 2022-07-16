@@ -74,7 +74,6 @@ Q_SIGNALS:
 private:
 	int init_argc;
 	char** init_argv;
-	ros::Publisher chatter_publisher;
     QStringListModel logging_model;
     image_transport::Subscriber image_sub;
     cv::Mat img;
