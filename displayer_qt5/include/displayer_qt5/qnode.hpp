@@ -42,6 +42,7 @@ namespace displayer_qt5 {
 ** Class
 *****************************************************************************/
 
+
 class QNode : public QThread {
     Q_OBJECT
 public:
