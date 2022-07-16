@@ -120,5 +120,5 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	QMainWindow::closeEvent(event);
 }
 
-}  // namespace displayer_qt5
+}
 

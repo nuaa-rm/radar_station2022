@@ -47,7 +47,6 @@ void QNode::imgShowCallback(const sensor_msgs::ImageConstPtr &msg)
     cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
     img = cv_ptr->image;
     image = QImage(img.data,img.cols,img.rows,img.step[0],QImage::Format_RGB888);//change  to QImage format
-    ROS_INFO("I'm setting picture in mul_t callback function!");
     Q_EMIT loggingCamera();
   }
   catch (cv_bridge::Exception& e)
@@ -89,6 +88,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 
 void QNode::run() {
     log(Info,"Running!");
+    std::cout << "haha" << std::endl;
     ros::spin();
     std::cout << "Ros shutdown" << std::endl;
     Q_EMIT rosShutdown();
@@ -101,27 +101,27 @@ void QNode::log( const LogLevel &level, const std::string &msg) {
 	switch ( level ) {
 		case(Debug) : {
 				ROS_DEBUG_STREAM(msg);
-				logging_model_msg << "[DEBUG] [" << ros::Time::now() << "]: " << msg;
+                logging_model_msg << msg;
 				break;
 		}
 		case(Info) : {
 				ROS_INFO_STREAM(msg);
-				logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
+                logging_model_msg << msg;
 				break;
 		}
 		case(Warn) : {
 				ROS_WARN_STREAM(msg);
-				logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
+                logging_model_msg << msg;
 				break;
 		}
 		case(Error) : {
 				ROS_ERROR_STREAM(msg);
-				logging_model_msg << "[ERROR] [" << ros::Time::now() << "]: " << msg;
+                logging_model_msg << msg;
 				break;
 		}
 		case(Fatal) : {
 				ROS_FATAL_STREAM(msg);
-				logging_model_msg << "[FATAL] [" << ros::Time::now() << "]: " << msg;
+                logging_model_msg << msg;
 				break;
 		}
 	}
