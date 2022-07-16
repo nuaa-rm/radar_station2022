@@ -38,7 +38,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="groupBox_2">
+     <widget class="QGroupBox" name="groupBoxRightSide">
       <property name="title">
        <string>GroupBox</string>
       </property>
@@ -47,22 +47,22 @@
         <widget class="QListView" name="view_logging"/>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_3">
+        <widget class="QGroupBox" name="groupBoxRobotHealth">
          <property name="title">
           <string/>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth1_1">
             <item>
-             <widget class="QLabel" name="label_3">
+             <widget class="QLabel" name="labelRobotName1_1">
               <property name="text">
                <string>R1                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_6">
+             <widget class="QProgressBar" name="progressBarRobotHealth1_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -72,7 +72,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_4">
+             <widget class="QLabel" name="labelRobotHealth1_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -81,16 +81,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth2_1">
             <item>
-             <widget class="QLabel" name="label_24">
+             <widget class="QLabel" name="labelRobotName2_1">
               <property name="text">
                <string>R2                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_16">
+             <widget class="QProgressBar" name="progressBarRobotHealth2_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -100,7 +100,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_25">
+             <widget class="QLabel" name="labelRobotHealth2_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -109,16 +109,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth3_1">
             <item>
-             <widget class="QLabel" name="label_26">
+             <widget class="QLabel" name="labelRobotName3_1">
               <property name="text">
                <string>R3                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_17">
+             <widget class="QProgressBar" name="progressBarRobotHealth3_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -128,7 +128,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_27">
+             <widget class="QLabel" name="labelRobotHealth3_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -137,16 +137,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth4_1">
             <item>
-             <widget class="QLabel" name="label_28">
+             <widget class="QLabel" name="labelRobotName4_1">
               <property name="text">
                <string>R4                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_18">
+             <widget class="QProgressBar" name="progressBarRobotHealth4_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -156,7 +156,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_29">
+             <widget class="QLabel" name="labelRobotHealth4_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -165,16 +165,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth5_1">
             <item>
-             <widget class="QLabel" name="label_30">
+             <widget class="QLabel" name="labelRobotName5_1">
               <property name="text">
                <string>R5                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_19">
+             <widget class="QProgressBar" name="progressBarRobotHealth5_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -184,7 +184,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_31">
+             <widget class="QLabel" name="labelRobotHealth5_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -206,16 +206,16 @@
            </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthGuard_1">
             <item>
-             <widget class="QLabel" name="label_32">
+             <widget class="QLabel" name="labelRobotNameGuard_1">
               <property name="text">
                <string>R guard     </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_20">
+             <widget class="QProgressBar" name="progressBarRobotHealthGuard_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -225,7 +225,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_33">
+             <widget class="QLabel" name="labelRobotHealthGuard_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -234,16 +234,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthOutpose_1">
             <item>
-             <widget class="QLabel" name="label_34">
+             <widget class="QLabel" name="labelRobotNameOutpose_1">
               <property name="text">
                <string>R outpose</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_21">
+             <widget class="QProgressBar" name="progressBarRobotHealthOutpose_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -253,7 +253,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_35">
+             <widget class="QLabel" name="labelRobotHealthOutpose_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -262,16 +262,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthBase_1">
             <item>
-             <widget class="QLabel" name="label_36">
+             <widget class="QLabel" name="labelRobotNameBase_1">
               <property name="text">
                <string>R base       </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_22">
+             <widget class="QProgressBar" name="progressBarRobotHealthBase_1">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -281,7 +281,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_37">
+             <widget class="QLabel" name="labelRobotHealthBase_1">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -316,16 +316,16 @@
            </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_19">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth1_2">
             <item>
-             <widget class="QLabel" name="label_5">
+             <widget class="QLabel" name="labelRobotName1_2">
               <property name="text">
                <string>R1                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_7">
+             <widget class="QProgressBar" name="progressBarRobotHealth1_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -335,7 +335,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="labelRobotHealth1_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -344,16 +344,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_21">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth2_2">
             <item>
-             <widget class="QLabel" name="label_44">
+             <widget class="QLabel" name="labelRobotName2_2">
               <property name="text">
                <string>R2                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_26">
+             <widget class="QProgressBar" name="progressBarRobotHealth2_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -363,7 +363,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_45">
+             <widget class="QLabel" name="labelRobotHealth2_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -372,16 +372,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_23">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth3_2">
             <item>
-             <widget class="QLabel" name="label_48">
+             <widget class="QLabel" name="labelRobotName3_2">
               <property name="text">
                <string>R3                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_28">
+             <widget class="QProgressBar" name="progressBarRobotHealth3_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -391,7 +391,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_49">
+             <widget class="QLabel" name="labelRobotHealth3_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -400,16 +400,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_24">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth4_2">
             <item>
-             <widget class="QLabel" name="label_50">
+             <widget class="QLabel" name="labelRobotName4_2">
               <property name="text">
                <string>R4                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_29">
+             <widget class="QProgressBar" name="progressBarRobotHealth4_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -419,7 +419,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_51">
+             <widget class="QLabel" name="labelRobotHealth4_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -428,16 +428,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_22">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth5_2">
             <item>
-             <widget class="QLabel" name="label_46">
+             <widget class="QLabel" name="labelRobotName5_2">
               <property name="text">
                <string>R5                </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_27">
+             <widget class="QProgressBar" name="progressBarRobotHealth5_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -447,7 +447,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_47">
+             <widget class="QLabel" name="labelRobotHealth5_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -469,16 +469,16 @@
            </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_20">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthGuard_2">
             <item>
-             <widget class="QLabel" name="label_42">
+             <widget class="QLabel" name="labelRobotNameGuard_2">
               <property name="text">
                <string>R guard     </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_25">
+             <widget class="QProgressBar" name="progressBarRobotHealthGuard_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -488,7 +488,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_43">
+             <widget class="QLabel" name="labelRobotHealthGuard_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -497,16 +497,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_18">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthOutpose_2">
             <item>
-             <widget class="QLabel" name="label_40">
+             <widget class="QLabel" name="labelRobotNameOutpose_2">
               <property name="text">
                <string>R outpose</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_24">
+             <widget class="QProgressBar" name="progressBarRobotHealthOutpose_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -516,7 +516,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_41">
+             <widget class="QLabel" name="labelRobotHealthOutpose_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
@@ -525,16 +525,16 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_17">
+           <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthBase_2">
             <item>
-             <widget class="QLabel" name="label_38">
+             <widget class="QLabel" name="labelRobotNameBase_2">
               <property name="text">
                <string>R base       </string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="progressBar_23">
+             <widget class="QProgressBar" name="progressBarRobotHealthBase_2">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -544,7 +544,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_39">
+             <widget class="QLabel" name="labelRobotHealthBase_2">
               <property name="text">
                <string>TextLabel</string>
               </property>
