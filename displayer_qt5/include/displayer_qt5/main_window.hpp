@@ -37,7 +37,6 @@ public:
 	MainWindow(int argc, char** argv, QWidget *parent = 0);
 	~MainWindow();
 
-
 	void closeEvent(QCloseEvent *event); // Overloaded function
 	void showNoMasterMessage();
 
@@ -51,7 +50,7 @@ public Q_SLOTS:
     *******************************************/
     void updateLogcamera();
     void displayCamera(const QImage& image);
-    void updateLoggingView(); // no idea why this can't connect automatically
+    void updateLoggingView();
 
 private:
 	Ui::MainWindowDesign ui;

@@ -88,9 +88,9 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 }
 
 void QNode::run() {
-    log(Info,"I'm running!");
+    log(Info,"Running!");
     ros::spin();
-    std::cout << "Ros shutdown, proceeding to close the gui." << std::endl;
+    std::cout << "Ros shutdown" << std::endl;
     Q_EMIT rosShutdown();
 }
 
