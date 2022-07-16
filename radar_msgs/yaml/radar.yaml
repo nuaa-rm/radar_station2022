@@ -104,6 +104,6 @@ sensor_close:
     z: 1581.0
 
 small_map:
-  small_map_shift_X: 15
+  small_map_shift_X: 0
   small_map_shift_Y: 0
 

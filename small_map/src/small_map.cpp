@@ -5,7 +5,6 @@
 #include <radar_msgs/points.h>
 #include <radar_msgs/point.h>
 #include <radar_msgs/dist_points.h>
-#include <radar_msgs/small_map.h>
 #include <bitset>
 
 using namespace std;
@@ -40,8 +39,10 @@ Mat close_T = Mat::zeros(3, 1, CV_64FC1);
 int close_calc_flag = 0;
 radar_msgs::points far_points;
 radar_msgs::points close_points;
-radar_msgs::small_map far_map_info;
-radar_msgs::small_map close_map_info;
+radar_msgs::points relative_coordinates;
+radar_msgs::points pub_relative;
+Point2f our_guard;
+Point2f enemy_guard;
 int X_shift = 0;
 int Y_shift = 0;
 vector<Point> our_R1 = {Point(0, 395), Point(0, 562), Point(33, 562), Point(33, 395)};
@@ -50,10 +51,17 @@ vector<Point> our_R2 = {Point(76, 511), Point(160, 569), Point(247, 569), Point(
 vector<Point> our_R3 = {Point(0, 572), Point(0, 705), Point(157, 705), Point(157, 654), Point(31, 572)};
 vector<Point> our_dafu = {Point(370, 558), Point(370, 609), Point(416, 609), Point(416, 558)};
 vector<Point> our_highway = {Point(415, 464), Point(415, 644), Point(450, 644), Point(450, 464)};
+vector<Point> our_outpost = {Point(414, 558), Point(414, 445), Point(317, 445), Point(317, 558)};
+vector<Point> enemy_highway = {Point(35, 376), Point(35, 196), Point(0, 196), Point(0, 376)};
+vector<Point> enemy_dafu = {Point(80, 282), Point(80, 231), Point(34, 231), Point(34, 282)};
+vector<Point> enemy_outpost = {Point(36, 282), Point(36, 395), Point(133, 395), Point(133, 282)};
+vector<Point> enemy_hero_hide = {Point(417, 333), Point(417, 445), Point(450, 445), Point(450, 333)};
+vector<Point> enemy_R3 = {Point(450, 268), Point(450, 135), Point(293, 135), Point(293, 186), Point(419, 268)};
 vector<vector<Point>> our_warn_regions;
 vector<vector<Point>> enemy_warn_regions;
-string our_region_names[5] = {"our_R1", "our_R2", "our_R3", "our_dafu", "our_highway"};
-string enemy_region_names[5] = {"enemy_R1", "enemy_R2", "enemy_R3", "enemy_dafu", "enemy_highway"};
+uint16_t warn_region_state = 0x0000;
+string our_region_names[6] = {"our_R1", "our_R2", "our_R3", "our_dafu", "our_highway", "our_outpost"};
+string enemy_region_names[5] = {"enemy_highway", "enemy_dafu", "enemy_outpost", "enemy_hero_hide", "enemy_R3"};
 
 void onMouse(int event, int x, int y, int flags, void *userdata);//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
 void far_calibration(const radar_msgs::points &msg);//相机标定
@@ -68,18 +76,28 @@ vector<Point> transfer_region(const vector<Point> &input);
 
 void draw_warn_region(Mat &image, const vector<vector<Point>> &our_regions, const vector<vector<Point>> &enemy_regions);
 
-void warn_on_map(const radar_msgs::point &point, Mat &image);
+void warn_on_map(const radar_msgs::points &points, Mat &image);
+
+radar_msgs::point calculate_relative_codi(const Point2f &guard, const radar_msgs::point &enemy, uint8_t priority_id);
+
+Point2f calculate_pixel_codi(const radar_msgs::point &point);
 
 int main(int argc, char **argv) {
+    our_guard.x = 9200;
+    our_guard.y = 5333.44;
+    enemy_guard.y = 22666.56;
     /*预警区域多边形角点初始化*/
     our_warn_regions.emplace_back(our_R1);
     our_warn_regions.emplace_back(our_R2);
     our_warn_regions.emplace_back(our_R3);
     our_warn_regions.emplace_back(our_dafu);
     our_warn_regions.emplace_back(our_highway);
-    for (const vector<Point> &points: our_warn_regions) {
-        enemy_warn_regions.emplace_back(transfer_region(points));
-    }
+    our_warn_regions.emplace_back(our_outpost);
+    enemy_warn_regions.emplace_back(enemy_highway);
+    enemy_warn_regions.emplace_back(enemy_dafu);
+    enemy_warn_regions.emplace_back(enemy_outpost);
+    enemy_warn_regions.emplace_back(enemy_hero_hide);
+    enemy_warn_regions.emplace_back(enemy_R3);
     /*solvePnP求解相机外参矩阵*/
     ros::init(argc, argv, "small_map");
     ros::NodeHandle n;
@@ -169,11 +187,14 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
+        if (!far_points.data.empty())warn_on_map(far_points, small_map_copy);
         for (int i = 0; i < far_points.data.size(); i++) {
-            warn_on_map(far_points.data[i], small_map_copy);
             draw_point_on_map(far_points.data[i], small_map_copy);
         }
-        worldPointPub.publish(far_points);
+        if (!pub_relative.data.empty()) {
+            worldPointPub.publish(pub_relative);
+        }
+//        cout<<our_guard<<endl;
 //        for (int i = 0; i < close_points.size(); i++) {
 //            double x = close_points[i].data[0].x;
 //            double y = close_points[i].data[0].y;
@@ -222,47 +243,104 @@ void onMouse(int event, int x, int y, int flags, void *userdata)//event鼠标事
     }
 }
 
-void warn_on_map(const radar_msgs::point &point, Mat &image) {
+double Point2PointDist(const radar_msgs::point &a, const Point2f &b) {
+    double res = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+    return res;
+}
+
+bool is_enemy_car(uint8_t id) {
+    if (red_or_blue == 0) {
+        if ((id >= 6 && id <= 11) || id == 13)
+            return true;
+        else return false;
+    } else {
+        if (id <= 5 || id == 12)
+            return true;
+        else return false;
+    }
+}
+
+void warn_on_map(const radar_msgs::points &points, Mat &image) {
+    vector<radar_msgs::point>().swap(pub_relative.data);
     Scalar light_green = Scalar(0xcc, 0xff, 0xcc);
     far_points.id = 0;
     for (int i = 0; i < our_warn_regions.size(); i++) {
-        if (pointPolygonTest(our_warn_regions[i],
-                             Point(450 * point.x - X_shift, 840 * point.y - Y_shift),
-                             false) > 0) {
-            drawContours(image, our_warn_regions, i, light_green, -1);
-            if (i == 0) {
-                far_points.id |= 0x01;
+        for (radar_msgs::point car: points.data) {
+            if (is_enemy_car(car.id) && pointPolygonTest(our_warn_regions[i],
+                                                         calculate_pixel_codi(car),
+                                                         false) > 0) {
+                warn_region_state |= (0x01 << (i + 5));
+                relative_coordinates.data.push_back(calculate_relative_codi(our_guard, car, 0));
+                drawContours(image, our_warn_regions, i, light_green, -1);
             }
-            if (i == 1) {
-                far_points.id |= 0x02;
-            }
-            if (i == 2) {
-                far_points.id |= 0x04;
-            }
-            if (i == 4) {
-                far_points.id |= 0x08;
-            }
-            cout<<bitset<8>(far_points.id)<<endl;
-        }
-        if (pointPolygonTest(enemy_warn_regions[i],
-                             Point(450 * point.x - X_shift, 840 * point.y - Y_shift), false) > 0) {
-            drawContours(image, enemy_warn_regions, i, light_green, -1);
-            if (i == 0) {
-                far_points.id |= 0x10;
-            }
-            if (i == 2) {
-                far_points.id |= 0x20;
-            }
-            if (i == 3) {
-                far_points.id |= 0x40;
-            }
-            if (i == 4) {
-                far_points.id |= 0x80;
-            }
-            cout<<bitset<8>(far_points.id)<<endl;
         }
     }
+    double nearest = 50.0;
+    double dist = 0;
+    uint8_t position = 0;
+    for (int i = 0; i < relative_coordinates.data.size(); i++) {
+        dist = Point2PointDist(relative_coordinates.data[i], our_guard);
+        if (dist < nearest) {
+            nearest = dist;
+            position = (uint8_t) i;
+        }
+    }
+    if (!relative_coordinates.data.empty()) {
+        pub_relative.data.emplace_back(relative_coordinates.data[position]);
+    }
+    for (int i = 0; i < enemy_warn_regions.size(); i++) {
+        for (radar_msgs::point car: points.data) {
+            if (is_enemy_car(car.id) && pointPolygonTest(enemy_warn_regions[i],
+                                                         calculate_pixel_codi(car),
+                                                         false) > 0) {
+                warn_region_state |= (0x01 << (i));
+                drawContours(image, enemy_warn_regions, i, light_green, -1);
+                if (red_or_blue == 0) {
+                    if (i == 4 && car.id == 6) {
+                        pub_relative.data.emplace_back(
+                                calculate_relative_codi(our_guard, car, 1));//敌方英雄到达敌方公路区，可能会打前哨站
+//                        cout << "hero" << endl;
+                    } else if (i == 2 && car.id != 7) {
+                        pub_relative.data.emplace_back(
+                                calculate_relative_codi(our_guard, car, 2));//敌方车辆到达敌方前哨站(工程除外)
+//                        cout << "outpost" << endl;
+                    }
+                } else {
+                    if (i == 4 && car.id == 0) {
+                        pub_relative.data.emplace_back(
+                                calculate_relative_codi(our_guard, car, 1));//敌方英雄到达敌方公路区，可能会打前哨站
+//                        cout << "hero" << endl;
+                    } else if (i == 2 && car.id != 1) {
+                        pub_relative.data.emplace_back(
+                                calculate_relative_codi(our_guard, car, 2));//敌方车辆到达敌方前哨站(工程除外)
+//                        cout << "outpost" << endl;
+                    }
+                }
+            }
+        }
+    }
+}
 
+radar_msgs::point calculate_relative_codi(const Point2f &guard, const radar_msgs::point &enemy, uint8_t priority_id) {
+    radar_msgs::point re_codi;
+    re_codi.x = enemy.x * 15000 - guard.x;
+    re_codi.y = enemy.y * 28000 - guard.y;
+    re_codi.id = priority_id;
+    return re_codi;
+}
+
+Point2f calculate_pixel_codi(const radar_msgs::point &point) {
+    Point2f res;
+    res.x = point.x * 450 - (float) X_shift;
+    res.y = (1 - point.y) * 840 - (float) Y_shift;
+    return res;
+}
+
+Point2f calculate_pixel_text_codi(const radar_msgs::point &point) {
+    Point2f res;
+    res.x = point.x * 450 - (float) X_shift - 7;
+    res.y = (1 - point.y) * 840 - (float) Y_shift + 7;
+    return res;
 }
 
 void draw_point_on_map(const radar_msgs::point &point, Mat &image) {
@@ -270,8 +348,7 @@ void draw_point_on_map(const radar_msgs::point &point, Mat &image) {
     string id;
     if (point.id <= 5 || point.id == 12)scalar = Scalar(0, 0, 255);
     else scalar = Scalar(255, 0, 0);
-    circle(image, Point((int) (450 * point.x - X_shift),
-                        (int) (840 * point.y - Y_shift)), 10,
+    circle(image, calculate_pixel_codi(point), 10,
            scalar, -1, LINE_8, 0);
     if (point.id != 12 && point.id != 13) {
         if (point.id <= 5)id = to_string(point.id + 1);
@@ -279,18 +356,9 @@ void draw_point_on_map(const radar_msgs::point &point, Mat &image) {
         if (point.id >= 6)id = to_string(point.id - 5);
         if (point.id == 11)id = "G";
         putText(image, id,
-                Point((int) (450 * point.x) - X_shift - 7,
-                      (int) (840 * point.y - Y_shift) + 7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                calculate_pixel_text_codi(point), cv::FONT_HERSHEY_SIMPLEX, 0.7,
                 cv::Scalar(0xFF, 0xFF, 0xFF), 2);
     }
-}
-
-vector<Point> transfer_region(const vector<Point> &input) {
-    vector<Point> enemy_region;
-    for (const Point &point: input) {
-        enemy_region.emplace_back(450 - point.x, 840 - point.y);
-    }
-    return enemy_region;
 }
 
 void
@@ -312,6 +380,7 @@ draw_warn_region(Mat &image, const vector<vector<Point>> &our_regions, const vec
     }
 }
 
+
 void far_distPointCallback(const radar_msgs::dist_points &input) {
     if (far_calc_flag == 1) {
         Mat invR;
@@ -328,14 +397,29 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                 calcWorld /= 1000;
                 double x = calcWorld.at<double>(0, 0);
                 double y = calcWorld.at<double>(1, 0);
-                y = field_width - y;
                 x /= field_height;
                 y /= field_width;
                 radar_msgs::point point;
                 point.x = x;
                 point.y = y;
-                if (input.data[i].id == 5) {
-                    point.y = 0.80952;
+                if (red_or_blue == 0) {
+                    if (input.data[i].id == 5) {
+                        point.y = 0.19048;
+                        our_guard.x = x * 15000;
+                    }
+                    if (input.data[i].id == 11) {
+                        point.y = 0.80952;
+                        enemy_guard.x = x * 15000;
+                    }
+                } else {
+                    if (input.data[i].id == 11) {
+                        point.y = 0.19048;
+                        our_guard.x = x * 15000;
+                    }
+                    if (input.data[i].id == 5) {
+                        point.y = 0.80952;
+                        enemy_guard.x = x * 15000;
+                    }
                 }
                 point.id = input.data[i].id;
                 far_points.data.push_back(point);
@@ -386,8 +470,24 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 radar_msgs::point point;
                 point.x = x;
                 point.y = y;
-                if (input.data[i].id == 5) {
-                    point.y = 0.80952;
+                if (red_or_blue == 0) {
+                    if (input.data[i].id == 5) {
+                        point.y = 0.80952;
+                        our_guard.x = x * 15;
+                    }
+                    if (input.data[i].id == 11) {
+                        point.y = 0.19048;
+                        enemy_guard.x = x * 15;
+                    }
+                } else {
+                    if (input.data[i].id == 11) {
+                        point.y = 0.80952;
+                        our_guard.x = x * 15;
+                    }
+                    if (input.data[i].id == 5) {
+                        point.y = 0.19048;
+                        enemy_guard.x = x * 15;
+                    }
                 }
                 point.id = input.data[i].id;
                 close_points.data.push_back(point);
