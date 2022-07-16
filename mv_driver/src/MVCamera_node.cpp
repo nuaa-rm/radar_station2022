@@ -42,7 +42,7 @@ public:
 
     int image_width_, image_height_, framerate_, exposure_=2400, brightness_, contrast_, saturation_, sharpness_, focus_,
     white_balance_, gain_,fps_mode=1;
-    bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=1, auto_white_balance_=1;
+    bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=0, auto_white_balance_=0;
     string rcd_path_;
     VideoSaver saver;
     MVCamNode():
@@ -53,7 +53,7 @@ public:
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
-        ros::param::get("/battle_state/exp_time", exposure_);
+        ros::param::get("exp_time", exposure_);
         image_pub_ = it.advertise("image_raw", 1);
 
         node_.param("image_width", image_width_, 640);

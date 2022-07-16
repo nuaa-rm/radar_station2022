@@ -12,7 +12,7 @@ image_height: 1024
 
 sensor_far:
   deviceID: 0
-  exp_time: 27000
+  exp_time: 25000
   fps: 400
   camera_name: changjiao
   camera_matrix:
@@ -59,7 +59,7 @@ sensor_far:
 
 sensor_close:
   deviceID: 1
-  exp_time: 27000
+  exp_time: 28000
   camera_name: guangjiao
   camera_matrix:
     zerozero: 833.605838
