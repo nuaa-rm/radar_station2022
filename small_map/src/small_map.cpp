@@ -39,6 +39,7 @@ Mat close_T = Mat::zeros(3, 1, CV_64FC1);
 int close_calc_flag = 0;
 radar_msgs::points far_points;
 radar_msgs::points close_points;
+radar_msgs::points result_points;
 radar_msgs::points relative_coordinates;
 radar_msgs::points pub_relative;
 Point2f our_guard;
@@ -72,7 +73,7 @@ void close_distPointCallback(const radar_msgs::dist_points &input);
 
 void draw_point_on_map(const radar_msgs::point &point, Mat &image);
 
-vector<Point> transfer_region(const vector<Point> &input);
+void remove_duplicate();
 
 void draw_warn_region(Mat &image, const vector<vector<Point>> &our_regions, const vector<vector<Point>> &enemy_regions);
 
@@ -83,6 +84,12 @@ radar_msgs::point calculate_relative_codi(const Point2f &guard, const radar_msgs
 Point2f calculate_pixel_codi(const radar_msgs::point &point);
 
 int main(int argc, char **argv) {
+//    Mat markerImage;
+//    Ptr<cv::aruco::Dictionary> dictionary;
+//    Ptr<cv::aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+//    aruco::drawMarker(dictionary, 33, 200, markerImage, 1);
+//    imshow("aruco",markerImage);
+    waitKey(0);
     our_guard.x = 9200;
     our_guard.y = 5333.44;
     enemy_guard.y = 22666.56;
@@ -187,40 +194,44 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
-        if (!far_points.data.empty())warn_on_map(far_points, small_map_copy);
-        for (int i = 0; i < far_points.data.size(); i++) {
-            draw_point_on_map(far_points.data[i], small_map_copy);
+        if (!far_points.data.empty()) {
+//            Mat Points(far_points.data.size(),1,CV_32FC2);
+//            for(int i=0;i<far_points.data.size();i++){
+//                Points.at<Point2f>(i,0)=calculate_pixel_codi(far_points.data[i]);;
+//            }
+//            Mat labels;
+//            Mat centers;
+//            Scalar colorLut[4]={
+//                    Scalar(0,0,255),
+//                    Scalar(0,255,0),
+//                    Scalar(255,0,0),
+//                    Scalar(0,0,0)
+//            };
+//            kmeans(Points,3,labels,TermCriteria(TermCriteria::EPS+TermCriteria::COUNT,10,0.1),3,KMEANS_PP_CENTERS);
+//            Mat mean_img(840,450,CV_32FC3,Scalar(255,255,255));
+//            for(int i=0;i<far_points.data.size();i++){
+//                int index=labels.at<int>(i);
+//                Point point=Points.at<Point2f>(i);
+//                circle(mean_img,point,10,colorLut[index],-1,4);
+//            }
+//            imshow("kmeans",mean_img);
+//            waitKey(1);
+            warn_on_map(far_points, small_map_copy);
         }
+        if (!close_points.data.empty()) {
+            warn_on_map(close_points, small_map_copy);
+        }
+        for (int i = 0; i < close_points.data.size(); i++) {
+            draw_point_on_map(close_points.data[i], small_map_copy);
+        }
+//        if(!far_points.data.empty()&&!close_points.data.empty())remove_duplicate();
+//        for (int i = 0; i < result_points.data.size(); i++) {
+//            draw_point_on_map(result_points.data[i], small_map_copy);
+//        }
         if (!pub_relative.data.empty()) {
             worldPointPub.publish(pub_relative);
         }
-//        cout<<our_guard<<endl;
-//        for (int i = 0; i < close_points.size(); i++) {
-//            double x = close_points[i].data[0].x;
-//            double y = close_points[i].data[0].y;
-//            x *= 450;
-//            y *= 840;
-//            if (x + Ky_right * y - C_right > 0 || x + Ky_left * y - C_left < 0) {
-//                if (close_points[i].color == "blue") {
-//                    circle(small_map, Point((int) x-15,
-//                                                 (int) y), 10,
-//                           Scalar(255, 0, 0), -1, LINE_8, 0);
-//                    if(close_points[i].id!=12&&close_points[i].id!=13)putText(small_map, to_string(close_points[i].id),
-//                            Point((int) (450 * close_points[i].data[0].x) - 22,
-//                                  (int) (840 * close_points[i].data[0].y) +7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
-//                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-//                } else if (close_points[i].color == "red") {
-//                    circle(small_map, Point((int) x-15,
-//                                                 (int) y), 10,
-//                           Scalar(0, 0, 255), -1, LINE_8, 0);
-//                    if(close_points[i].id!=12&&close_points[i].id!=13)putText(small_map, to_string(close_points[i].id),
-//                            Point((int) (450 * close_points[i].data[0].x) - 22,
-//                                  (int) (840 * close_points[i].data[0].y) +7), cv::FONT_HERSHEY_SIMPLEX, 0.7,
-//                            cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-//                }
-//                worldPointPub.publish(close_points[i]);
-//            }
-//        }
+
         imshow("small_map", small_map_copy);
         waitKey(1);
         loop_rate.sleep();
@@ -248,6 +259,11 @@ double Point2PointDist(const radar_msgs::point &a, const Point2f &b) {
     return res;
 }
 
+double calculate_dist(const radar_msgs::point &a, const radar_msgs::point &b) {
+    double res = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+    return res;
+}
+
 bool is_enemy_car(uint8_t id) {
     if (red_or_blue == 0) {
         if ((id >= 6 && id <= 11) || id == 13)
@@ -258,6 +274,77 @@ bool is_enemy_car(uint8_t id) {
             return true;
         else return false;
     }
+}
+
+void remove_duplicate() {
+    vector<radar_msgs::point>().swap(result_points.data);
+    radar_msgs::points red_no_id_cars;
+    radar_msgs::points blue_no_id_cars;
+    radar_msgs::points left_may_overlap_points;
+    radar_msgs::points right_may_overlap_points;
+    vector<Point2f> left_region = {Point(0, 0), Point(0, 840), Point(150, 840), Point(150, 0)};
+    vector<Point2f> right_region = {Point(255, 0), Point(255, 840), Point(450, 840), Point(450, 0)};
+    for (auto &i: far_points.data) {
+        int test = pointPolygonTest(left_region, calculate_pixel_codi(i), false);
+        if (test > 0) {
+            result_points.data.emplace_back(i);
+        } else if (test == 0 && i.x != 150) {
+            result_points.data.emplace_back(i);
+        } else {
+            left_may_overlap_points.data.emplace_back(i);
+        }
+    }
+    for (auto &i: close_points.data) {
+        int test = pointPolygonTest(right_region, calculate_pixel_codi(i), false);
+        if (test > 0) {
+            result_points.data.emplace_back(i);
+        } else if (test == 0 && i.x != 255) {
+            result_points.data.emplace_back(i);
+        } else {
+            right_may_overlap_points.data.emplace_back(i);
+        }
+    }
+
+    for (int i = 0; i < left_may_overlap_points.data.size(); i++) {
+        if (left_may_overlap_points.data[i].id == 12) {
+            red_no_id_cars.data.emplace_back(left_may_overlap_points.data[i]);
+            continue;
+        }
+        if (left_may_overlap_points.data[i].id == 13) {
+            blue_no_id_cars.data.emplace_back(left_may_overlap_points.data[i]);
+            continue;
+        }
+        for (int j = 0; j < right_may_overlap_points.data.size(); j++) {
+            if (right_may_overlap_points.data[i].id == 12) {
+                red_no_id_cars.data.emplace_back(right_may_overlap_points.data[i]);
+                continue;
+            }
+            if (right_may_overlap_points.data[i].id == 13) {
+                blue_no_id_cars.data.emplace_back(right_may_overlap_points.data[i]);
+                continue;
+            }
+            if (left_may_overlap_points.data[i].id < 12 && right_may_overlap_points.data[i].id < 12 &&
+                left_may_overlap_points.data[i].id == right_may_overlap_points.data[j].id) {
+                radar_msgs::point center;
+                center.id = left_may_overlap_points.data[i].id;
+                center.x = (left_may_overlap_points.data[i].x + right_may_overlap_points.data[j].x) / 2;
+                center.y = (left_may_overlap_points.data[i].y + right_may_overlap_points.data[j].y) / 2;
+                result_points.data.emplace_back(center);
+            }
+        }
+    }
+//    for (int i = 0; i < red_no_id_cars.data.size(); i++) {
+//        for (int j = 0; j < blue_no_id_cars.data.size(); j++) {
+//            if (calculate_dist(red_no_id_cars.data[i],blue_no_id_cars.data[j])<10){
+//                radar_msgs::point center;
+//                center.id = red_no_id_cars.data[i].id;
+//                center.x = (left_may_overlap_points.data[i].x + right_may_overlap_points.data[j].x) / 2;
+//                center.y = (left_may_overlap_points.data[i].y + right_may_overlap_points.data[j].y) / 2;
+//
+//                result_points.data.emplace_back(center);
+//            }
+//        }
+//    }
 }
 
 void warn_on_map(const radar_msgs::points &points, Mat &image) {
@@ -276,7 +363,7 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
         }
     }
     double nearest = 50.0;
-    double dist = 0;
+    double dist;
     uint8_t position = 0;
     for (int i = 0; i < relative_coordinates.data.size(); i++) {
         dist = Point2PointDist(relative_coordinates.data[i], our_guard);
@@ -299,21 +386,17 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
                     if (i == 4 && car.id == 6) {
                         pub_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 1));//敌方英雄到达敌方公路区，可能会打前哨站
-//                        cout << "hero" << endl;
                     } else if (i == 2 && car.id != 7) {
                         pub_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 2));//敌方车辆到达敌方前哨站(工程除外)
-//                        cout << "outpost" << endl;
                     }
                 } else {
                     if (i == 4 && car.id == 0) {
                         pub_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 1));//敌方英雄到达敌方公路区，可能会打前哨站
-//                        cout << "hero" << endl;
                     } else if (i == 2 && car.id != 1) {
                         pub_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 2));//敌方车辆到达敌方前哨站(工程除外)
-//                        cout << "outpost" << endl;
                     }
                 }
             }
@@ -464,7 +547,6 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 calcWorld /= 1000;
                 double x = calcWorld.at<double>(0, 0);
                 double y = calcWorld.at<double>(1, 0);
-                y = field_width - y;
                 x /= field_height;
                 y /= field_width;
                 radar_msgs::point point;
@@ -472,21 +554,21 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                 point.y = y;
                 if (red_or_blue == 0) {
                     if (input.data[i].id == 5) {
-                        point.y = 0.80952;
-                        our_guard.x = x * 15;
+                        point.y = 0.19048;
+                        our_guard.x = x * 15000;
                     }
                     if (input.data[i].id == 11) {
-                        point.y = 0.19048;
-                        enemy_guard.x = x * 15;
+                        point.y = 0.80952;
+                        enemy_guard.x = x * 15000;
                     }
                 } else {
                     if (input.data[i].id == 11) {
-                        point.y = 0.80952;
-                        our_guard.x = x * 15;
+                        point.y = 0.19048;
+                        our_guard.x = x * 15000;
                     }
                     if (input.data[i].id == 5) {
-                        point.y = 0.19048;
-                        enemy_guard.x = x * 15;
+                        point.y = 0.80952;
+                        enemy_guard.x = x * 15000;
                     }
                 }
                 point.id = input.data[i].id;

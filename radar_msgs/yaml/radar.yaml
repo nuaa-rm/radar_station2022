@@ -9,23 +9,22 @@ battle_state:
 length_of_cloud_queue: 10
 image_width: 1280
 image_height: 1024
-
 sensor_far:
   deviceID: 0
-  exp_time: 25000
+  exp_time: 28000
   fps: 400
   camera_name: changjiao
   camera_matrix:
-    zerozero: 1868.347943
-    zerotwo: 629.827908
-    oneone: 1856.753122
-    onetwo: 545.682949
+    zerozero: 1946.307691
+    zerotwo: 677.359551
+    oneone: 1924.857445
+    onetwo: 546.888763
     twotwo: 1.0
   distortion_coefficient:
-    zero: -0.077960
-    one: 0.113295
-    two: 0.004178
-    three: -0.000990
+    zero:  -0.098207
+    one: 0.159655
+    two: 0.000854
+    three: 0.004972
     four: 0.000000
   uni_matrix:
     zerozero: -0.0452149
@@ -62,16 +61,16 @@ sensor_close:
   exp_time: 28000
   camera_name: guangjiao
   camera_matrix:
-    zerozero: 833.605838
-    zerotwo: 596.964448
-    oneone: 818.771189
-    onetwo: 523.955168
+    zerozero: 1854.425947
+    zerotwo: 691.638391
+    oneone: 1834.091532
+    onetwo: 496.069464
     twotwo: 1.0
   distortion_coefficient:
-    zero: -0.100300
-    one: 0.083467
-    two: 0.000241
-    three: 0.001856
+    zero: -0.064419
+    one: 0.266893
+    two: -0.003348
+    three: 0.007407
     four: 0.000000
   uni_matrix:
     zerozero: -0.10946
