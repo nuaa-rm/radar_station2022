@@ -34,7 +34,6 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(&qnode,SIGNAL(loggingCamera()),this,SLOT(updateLogcamera()));
     setWindowIcon(QIcon(":/images/icon.png"));
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-
 	/*********************
 	** Logging
 	**********************/
@@ -59,6 +58,11 @@ void MainWindow::showNoMasterMessage() {
 	msgBox.setText("Couldn't find the ros master.");
 	msgBox.exec();
     close();
+}
+
+void MainWindow::initUI()
+{
+
 }
 
 /*

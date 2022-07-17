@@ -41,6 +41,7 @@ public:
 
 	void closeEvent(QCloseEvent *event); // Overloaded function
 	void showNoMasterMessage();
+    void initUI();
 
 public Q_SLOTS:
 	/******************************************

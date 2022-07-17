@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QPoint>
 #include <QMouseEvent>
+#include <QPainter>
 
 class QLabel_with_mouse_event : public QLabel
 {
@@ -20,6 +21,10 @@ class QLabel_with_mouse_event : public QLabel
 protected:
     void  mouseMoveEvent(QMouseEvent *event);
     void  mousePressEvent(QMouseEvent *event);
+    void  mouseReleaseEvent(QMouseEvent *event);
+    void  paintEvent(QPaintEvent* );
+private:
+    QPoint selectedPoint;
 public:
     explicit QLabel_with_mouse_event(QWidget *parent = nullptr);
 signals:
