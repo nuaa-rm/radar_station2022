@@ -99,7 +99,6 @@ void MainWindow::updateLoggingView() {
     QListWidgetItem *item = new QListWidgetItem(ui.view_logging);
     item->setText(qnode.logInformation->qstring);
     QFont font = item->font();
-    std::cout << qnode.logInformation->level <<std::endl;
     switch (qnode.logInformation->level) {
         case(Debug) : {
                 font.setPointSize(15);
