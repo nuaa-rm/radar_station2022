@@ -23,7 +23,8 @@
 #endif
 #include <string>
 #include <QThread>
-#include <QStringListModel>
+//#include <QStringListModel>
+//#include <QStringList>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -31,6 +32,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <QImage>
 
+#include <QListWidgetItem>
 
 /*****************************************************************************
 ** Namespaces
@@ -41,7 +43,17 @@ namespace displayer_qt5 {
 /*****************************************************************************
 ** Class
 *****************************************************************************/
-
+enum LogLevel {
+         Debug,
+         Info,
+         Warn,
+         Error,
+         Fatal
+ };
+struct log_information{
+         LogLevel level;
+         QString qstring;
+};
 
 class QNode : public QThread {
     Q_OBJECT
@@ -53,29 +65,25 @@ public:
 	void run();
     void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
     QImage image;
+    QListWidgetItem *listWidgetItem;
+    log_information *logInformation;
 	/*********************
 	** Logging
 	**********************/
-	enum LogLevel {
-	         Debug,
-	         Info,
-	         Warn,
-	         Error,
-	         Fatal
-	 };
 
-	QStringListModel* loggingModel() { return &logging_model; }
+    //QStringListModel* loggingModel() { return &logging_model; }
+
 	void log( const LogLevel &level, const std::string &msg);
 
 Q_SIGNALS:
-	void loggingUpdated();
+    void loggingUpdated();
     void rosShutdown();
     void loggingCamera();//发出设置相机图片信号
 
 private:
 	int init_argc;
 	char** init_argv;
-    QStringListModel logging_model;
+    //QStringListModel logging_model;
     image_transport::Subscriber image_sub;
     cv::Mat img;
 };

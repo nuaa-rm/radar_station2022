@@ -38,7 +38,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	/*********************
 	** Logging
 	**********************/
-	ui.view_logging->setModel(qnode.loggingModel());
+    //ui.view_logging->setModel(qnode.loggingModel());
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     if ( !qnode.init() ) {
         showNoMasterMessage();
@@ -97,7 +97,51 @@ void MainWindow::displayCamera(const QImage &image)
  * the user can always see the latest log message.
  */
 void MainWindow::updateLoggingView() {
-        ui.view_logging->scrollToBottom();
+    QListWidgetItem *item = new QListWidgetItem(ui.view_logging);
+    item->setText(qnode.logInformation->qstring);
+    QFont font = item->font();
+    std::cout << qnode.logInformation->level <<std::endl;
+    switch (qnode.logInformation->level) {
+        case(Debug) : {
+                font.setPointSize(15);
+                font.setBold(false);
+                item->setFont(font);
+                item->setTextColor(Qt::gray);
+                break;
+        }
+        case(Info) : {
+                font.setPointSize(18);
+                font.setBold(false);
+                item->setFont(font);
+                item->setTextColor(Qt::black);
+                break;
+        }
+        case(Warn) : {
+                font.setPointSize(20);
+                font.setBold(false);
+                item->setFont(font);
+                item->setTextColor(Qt::darkYellow);
+                break;
+        }
+        case(Error) : {
+                font.setPointSize(23);
+                font.setBold(true);
+                item->setFont(font);
+                item->setTextColor(Qt::red);
+                break;
+        }
+        case(Fatal) : {
+                font.setPointSize(28);
+                font.setBold(true);
+                font.setItalic(true);
+                item->setFont(font);
+                item->setTextColor(Qt::darkRed);
+                break;
+        }
+    }
+    item->setFont(font);
+    ui.view_logging->addItem(item);
+    ui.view_logging->scrollToBottom();
 }
 
 /*****************************************************************************

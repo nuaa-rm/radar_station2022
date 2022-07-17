@@ -44,7 +44,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QListView" name="view_logging"/>
+        <widget class="QListWidget" name="view_logging"/>
        </item>
        <item>
         <widget class="QGroupBox" name="groupBoxRobotHealth">

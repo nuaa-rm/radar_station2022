@@ -17,6 +17,8 @@
 #include "qnode.hpp"
 #include <QImage>
 #include <QMutex>
+#include <QListWidgetItem>
+#include "qnode.hpp"
 
 /*****************************************************************************
 ** Namespace
