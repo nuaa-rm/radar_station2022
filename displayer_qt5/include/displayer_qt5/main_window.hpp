@@ -5,8 +5,8 @@
  *
  * @date November 2010
  **/
-#ifndef displayer_qt5_MAIN_WINDOW_H
-#define displayer_qt5_MAIN_WINDOW_H
+#ifndef displayer_qt5_MAIN_WINDOW_HPP_
+#define displayer_qt5_MAIN_WINDOW_HPP_
 
 /*****************************************************************************
 ** Includes
@@ -18,7 +18,7 @@
 #include <QImage>
 #include <QMutex>
 #include <QListWidgetItem>
-#include "qnode.hpp"
+
 
 /*****************************************************************************
 ** Namespace

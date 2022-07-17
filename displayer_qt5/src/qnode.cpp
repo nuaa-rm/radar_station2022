@@ -17,6 +17,7 @@
 #include <sstream>
 #include "../include/displayer_qt5/qnode.hpp"
 #include "sensor_msgs/image_encodings.h"
+#include "displayer_qt5/qlabel_with_mouse_event.h"
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -98,7 +99,6 @@ void QNode::run() {
 void QNode::log( const LogLevel &level, const std::string &msg) {
     logInformation = new log_information;
     logInformation->level = level;
-
     std::stringstream logging_model_msg;
     switch ( level ) {
         case(Debug) : {

@@ -641,7 +641,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <widget class="QLabel" name="labelCalibrateCameraMainWindow">
+         <widget class="QLabel_with_mouse_event" name="labelCalibrateCameraMainWindow">
           <property name="font">
            <font>
             <family>ori1Uni</family>
@@ -705,6 +705,13 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QLabel_with_mouse_event</class>
+   <extends>QLabel</extends>
+   <header location="global">displayer_qt5/qlabel_with_mouse_event.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
