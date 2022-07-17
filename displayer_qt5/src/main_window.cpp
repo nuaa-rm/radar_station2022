@@ -38,7 +38,6 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	/*********************
 	** Logging
 	**********************/
-    //ui.view_logging->setModel(qnode.loggingModel());
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     if ( !qnode.init() ) {
         showNoMasterMessage();

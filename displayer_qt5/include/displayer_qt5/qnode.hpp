@@ -71,7 +71,6 @@ public:
 	** Logging
 	**********************/
 
-    //QStringListModel* loggingModel() { return &logging_model; }
 
 	void log( const LogLevel &level, const std::string &msg);
 
@@ -83,7 +82,6 @@ Q_SIGNALS:
 private:
 	int init_argc;
 	char** init_argv;
-    //QStringListModel logging_model;
     image_transport::Subscriber image_sub;
     cv::Mat img;
 };
