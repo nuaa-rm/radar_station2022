@@ -3,10 +3,10 @@
 void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint point = event->pos();
-    emit mouseMovePoint(point);
     QLabel::mouseMoveEvent(event);
     selectedPoint = point;
-    //std::cout << point.x() << '\t' << point.y() << std::endl;
+    emit mouseMovePoint(point);
+    update();
 }
 
 void QLabel_with_mouse_event::mousePressEvent(QMouseEvent *event)
@@ -15,7 +15,6 @@ void QLabel_with_mouse_event::mousePressEvent(QMouseEvent *event)
     {
         QPoint point = event -> pos();
         emit mouseClicked(point);
-        update();
     }
     QLabel::mousePressEvent(event);
 }
@@ -31,9 +30,9 @@ void QLabel_with_mouse_event::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     QPen pen;
     pen.setColor(Qt::red);
-    pen.setWidth(3);
+    pen.setWidth(1);
     painter.setPen(pen);
-    painter.drawEllipse(selectedPoint, 10, 10);
+    painter.drawEllipse(selectedPoint, 3, 3);
 }
 
 

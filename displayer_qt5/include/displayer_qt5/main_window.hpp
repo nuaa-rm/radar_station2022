@@ -52,13 +52,26 @@ public Q_SLOTS:
     ** Manual connections
     *******************************************/
     void updateLogcamera();
+    void updateLogcameraCalibrateMainWindow();
+    void updateLogcameraCalibrateSecondWindow();
     void displayCamera(const QImage& image);
+    void displayCameraCalibrateMainWindow(const QImage& image);
+    void displayCameraCalibrateSecondWindow(const QImage& image);
     void updateLoggingView();
+
+private slots:
+    void on_comboBoxCalibrateCamera_currentIndexChanged(const QString &arg1);
+    void on_labelCalibrateCameraMainWindow_mouseLocationChanged();
+
+    void on_tabWidget_currentChanged(int index);
 
 private:
 	Ui::MainWindowDesign ui;
-	QNode qnode;
+    QNode qnode;
     QImage qimage_;
+    QImage qimage_calibrate_main_window_;
+    QImage qimage_calibrate_second_window_;
+    QImage qimage_second_window_;
     mutable QMutex qimage_mutex_;
 };
 

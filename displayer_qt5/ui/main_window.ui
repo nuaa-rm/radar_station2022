@@ -641,22 +641,66 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <widget class="QLabel_with_mouse_event" name="labelCalibrateCameraMainWindow">
-          <property name="font">
-           <font>
-            <family>ori1Uni</family>
-            <pointsize>31</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>No Image To Show (Main Window)</string>
-          </property>
-         </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QLabel_with_mouse_event" name="labelCalibrateCameraMainWindow">
+            <property name="font">
+             <font>
+              <family>ori1Uni</family>
+              <pointsize>31</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>No Image To Show (Main Window)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="labelCalibrateCameraSecondWindow">
+            <property name="font">
+             <font>
+              <family>ori1Uni</family>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>No Image To Show (Second Window)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
@@ -676,20 +720,6 @@
              </widget>
             </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="labelCalibrateCameraSecondWindow">
-            <property name="font">
-             <font>
-              <family>ori1Uni</family>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>No Image To Show (Second Window)</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>

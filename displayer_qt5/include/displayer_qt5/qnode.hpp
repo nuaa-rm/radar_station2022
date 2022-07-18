@@ -59,29 +59,48 @@ public:
 	QNode(int argc, char** argv );
 	virtual ~QNode();
 	bool init();
-	bool init(const std::string &master_url, const std::string &host_url);
 	void run();
     void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
+    void imgSensorFarCallback(const sensor_msgs::ImageConstPtr& msg);
+    void imgSensorCloseCallback(const sensor_msgs::ImageConstPtr& msg);
     QImage image;
+    QImage imageSensorFar;
+    QImage imageSensorClose;
+    QImage imageCalibrateMainWindow;
+    QImage imageCalibrateSecondWindow;
     QListWidgetItem *listWidgetItem;
     log_information *logInformation;
-	/*********************
-	** Logging
-	**********************/
-
-
 	void log( const LogLevel &level, const std::string &msg);
+    void loadParams();
+    QString sensorFarImgRaw;
+    QString sensorCloseImgRaw;
+    QString cameraCelibrating;
+    QPoint mouseLoaction;
+    bool if_is_celibrating;
+    QString realsenseImgRaw;
 
 Q_SIGNALS:
     void loggingUpdated();
     void rosShutdown();
     void loggingCamera();//发出设置相机图片信号
+    void loggingCameraCalibrateMainWindow();
+    void loggingCameraCalibrateSecondWindow();
+
 
 private:
 	int init_argc;
 	char** init_argv;
     image_transport::Subscriber image_sub;
+    image_transport::Subscriber image_sub_sensor_far;
+    image_transport::Subscriber image_sub_sensor_close;
     cv::Mat img;
+    cv::Mat imgSensorFar;
+    cv::Mat imgSensorClose;
+    int calibrateRate;
+    int calibrateMainWindowWidth;
+    int calibrateMainWindowHeight;
+    int calibrateSecondWindowWidth;
+    int calibrateSecondWindowHeight;
 };
 
 }  // namespace displayer_qt5

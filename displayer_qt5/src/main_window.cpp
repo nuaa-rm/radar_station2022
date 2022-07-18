@@ -32,18 +32,16 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 {
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(&qnode,SIGNAL(loggingCamera()),this,SLOT(updateLogcamera()));
+    QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateMainWindow()),this,SLOT(updateLogcameraCalibrateMainWindow()));
+    QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateSecondWindow()),this,SLOT(updateLogcameraCalibrateSecondWindow()));
     setWindowIcon(QIcon(":/images/icon.png"));
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-	/*********************
-	** Logging
-	**********************/
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
+    QObject::connect(ui.labelCalibrateCameraMainWindow, SIGNAL(mouseMovePoint(QPoint)), this, SLOT(on_labelCalibrateCameraMainWindow_mouseLocationChanged()));
     if ( !qnode.init() ) {
         showNoMasterMessage();
     }
-    /*********************
-    ** Auto Start
-    **********************/
+    initUI();
 
 }
 
@@ -62,22 +60,27 @@ void MainWindow::showNoMasterMessage() {
 
 void MainWindow::initUI()
 {
+    ui.comboBoxCalibrateCamera->clear();
+    QStringList stringList;
+    stringList << qnode.sensorFarImgRaw << qnode.sensorCloseImgRaw;
+    ui.comboBoxCalibrateCamera->addItems(stringList);
 
+    ui.tabWidget->setCurrentIndex(0);
 }
-
-/*
- * These triggers whenever the button is clicked, regardless of whether it
- * is already checked or not.
- */
-
-
-
-
-
 
 void MainWindow::updateLogcamera()
 {
     displayCamera(qnode.image);
+}
+
+void MainWindow::updateLogcameraCalibrateMainWindow()
+{
+    displayCameraCalibrateMainWindow(qnode.imageCalibrateMainWindow);
+}
+
+void MainWindow::updateLogcameraCalibrateSecondWindow()
+{
+    displayCameraCalibrateSecondWindow(qnode.imageCalibrateSecondWindow);
 }
 
 void MainWindow::displayCamera(const QImage &image)
@@ -90,15 +93,24 @@ void MainWindow::displayCamera(const QImage &image)
 
 }
 
-/*****************************************************************************
-** Implemenation [Slots][manually connected]
-*****************************************************************************/
+void MainWindow::displayCameraCalibrateMainWindow(const QImage &image)
+{
+    qimage_mutex_.lock();
+    qimage_calibrate_main_window_ = image.copy();
+    ui.labelCalibrateCameraMainWindow->setPixmap(QPixmap::fromImage(qimage_calibrate_main_window_));
+    ui.labelCalibrateCameraMainWindow->resize(ui.labelCalibrateCameraMainWindow->pixmap()->size());
+    qimage_mutex_.unlock();
+}
 
-/**
- * This function is signalled by the underlying model. When the model changes,
- * this will drop the cursor down to the last line in the QListview to ensure
- * the user can always see the latest log message.
- */
+void MainWindow::displayCameraCalibrateSecondWindow(const QImage &image)
+{
+    qimage_mutex_.lock();
+    qimage_calibrate_second_window_ = image.copy();
+    ui.labelCalibrateCameraSecondWindow->setPixmap(QPixmap::fromImage(qimage_calibrate_second_window_));
+    ui.labelCalibrateCameraSecondWindow->resize(ui.labelCalibrateCameraSecondWindow->pixmap()->size());
+    qimage_mutex_.unlock();
+}
+
 void MainWindow::updateLoggingView() {
     QListWidgetItem *item = new QListWidgetItem(ui.view_logging);
     item->setText(qnode.logInformation->qstring);
@@ -146,19 +158,6 @@ void MainWindow::updateLoggingView() {
     ui.view_logging->scrollToBottom();
 }
 
-/*****************************************************************************
-** Implementation [Menu]
-*****************************************************************************/
-
-
-
-/*****************************************************************************
-** Implementation [Configuration]
-*****************************************************************************/
-
-
-
-
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
@@ -170,3 +169,25 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 
 
+
+void displayer_qt5::MainWindow::on_comboBoxCalibrateCamera_currentIndexChanged(const QString &arg1)
+{
+    qnode.cameraCelibrating = arg1;
+}
+
+void displayer_qt5::MainWindow::on_labelCalibrateCameraMainWindow_mouseLocationChanged()
+{
+    qnode.mouseLoaction = ui.labelCalibrateCameraMainWindow->selectedPoint;
+}
+
+void displayer_qt5::MainWindow::on_tabWidget_currentChanged(int index)
+{
+    if(index == 1)
+    {
+        qnode.if_is_celibrating = true;
+    }
+    else
+    {
+        qnode.if_is_celibrating = false;
+    }
+}

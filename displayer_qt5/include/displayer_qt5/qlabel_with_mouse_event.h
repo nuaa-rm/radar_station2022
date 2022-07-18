@@ -14,6 +14,7 @@
 #include <QPoint>
 #include <QMouseEvent>
 #include <QPainter>
+#include "qnode.hpp"
 
 class QLabel_with_mouse_event : public QLabel
 {
@@ -24,9 +25,9 @@ protected:
     void  mouseReleaseEvent(QMouseEvent *event);
     void  paintEvent(QPaintEvent* );
 private:
-    QPoint selectedPoint;
 public:
     explicit QLabel_with_mouse_event(QWidget *parent = nullptr);
+    QPoint selectedPoint;
 signals:
     void mouseMovePoint(QPoint point);
     void mouseClicked(QPoint point);
