@@ -61,16 +61,16 @@ sensor_close:
   exp_time: 28000
   camera_name: guangjiao
   camera_matrix:
-    zerozero: 1854.425947
-    zerotwo: 691.638391
-    oneone: 1834.091532
-    onetwo: 496.069464
+    zerozero: 833.605838
+    zerotwo: 596.964448
+    oneone: 818.771189
+    onetwo: 523.955168
     twotwo: 1.0
   distortion_coefficient:
-    zero: -0.064419
-    one: 0.266893
-    two: -0.003348
-    three: 0.007407
+    zero: -0.100300
+    one: 0.083467
+    two: 0.000241
+    three: 0.001856
     four: 0.000000
   uni_matrix:
     zerozero: -0.10946
