@@ -25,12 +25,20 @@ protected:
     void  mouseReleaseEvent(QMouseEvent *event);
     void  paintEvent(QPaintEvent* );
 private:
+    bool if_is_dragging;
+    bool if_point_being_selected;
 public:
     explicit QLabel_with_mouse_event(QWidget *parent = nullptr);
     QPoint selectedPoint;
+    QString cameraCelibrating;
+    QString sensorFarImgRaw;
+    QString sensorCloseImgRaw;
+    QPoint* sensor_far_points;
+    QPoint* sensor_close_points;
 signals:
     void mouseMovePoint(QPoint point);
     void mouseClicked(QPoint point);
+    void mouseReleased(QPoint point);
 };
 
 #endif // displayer_qt5_QLABEL_WITH_MOUSE_EVENT_H

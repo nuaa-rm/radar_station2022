@@ -308,6 +308,40 @@ void QNode::loadParams()
 
     if_is_celibrating = false;
 
+    float x, y;
+    QPoint point;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point1/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point1/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_far_points[0] = point;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point2/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point2/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_far_points[1] = point;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point3/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point3/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_far_points[2] = point;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point4/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point4/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_far_points[3] = point;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point1/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point1/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_close_points[0] = point;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point2/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point2/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_close_points[1] = point;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point3/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point3/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_close_points[2] = point;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point4/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point4/y", y);
+    point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
+    sensor_close_points[3] = point;
 }
 
 }  // namespace displayer_qt5

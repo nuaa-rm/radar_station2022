@@ -66,6 +66,12 @@ void MainWindow::initUI()
     ui.comboBoxCalibrateCamera->addItems(stringList);
 
     ui.tabWidget->setCurrentIndex(0);
+
+    ui.labelCalibrateCameraMainWindow->sensor_far_points = qnode.sensor_far_points;
+    ui.labelCalibrateCameraMainWindow->sensor_close_points = qnode.sensor_close_points;
+
+    ui.labelCalibrateCameraMainWindow->sensorFarImgRaw = qnode.sensorFarImgRaw;
+    ui.labelCalibrateCameraMainWindow->sensorCloseImgRaw = qnode.sensorCloseImgRaw;
 }
 
 void MainWindow::updateLogcamera()
@@ -173,6 +179,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void displayer_qt5::MainWindow::on_comboBoxCalibrateCamera_currentIndexChanged(const QString &arg1)
 {
     qnode.cameraCelibrating = arg1;
+    ui.labelCalibrateCameraMainWindow->cameraCelibrating = arg1;
 }
 
 void displayer_qt5::MainWindow::on_labelCalibrateCameraMainWindow_mouseLocationChanged()

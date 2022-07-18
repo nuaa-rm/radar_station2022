@@ -5,6 +5,52 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
     QPoint point = event->pos();
     QLabel::mouseMoveEvent(event);
     selectedPoint = point;
+    double min_distance = 100000000000;
+    static int min_i = 4;
+    if(if_is_dragging)
+    {
+        if(cameraCelibrating == sensorFarImgRaw)
+        {   if(if_point_being_selected)
+            {
+                sensor_far_points[min_i] = point;
+            }
+            else
+            {
+                for(int i = 0; i < 4; i++)
+                {
+                    double distance = (point.x() - sensor_far_points[i].x()) * (point.x() - sensor_far_points[i].x()) + (point.y() - sensor_far_points[i].y()) * (point.y() - sensor_far_points[i].y());
+                    if(min_distance > distance)
+                    {
+                        min_distance = distance;
+                        min_i = i;
+                    }
+                }
+                sensor_far_points[min_i] = point;
+                if_point_being_selected = true;
+            }
+        }
+        else if(cameraCelibrating == sensorCloseImgRaw)
+        {
+            if(if_point_being_selected)
+            {
+                sensor_far_points[min_i] = point;
+            }
+            else
+            {
+                for(int i = 0; i < 4; i++)
+                {
+                    double distance = (point.x() - sensor_close_points[i].x()) * (point.x() - sensor_close_points[i].x()) + (point.y() - sensor_close_points[i].y()) * (point.y() - sensor_close_points[i].y());
+                    if(min_distance > distance)
+                    {
+                        min_distance = distance;
+                        min_i = i;
+                    }
+                }
+                sensor_close_points[min_i] = point;
+                if_point_being_selected = true;
+            }
+        }
+    }
     emit mouseMovePoint(point);
     update();
 }
@@ -14,6 +60,7 @@ void QLabel_with_mouse_event::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton)
     {
         QPoint point = event -> pos();
+        if_is_dragging = true;
         emit mouseClicked(point);
     }
     QLabel::mousePressEvent(event);
@@ -21,7 +68,10 @@ void QLabel_with_mouse_event::mousePressEvent(QMouseEvent *event)
 
 void QLabel_with_mouse_event::mouseReleaseEvent(QMouseEvent *event)
 {
-
+     QPoint point = event -> pos();
+     if_is_dragging = false;
+     if_point_being_selected = false;
+     emit mouseReleased(point);
 }
 
 void QLabel_with_mouse_event::paintEvent(QPaintEvent *event)
@@ -33,6 +83,40 @@ void QLabel_with_mouse_event::paintEvent(QPaintEvent *event)
     pen.setWidth(1);
     painter.setPen(pen);
     painter.drawEllipse(selectedPoint, 3, 3);
+
+    pen.setColor(Qt::white);
+    pen.setWidth(1);
+    painter.setPen(pen);
+
+    QBrush brush;
+    brush.setStyle(Qt::SolidPattern);
+    brush.setColor(Qt::white);
+    painter.setBrush(brush);
+
+
+
+    if(cameraCelibrating == sensorFarImgRaw)
+    {
+        for(size_t i = 0; i < 4; i++)
+        {
+            painter.drawEllipse(sensor_far_points[i], 3, 3);
+        }
+        brush.setStyle(Qt::Dense7Pattern);
+        painter.setBrush(brush);
+        painter.drawConvexPolygon(sensor_far_points, 4);
+
+    }
+    else if(cameraCelibrating == sensorCloseImgRaw)
+    {
+        for(size_t i = 0; i < 4; i++)
+        {
+            painter.drawEllipse(sensor_close_points[i], 3, 3);
+        }
+        brush.setStyle(Qt::Dense7Pattern);
+        painter.setBrush(brush);
+        painter.drawConvexPolygon(sensor_close_points, 4);
+    }
+
 }
 
 
@@ -40,5 +124,7 @@ QLabel_with_mouse_event::QLabel_with_mouse_event(QWidget *parent) : QLabel{paren
 {
     setMouseTracking(true);
     selectedPoint = QPoint(0, 0);
+    if_is_dragging = false;
+    if_point_being_selected = false;
 }
 

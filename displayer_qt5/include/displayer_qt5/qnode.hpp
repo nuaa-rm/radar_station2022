@@ -78,6 +78,8 @@ public:
     QPoint mouseLoaction;
     bool if_is_celibrating;
     QString realsenseImgRaw;
+    QPoint sensor_far_points[4];
+    QPoint sensor_close_points[4];
 
 Q_SIGNALS:
     void loggingUpdated();
