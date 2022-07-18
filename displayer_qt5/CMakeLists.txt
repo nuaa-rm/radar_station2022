@@ -23,6 +23,8 @@ set(QT_LIBRARIES Qt5::Widgets)
 include_directories(
     ${catkin_INCLUDE_DIRS}
     include
+    ../../../devel/include
+    ../../devel/include
     )
 # Use this to define what the package will export (e.g. libs, headers).
 # Since the default here is to produce only a binary, we don't worry about

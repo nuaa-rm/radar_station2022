@@ -63,6 +63,7 @@ public:
     void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
     void imgSensorFarCallback(const sensor_msgs::ImageConstPtr& msg);
     void imgSensorCloseCallback(const sensor_msgs::ImageConstPtr& msg);
+    void pubCelibrateResult();
     QImage image;
     QImage imageSensorFar;
     QImage imageSensorClose;
@@ -80,6 +81,8 @@ public:
     QString realsenseImgRaw;
     QPoint sensor_far_points[4];
     QPoint sensor_close_points[4];
+    QString calibrationTopicSensorFar;
+    QString calibrationTopicSensorClose;
 
 Q_SIGNALS:
     void loggingUpdated();
@@ -95,6 +98,8 @@ private:
     image_transport::Subscriber image_sub;
     image_transport::Subscriber image_sub_sensor_far;
     image_transport::Subscriber image_sub_sensor_close;
+    ros::Publisher calibration_pub_sensor_far;
+    ros::Publisher calibration_pub_sensor_close;
     cv::Mat img;
     cv::Mat imgSensorFar;
     cv::Mat imgSensorClose;

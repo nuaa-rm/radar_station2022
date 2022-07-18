@@ -33,7 +33,7 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
         {
             if(if_point_being_selected)
             {
-                sensor_far_points[min_i] = point;
+                sensor_close_points[min_i] = point;
             }
             else
             {

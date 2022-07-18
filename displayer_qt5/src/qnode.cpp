@@ -18,6 +18,8 @@
 #include "../include/displayer_qt5/qnode.hpp"
 #include "sensor_msgs/image_encodings.h"
 #include "displayer_qt5/qlabel_with_mouse_event.h"
+#include <radar_msgs/dist_points.h>
+#include <radar_msgs/dist_point.h>
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -222,6 +224,32 @@ void QNode::imgSensorCloseCallback(const sensor_msgs::ImageConstPtr &msg)
     }
 }
 
+void QNode::pubCelibrateResult()
+{
+    radar_msgs::dist_point one_point_msg;
+    radar_msgs::dist_points points_msg;
+    if(cameraCelibrating == sensorFarImgRaw)
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            one_point_msg.x = sensor_far_points[i].x() * 1.0 / calibrateMainWindowWidth;
+            one_point_msg.y = sensor_far_points[i].y() * 1.0 / calibrateMainWindowHeight;
+            points_msg.data.push_back(one_point_msg);
+        }
+        calibration_pub_sensor_far.publish(points_msg);
+    }
+    else if (cameraCelibrating == sensorCloseImgRaw)
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            one_point_msg.x = sensor_close_points[i].x() * 1.0 / calibrateMainWindowWidth;
+            one_point_msg.y = sensor_close_points[i].y() * 1.0 / calibrateMainWindowHeight;
+            points_msg.data.push_back(one_point_msg);
+        }
+        calibration_pub_sensor_close.publish(points_msg);
+    }
+}
+
 bool QNode::init()
 {
 	ros::init(init_argc,init_argv,"displayer_qt5");
@@ -237,6 +265,8 @@ bool QNode::init()
     image_sub = it.subscribe(realsenseImgRaw.toStdString(),1,&QNode::imgShowCallback,this);
     image_sub_sensor_far = it.subscribe(sensorFarImgRaw.toStdString(),1,&QNode::imgSensorFarCallback,this);
     image_sub_sensor_close = it.subscribe(sensorCloseImgRaw.toStdString(),1,&QNode::imgSensorCloseCallback,this);
+    calibration_pub_sensor_far = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorFar.toStdString(), 1);
+    calibration_pub_sensor_close = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorClose.toStdString(), 1);
 	start();
 	return true;
 }
@@ -300,6 +330,11 @@ void QNode::loadParams()
 
     ros::param::get("/camera/list/realsense/topic", str);
     realsenseImgRaw = QString(str.c_str());
+
+    ros::param::get("/camera/list/farCam/calibrationTopic", str);
+    calibrationTopicSensorFar = QString(str.c_str());
+    ros::param::get("/camera/list/closeCam/calibrationTopic", str);
+    calibrationTopicSensorClose = QString(str.c_str());
 
     calibrateMainWindowWidth = 1280;
     calibrateMainWindowHeight = 1024;

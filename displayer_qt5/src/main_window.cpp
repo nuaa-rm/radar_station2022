@@ -198,3 +198,16 @@ void displayer_qt5::MainWindow::on_tabWidget_currentChanged(int index)
         qnode.if_is_celibrating = false;
     }
 }
+
+void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
+{
+    qnode.pubCelibrateResult();
+    if(ui.comboBoxCalibrateCamera->currentIndex() == 1)
+    {
+        ui.comboBoxCalibrateCamera->setCurrentIndex(0);
+    }
+    else
+    {
+        ui.comboBoxCalibrateCamera->setCurrentIndex(1);
+    }
+}
