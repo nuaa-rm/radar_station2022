@@ -86,6 +86,73 @@ void MainWindow::updateLogcameraCalibrateMainWindow()
 
 void MainWindow::updateLogcameraCalibrateSecondWindow()
 {
+    cv::Rect r;
+    r.width = qnode.calibrateSecondWindowWidth / qnode.calibrateRate;
+    r.height = qnode.calibrateSecondWindowHeight / qnode.calibrateRate;
+    int halfWidth = (qnode.calibrateSecondWindowWidth * 0.5) / qnode.calibrateRate;
+    int halfHeight = (qnode.calibrateSecondWindowHeight * 0.5) / qnode.calibrateRate;
+    if(ui.labelCalibrateCameraMainWindow->selectedPoint.x() > qnode.calibrateMainWindowWidth)
+    {
+        ui.labelCalibrateCameraMainWindow->selectedPoint.setX(qnode.calibrateMainWindowWidth);
+    }
+    if(ui.labelCalibrateCameraMainWindow->selectedPoint.y() > qnode.calibrateMainWindowHeight)
+    {
+        ui.labelCalibrateCameraMainWindow->selectedPoint.setY(qnode.calibrateMainWindowHeight);
+    }
+    cv::Mat m;
+    if(ui.labelCalibrateCameraMainWindow->selectedPoint.x() - halfWidth < 0)
+    {
+        r.x = 0;
+    }
+    else if((ui.labelCalibrateCameraMainWindow->selectedPoint.x() + halfWidth) > (qnode.calibrateMainWindowWidth))
+    {
+        r.x = qnode.calibrateMainWindowWidth - qnode.calibrateSecondWindowWidth / qnode.calibrateRate;
+    }
+    else
+    {
+        r.x = ui.labelCalibrateCameraMainWindow->selectedPoint.x() - halfWidth;
+    }
+
+    if(ui.labelCalibrateCameraMainWindow->selectedPoint.y() - halfHeight < 0)
+    {
+        r.y = 0;
+    }
+    else if((ui.labelCalibrateCameraMainWindow->selectedPoint.y() + halfHeight) > (qnode.calibrateMainWindowHeight))
+    {
+        r.y = qnode.calibrateMainWindowHeight - qnode.calibrateSecondWindowHeight / qnode.calibrateRate;
+    }
+    else
+    {
+        r.y = ui.labelCalibrateCameraMainWindow->selectedPoint.y() - halfHeight;
+    }
+    if (r.x < 0)
+    {
+        r.x = 0;
+    }
+    if (r.y < 0)
+    {
+        r.y = 0;
+    }
+    if ((r.x + r.width) > qnode.calibrateMainWindowWidth)
+    {
+        r.width = qnode.calibrateMainWindowWidth - r.x;
+    }
+    if ((r.y + r.height) > qnode.calibrateMainWindowWidth)
+    {
+        r.height = qnode.calibrateMainWindowWidth - r.y;
+    }
+    if(qnode.cameraCelibrating == qnode.sensorFarImgRaw)
+    {
+        qnode.imgSensorFar(r).copyTo(m);
+    }
+    else
+    {
+        qnode.imgSensorClose(r).copyTo(m);
+    }
+    cv::resize(m, m, cv::Size(qnode.calibrateSecondWindowWidth, qnode.calibrateSecondWindowHeight));
+    cv::line(m, cv::Point(0, (ui.labelCalibrateCameraMainWindow->selectedPoint.y() - r.y) * qnode.calibrateRate), cv::Point(qnode.calibrateSecondWindowWidth, (ui.labelCalibrateCameraMainWindow->selectedPoint.y() - r.y) * qnode.calibrateRate), cv::Scalar(255, 255, 255));
+    cv::line(m, cv::Point((ui.labelCalibrateCameraMainWindow->selectedPoint.x() - r.x) * qnode.calibrateRate, 0), cv::Point((ui.labelCalibrateCameraMainWindow->selectedPoint.x() - r.x) * qnode.calibrateRate, qnode.calibrateSecondWindowHeight), cv::Scalar(255, 255, 255));
+    qnode.imageCalibrateSecondWindow = QImage(m.data,m.cols,m.rows,m.step[0],QImage::Format_RGB888);
     displayCameraCalibrateSecondWindow(qnode.imageCalibrateSecondWindow);
 }
 
@@ -185,6 +252,7 @@ void displayer_qt5::MainWindow::on_comboBoxCalibrateCamera_currentIndexChanged(c
 void displayer_qt5::MainWindow::on_labelCalibrateCameraMainWindow_mouseLocationChanged()
 {
     qnode.mouseLoaction = ui.labelCalibrateCameraMainWindow->selectedPoint;
+    emit qnode.loggingCameraCalibrateSecondWindow();
 }
 
 void displayer_qt5::MainWindow::on_tabWidget_currentChanged(int index)

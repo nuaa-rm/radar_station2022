@@ -83,6 +83,14 @@ public:
     QPoint sensor_close_points[4];
     QString calibrationTopicSensorFar;
     QString calibrationTopicSensorClose;
+    int calibrateRate;
+    int calibrateMainWindowWidth;
+    int calibrateMainWindowHeight;
+    int calibrateSecondWindowWidth;
+    int calibrateSecondWindowHeight;
+    cv::Mat img;
+    cv::Mat imgSensorFar;
+    cv::Mat imgSensorClose;
 
 Q_SIGNALS:
     void loggingUpdated();
@@ -100,14 +108,8 @@ private:
     image_transport::Subscriber image_sub_sensor_close;
     ros::Publisher calibration_pub_sensor_far;
     ros::Publisher calibration_pub_sensor_close;
-    cv::Mat img;
-    cv::Mat imgSensorFar;
-    cv::Mat imgSensorClose;
-    int calibrateRate;
-    int calibrateMainWindowWidth;
-    int calibrateMainWindowHeight;
-    int calibrateSecondWindowWidth;
-    int calibrateSecondWindowHeight;
+
+
 };
 
 }  // namespace displayer_qt5

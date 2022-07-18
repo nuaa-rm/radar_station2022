@@ -73,67 +73,6 @@ void QNode::imgSensorFarCallback(const sensor_msgs::ImageConstPtr &msg)
           cv::resize(imgSensorFar, imgSensorFar, cv::Size(calibrateMainWindowWidth, calibrateMainWindowHeight));
           imageCalibrateMainWindow = QImage(imgSensorFar.data,imgSensorFar.cols,imgSensorFar.rows,imgSensorFar.step[0],QImage::Format_RGB888);//change  to QImage format
           Q_EMIT loggingCameraCalibrateMainWindow();
-
-          cv::Rect r;
-          r.width = calibrateSecondWindowWidth / calibrateRate;
-          r.height = calibrateSecondWindowHeight / calibrateRate;
-          int halfWidth = (calibrateSecondWindowWidth * 0.5) / calibrateRate;
-          int halfHeight = (calibrateSecondWindowHeight * 0.5) / calibrateRate;
-          if(mouseLoaction.x() > calibrateMainWindowWidth)
-          {
-              mouseLoaction.setX(calibrateMainWindowWidth);
-          }
-          if(mouseLoaction.y() > calibrateMainWindowHeight)
-          {
-              mouseLoaction.setY(calibrateMainWindowHeight);
-          }
-          cv::Mat m;
-          if(mouseLoaction.x() - halfWidth < 0)
-          {
-              r.x = 0;
-          }
-          else if((mouseLoaction.x() + halfWidth) > (calibrateMainWindowWidth))
-          {
-              r.x = calibrateMainWindowWidth - calibrateSecondWindowWidth / calibrateRate;
-          }
-          else
-          {
-              r.x = mouseLoaction.x() - halfWidth;
-          }
-
-          if(mouseLoaction.y() - halfHeight < 0)
-          {
-              r.y = 0;
-          }
-          else if((mouseLoaction.y() + halfHeight) > (calibrateMainWindowHeight))
-          {
-              r.y = calibrateMainWindowHeight - calibrateSecondWindowHeight / calibrateRate;
-          }
-          else
-          {
-              r.y = mouseLoaction.y() - halfHeight;
-          }
-          if (r.x < 0)
-          {
-              r.x = 0;
-          }
-          if (r.y < 0)
-          {
-              r.y = 0;
-          }
-          if ((r.x + r.width) > imgSensorFar.cols)
-          {
-              r.width = imgSensorFar.cols - r.x;
-          }
-          if ((r.y + r.height) > imgSensorFar.rows)
-          {
-              r.height = imgSensorFar.rows - r.y;
-          }
-          imgSensorFar(r).copyTo(m);
-          cv::resize(m, m, cv::Size(calibrateSecondWindowWidth, calibrateSecondWindowHeight));
-          cv::line(m, cv::Point(0, (mouseLoaction.y() - r.y) * calibrateRate), cv::Point(calibrateSecondWindowWidth, (mouseLoaction.y() - r.y) * calibrateRate), cv::Scalar(255, 255, 255));
-          cv::line(m, cv::Point((mouseLoaction.x() - r.x) * calibrateRate, 0), cv::Point((mouseLoaction.x() - r.x) * calibrateRate, calibrateSecondWindowHeight), cv::Scalar(255, 255, 255));
-          imageCalibrateSecondWindow = QImage(m.data,m.cols,m.rows,m.step[0],QImage::Format_RGB888);
           Q_EMIT loggingCameraCalibrateSecondWindow();
         }
         catch (cv_bridge::Exception& e)
@@ -155,66 +94,6 @@ void QNode::imgSensorCloseCallback(const sensor_msgs::ImageConstPtr &msg)
           imageCalibrateMainWindow = QImage(imgSensorClose.data,imgSensorClose.cols,imgSensorClose.rows,imgSensorClose.step[0],QImage::Format_RGB888);//change  to QImage format
           Q_EMIT loggingCameraCalibrateMainWindow();
 
-          cv::Rect r;
-          r.width = calibrateSecondWindowWidth / calibrateRate;
-          r.height = calibrateSecondWindowHeight / calibrateRate;
-          int halfWidth = (calibrateSecondWindowWidth * 0.5) / calibrateRate;
-          int halfHeight = (calibrateSecondWindowHeight * 0.5) / calibrateRate;
-          if(mouseLoaction.x() > calibrateMainWindowWidth)
-          {
-              mouseLoaction.setX(calibrateMainWindowWidth);
-          }
-          if(mouseLoaction.y() > calibrateMainWindowHeight)
-          {
-              mouseLoaction.setY(calibrateMainWindowHeight);
-          }
-          cv::Mat m;
-          if(mouseLoaction.x() - halfWidth < 0)
-          {
-              r.x = 0;
-          }
-          else if((mouseLoaction.x() + halfWidth) > (calibrateMainWindowWidth))
-          {
-              r.x = calibrateMainWindowWidth - calibrateSecondWindowWidth / calibrateRate;
-          }
-          else
-          {
-              r.x = mouseLoaction.x() - halfWidth;
-          }
-
-          if(mouseLoaction.y() - halfHeight < 0)
-          {
-              r.y = 0;
-          }
-          else if((mouseLoaction.y() + halfHeight) > (calibrateMainWindowHeight))
-          {
-              r.y = calibrateMainWindowHeight - calibrateSecondWindowHeight / calibrateRate;
-          }
-          else
-          {
-              r.y = mouseLoaction.y() - halfHeight;
-          }
-          if (r.x < 0)
-          {
-              r.x = 0;
-          }
-          if (r.y < 0)
-          {
-              r.y = 0;
-          }
-          if ((r.x + r.width) > imgSensorClose.cols)
-          {
-              r.width = imgSensorClose.cols - r.x;
-          }
-          if ((r.y + r.height) > imgSensorClose.rows)
-          {
-              r.height = imgSensorClose.rows - r.y;
-          }
-          imgSensorClose(r).copyTo(m);
-          cv::resize(m, m, cv::Size(calibrateSecondWindowWidth, calibrateSecondWindowHeight));
-          cv::line(m, cv::Point(0, (mouseLoaction.y() - r.y) * calibrateRate), cv::Point(calibrateSecondWindowWidth, (mouseLoaction.y() - r.y) * calibrateRate), cv::Scalar(255, 255, 255));
-          cv::line(m, cv::Point((mouseLoaction.x() - r.x) * calibrateRate, 0), cv::Point((mouseLoaction.x() - r.x) * calibrateRate, calibrateSecondWindowHeight), cv::Scalar(255, 255, 255));
-          imageCalibrateSecondWindow = QImage(m.data,m.cols,m.rows,m.step[0],QImage::Format_RGB888);
           Q_EMIT loggingCameraCalibrateSecondWindow();
         }
         catch (cv_bridge::Exception& e)
