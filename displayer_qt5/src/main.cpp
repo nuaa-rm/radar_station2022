@@ -26,6 +26,6 @@ int main(int argc, char **argv) {
     displayer_qt5::MainWindow w(argc,argv);
     w.show();
     int result = app.exec();
-
+    std::cout << w.size().width() << '\t' << w.size().height() << std::endl;
 	return result;
 }

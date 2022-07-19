@@ -102,7 +102,6 @@ void MainWindow::updateLogcameraCalibrateMainWindow()
 void MainWindow::updateLogcameraCalibrateSecondWindow()
 {
     cv::Rect r;
-    std::cout << "haha" << std::endl;
     r.width = qnode.calibrateSecondWindowWidth / qnode.calibrateRate;
     r.height = qnode.calibrateSecondWindowHeight / qnode.calibrateRate;
     int halfWidth = (qnode.calibrateSecondWindowWidth * 0.5) / qnode.calibrateRate;

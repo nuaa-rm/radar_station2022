@@ -69,6 +69,9 @@ public:
     QImage imageSensorClose;
     QImage imageCalibrateMainWindow;
     QImage imageCalibrateSecondWindow;
+    QImage imageSmallMap;
+    QImage imageLogo;
+    QImage imageShowSecondWindow;
     QListWidgetItem *listWidgetItem;
     log_information *logInformation;
 	void log( const LogLevel &level, const std::string &msg);
@@ -88,9 +91,21 @@ public:
     int calibrateMainWindowHeight;
     int calibrateSecondWindowWidth;
     int calibrateSecondWindowHeight;
+    int showMainWindowWidth;
+    int showMainWindowHeight;
+    int showSecondWindowWidth;
+    int showSecondWindowHeight;
+    int smallMapWidth;
+    int smallMapHeight;
+    int logoWidth;
+    int logoHeight;
     cv::Mat img;
     cv::Mat imgSensorFar;
     cv::Mat imgSensorClose;
+    cv::Mat imgSmallMap;
+    cv::Mat imgLogo;
+    cv::Mat imgShowSecondWindow;
+    std::string battle_color;
 
 Q_SIGNALS:
     void loggingUpdated();

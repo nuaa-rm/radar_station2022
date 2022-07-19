@@ -50,9 +50,12 @@ void QNode::imgShowCallback(const sensor_msgs::ImageConstPtr &msg)
         try
         {
           cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
-          img = cv_ptr->image;
-          cv::resize(img, img, cv::Size(1536, 864));
-          image = QImage(img.data,img.cols,img.rows,img.step[0],QImage::Format_RGB888);//change  to QImage format
+          if(!cv_ptr->image.empty())
+          {
+              img = cv_ptr->image;
+              cv::resize(img, img, cv::Size(showMainWindowWidth, showMainWindowHeight));
+              image = QImage(img.data,img.cols,img.rows,img.step[0],QImage::Format_RGB888);//change  to QImage format
+          }
           Q_EMIT loggingCamera();
         }
         catch (cv_bridge::Exception& e)
@@ -68,12 +71,15 @@ void QNode::imgSensorFarCallback(const sensor_msgs::ImageConstPtr &msg)
     {
         try
         {
-          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
-          imgSensorFar = cv_ptr->image;
-          cv::resize(imgSensorFar, imgSensorFar, cv::Size(calibrateMainWindowWidth, calibrateMainWindowHeight));
-          imageCalibrateMainWindow = QImage(imgSensorFar.data,imgSensorFar.cols,imgSensorFar.rows,imgSensorFar.step[0],QImage::Format_RGB888);//change  to QImage format
-          Q_EMIT loggingCameraCalibrateMainWindow();
-          Q_EMIT loggingCameraCalibrateSecondWindow();
+            cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
+            if(!cv_ptr->image.empty())
+            {
+                imgSensorFar = cv_ptr->image;
+                cv::resize(imgSensorFar, imgSensorFar, cv::Size(calibrateMainWindowWidth, calibrateMainWindowHeight));
+                imageCalibrateMainWindow = QImage(imgSensorFar.data,imgSensorFar.cols,imgSensorFar.rows,imgSensorFar.step[0],QImage::Format_RGB888);//change  to QImage format
+                Q_EMIT loggingCameraCalibrateMainWindow();
+                Q_EMIT loggingCameraCalibrateSecondWindow();
+            }
         }
         catch (cv_bridge::Exception& e)
         {
@@ -89,12 +95,15 @@ void QNode::imgSensorCloseCallback(const sensor_msgs::ImageConstPtr &msg)
         try
         {
           cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
-          imgSensorClose = cv_ptr->image;
-          cv::resize(imgSensorClose, imgSensorClose, cv::Size(calibrateMainWindowWidth, calibrateMainWindowHeight));
-          imageCalibrateMainWindow = QImage(imgSensorClose.data,imgSensorClose.cols,imgSensorClose.rows,imgSensorClose.step[0],QImage::Format_RGB888);//change  to QImage format
-          Q_EMIT loggingCameraCalibrateMainWindow();
+          if(!cv_ptr->image.empty())
+          {
+              imgSensorClose = cv_ptr->image;
+              cv::resize(imgSensorClose, imgSensorClose, cv::Size(calibrateMainWindowWidth, calibrateMainWindowHeight));
+              imageCalibrateMainWindow = QImage(imgSensorClose.data,imgSensorClose.cols,imgSensorClose.rows,imgSensorClose.step[0],QImage::Format_RGB888);//change  to QImage format
+              Q_EMIT loggingCameraCalibrateMainWindow();
+              Q_EMIT loggingCameraCalibrateSecondWindow();
+          }
 
-          Q_EMIT loggingCameraCalibrateSecondWindow();
         }
         catch (cv_bridge::Exception& e)
         {
@@ -151,11 +160,10 @@ bool QNode::init()
 }
 
 
-void QNode::run() {
+void QNode::run()
+{
 
     log(Info,"Running!");
-
-
     ros::spin();
     std::cout << "Ros shutdown" << std::endl;
     Q_EMIT rosShutdown();
@@ -215,10 +223,53 @@ void QNode::loadParams()
     ros::param::get("/camera/list/closeCam/calibrationTopic", str);
     calibrationTopicSensorClose = QString(str.c_str());
 
-    calibrateMainWindowWidth = 1280;
-    calibrateMainWindowHeight = 1024;
-    calibrateSecondWindowWidth = 640;
-    calibrateSecondWindowHeight = 640;
+    battle_color = "blue";
+    ros::param::get("/battle_color", battle_color);
+
+    smallMapWidth = 360;
+    smallMapHeight = 672;
+
+    std::string ad(PROJECT_PATH);
+    if(battle_color == std::string("red"))
+    {
+        ad += "/resources/images/blue_minimap.png";
+    }
+    else if(battle_color == std::string("blue"))
+    {
+        ad += "/resources/images/red_minimap.png";
+    }
+    imgSmallMap = cv::imread(ad);
+
+    cv::resize(imgSmallMap, imgSmallMap, cv::Size(smallMapWidth, smallMapHeight));
+    imageSmallMap = QImage(imgSmallMap.data,imgSmallMap.cols,imgSmallMap.rows,imgSmallMap.step[0],QImage::Format_RGB888);
+
+    logoHeight = 448;
+    logoWidth = 222;
+    ad = std::string(PROJECT_PATH);
+    ad += "/resources/images/radar_logo.jpg";
+    imgLogo = cv::imread(ad);
+    cv::resize(imgLogo, imgLogo, cv::Size(logoWidth, logoHeight));
+    imageLogo = QImage(imgLogo.data,imgLogo.cols,imgLogo.rows,imgLogo.step[0],QImage::Format_RGB888);
+
+    calibrateMainWindowWidth = 1256;
+    calibrateMainWindowHeight = 1005;
+    calibrateSecondWindowWidth = 618;
+    calibrateSecondWindowHeight = 618;
+
+    showMainWindowWidth = 1280;
+    showMainWindowHeight = 720;
+    showSecondWindowWidth = 346;
+    showSecondWindowHeight = 277;
+
+    img = cv::Mat(showMainWindowHeight, showMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
+    imgSensorFar = cv::Mat(calibrateMainWindowHeight, calibrateMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
+    imgSensorClose = cv::Mat(calibrateMainWindowHeight, calibrateMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
+
+    ad = std::string(PROJECT_PATH);
+    ad += "/resources/images/icon.png";
+    imgShowSecondWindow = cv::imread(ad);
+    cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
+    imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);
 
     if_is_celibrating = false;
 

@@ -78,3 +78,5 @@ message(STATUS "OpenCV_INCLUDE_DIRS ?" : ${OpenCV_INCLUDE_DIRS})
 message(STATUS "OpenCV_VERSION ?" : ${OpenCV_VERSION})
 message(STATUS "OpenCV_LIB ?" : ${OpenCV_LIBS})
 message(STATUS "OpenCV_CONGIG_PATH ?" : ${OpenCV_CONFIG_PATH})
+
+add_definitions(-DPROJECT_PATH="${PROJECT_SOURCE_DIR}")
