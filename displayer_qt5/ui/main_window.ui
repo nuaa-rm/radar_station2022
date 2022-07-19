@@ -113,7 +113,7 @@
                    </font>
                   </property>
                   <property name="frameShape">
-                   <enum>QFrame::Box</enum>
+                   <enum>QFrame::NoFrame</enum>
                   </property>
                   <property name="text">
                    <string>Logo Loading</string>
@@ -162,25 +162,66 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth1_1">
                   <item>
                    <widget class="QLabel" name="labelRobotName1_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R1                </string>
+                     <string>R1</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth1_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QProgressBar{
+        border: 2px groove gray;
+        color: black;
+        text-align: center;
+        background: white;
+}
+QProgressBar::chunk {
+        border: 2px groove gray;
+        background: dark red;
+}</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth1_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -190,25 +231,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth2_1">
                   <item>
                    <widget class="QLabel" name="labelRobotName2_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R2                </string>
+                     <string>R2</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth2_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth2_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -218,25 +288,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth3_1">
                   <item>
                    <widget class="QLabel" name="labelRobotName3_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R3                </string>
+                     <string>R3</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth5_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth3_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -246,25 +345,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth4_1">
                   <item>
                    <widget class="QLabel" name="labelRobotName4_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R4                </string>
+                     <string>R4</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth4_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth4_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -274,25 +402,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth5_1">
                   <item>
                    <widget class="QLabel" name="labelRobotName5_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R5                </string>
+                     <string>R5</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth3_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth5_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -315,25 +472,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthGuard_1">
                   <item>
                    <widget class="QLabel" name="labelRobotNameGuard_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R guard     </string>
+                     <string>R Guard</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthGuard_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthGuard_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -343,25 +529,54 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthOutpose_1">
                   <item>
                    <widget class="QLabel" name="labelRobotNameOutpose_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R outpose</string>
+                     <string>R Outpose</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthOutpose_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthOutpose_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -371,25 +586,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthBase_1">
                   <item>
                    <widget class="QLabel" name="labelRobotNameBase_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R base       </string>
+                     <string>R Base</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthBase_1">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthBase_1">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -403,25 +648,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth1_2">
                   <item>
                    <widget class="QLabel" name="labelRobotName1_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R1                </string>
+                     <string>R1</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth1_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth1_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -431,25 +706,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth2_2">
                   <item>
                    <widget class="QLabel" name="labelRobotName2_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R2                </string>
+                     <string>R2</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth2_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth2_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -459,25 +764,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth3_2">
                   <item>
                    <widget class="QLabel" name="labelRobotName3_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R3                </string>
+                     <string>R3</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth3_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth3_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -487,25 +822,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth4_2">
                   <item>
                    <widget class="QLabel" name="labelRobotName4_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R4                </string>
+                     <string>R4</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth4_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth4_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -515,25 +880,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealth5_2">
                   <item>
                    <widget class="QLabel" name="labelRobotName5_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R5                </string>
+                     <string>R5</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealth5_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealth5_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -556,25 +951,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthGuard_2">
                   <item>
                    <widget class="QLabel" name="labelRobotNameGuard_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R guard     </string>
+                     <string>R Guard</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthGuard_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthGuard_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -584,25 +1009,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthOutpose_2">
                   <item>
                    <widget class="QLabel" name="labelRobotNameOutpose_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R outpose</string>
+                     <string>R Outpose</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthOutpose_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthOutpose_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -612,25 +1067,55 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutRobotHealthBase_2">
                   <item>
                    <widget class="QLabel" name="labelRobotNameBase_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>81</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>81</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
+                      <weight>50</weight>
+                      <bold>false</bold>
+                     </font>
+                    </property>
                     <property name="text">
-                     <string>R base       </string>
+                     <string>R Base</string>
                     </property>
                    </widget>
                   </item>
                   <item>
                    <widget class="QProgressBar" name="progressBarRobotHealthBase_2">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>34</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>ori1Uni</family>
+                      <pointsize>12</pointsize>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="value">
                      <number>24</number>
                     </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="labelRobotHealthBase_2">
-                    <property name="text">
-                     <string>TextLabel</string>
+                    <property name="format">
+                     <string>%v</string>
                     </property>
                    </widget>
                   </item>
@@ -639,6 +1124,19 @@
                </layout>
               </item>
              </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>

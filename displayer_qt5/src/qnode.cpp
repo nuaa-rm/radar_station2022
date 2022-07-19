@@ -112,6 +112,288 @@ void QNode::imgSensorCloseCallback(const sensor_msgs::ImageConstPtr &msg)
     }
 }
 
+void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
+{
+    robot_red1.hpCurrent = msg->red_1_robot_HP;
+    robot_red2.hpCurrent = msg->red_2_robot_HP;
+    robot_red3.hpCurrent = msg->red_3_robot_HP;
+    robot_red4.hpCurrent = msg->red_4_robot_HP;
+    robot_red5.hpCurrent = msg->red_5_robot_HP;
+    robot_redBase.hpCurrent = msg->red_base_HP;
+    robot_redGuard.hpCurrent = msg->red_7_robot_HP;
+    robot_redOutpose.hpCurrent = msg->red_outpose_HP;
+
+    if(msg->red_1_robot_HP > robot_red1.hpMax)
+    {
+        if(msg->red_1_robot_HP <= 150)
+        {
+            robot_red1.hpMax = 150;
+        }
+        else if(msg->red_1_robot_HP <= 200)
+        {
+            robot_red1.hpMax = 200;
+        }
+        else if(msg->red_1_robot_HP <= 250)
+        {
+            robot_red1.hpMax = 250;
+        }
+        else if(msg->red_1_robot_HP <= 300)
+        {
+            robot_red1.hpMax = 300;
+        }
+        else if(msg->red_1_robot_HP <= 350)
+        {
+            robot_red1.hpMax = 350;
+        }
+        else if(msg->red_1_robot_HP <= 450)
+        {
+            robot_red1.hpMax = 450;
+        }
+    }
+
+    if(msg->red_3_robot_HP > robot_red3.hpMax)
+    {
+        if(msg->red_3_robot_HP <= 100)
+        {
+            robot_red3.hpMax = 100;
+        }
+        else if(msg->red_3_robot_HP <= 150)
+        {
+            robot_red3.hpMax = 150;
+        }
+        else if(msg->red_3_robot_HP <= 200)
+        {
+            robot_red3.hpMax = 200;
+        }
+        else if(msg->red_3_robot_HP <= 250)
+        {
+            robot_red3.hpMax = 250;
+        }
+        else if(msg->red_3_robot_HP <= 300)
+        {
+            robot_red3.hpMax = 300;
+        }
+        else if(msg->red_3_robot_HP <= 400)
+        {
+            robot_red3.hpMax = 400;
+        }
+        else if(msg->red_3_robot_HP <= 500)
+        {
+            robot_red3.hpMax = 500;
+        }
+    }
+
+    if(msg->red_4_robot_HP > robot_red4.hpMax)
+    {
+        if(msg->red_4_robot_HP <= 100)
+        {
+            robot_red4.hpMax = 100;
+        }
+        else if(msg->red_4_robot_HP <= 150)
+        {
+            robot_red4.hpMax = 150;
+        }
+        else if(msg->red_4_robot_HP <= 200)
+        {
+            robot_red4.hpMax = 200;
+        }
+        else if(msg->red_4_robot_HP <= 250)
+        {
+            robot_red4.hpMax = 250;
+        }
+        else if(msg->red_4_robot_HP <= 300)
+        {
+            robot_red4.hpMax = 300;
+        }
+        else if(msg->red_4_robot_HP <= 400)
+        {
+            robot_red4.hpMax = 400;
+        }
+        else if(msg->red_4_robot_HP <= 500)
+        {
+            robot_red4.hpMax = 500;
+        }
+    }
+
+    if(msg->red_5_robot_HP > robot_red5.hpMax)
+    {
+        if(msg->red_5_robot_HP <= 100)
+        {
+            robot_red5.hpMax = 100;
+        }
+        else if(msg->red_5_robot_HP <= 150)
+        {
+            robot_red5.hpMax = 150;
+        }
+        else if(msg->red_5_robot_HP <= 200)
+        {
+            robot_red5.hpMax = 200;
+        }
+        else if(msg->red_5_robot_HP <= 250)
+        {
+            robot_red5.hpMax = 250;
+        }
+        else if(msg->red_5_robot_HP <= 300)
+        {
+            robot_red5.hpMax = 300;
+        }
+        else if(msg->red_5_robot_HP <= 400)
+        {
+            robot_red5.hpMax = 400;
+        }
+        else if(msg->red_5_robot_HP <= 500)
+        {
+            robot_red5.hpMax = 500;
+        }
+    }
+
+
+    robot_blue1.hpCurrent = msg->blue_1_robot_HP;
+    robot_blue2.hpCurrent = msg->blue_2_robot_HP;
+    robot_blue3.hpCurrent = msg->blue_3_robot_HP;
+    robot_blue4.hpCurrent = msg->blue_4_robot_HP;
+    robot_blue5.hpCurrent = msg->blue_5_robot_HP;
+    robot_blueBase.hpCurrent = msg->blue_base_HP;
+    robot_blueGuard.hpCurrent = msg->blue_7_robot_HP;
+    robot_blueOutpose.hpCurrent = msg->blue_outpose_HP;
+
+    if(msg->blue_1_robot_HP > robot_blue1.hpMax)
+    {
+        if(msg->blue_1_robot_HP <= 150)
+        {
+            robot_blue1.hpMax = 150;
+        }
+        else if(msg->blue_1_robot_HP <= 200)
+        {
+            robot_blue1.hpMax = 200;
+        }
+        else if(msg->blue_1_robot_HP <= 250)
+        {
+            robot_blue1.hpMax = 250;
+        }
+        else if(msg->blue_1_robot_HP <= 300)
+        {
+            robot_blue1.hpMax = 300;
+        }
+        else if(msg->blue_1_robot_HP <= 350)
+        {
+            robot_blue1.hpMax = 350;
+        }
+        else if(msg->blue_1_robot_HP <= 450)
+        {
+            robot_blue1.hpMax = 450;
+        }
+    }
+
+    if(msg->blue_3_robot_HP > robot_blue3.hpMax)
+    {
+        if(msg->blue_3_robot_HP <= 100)
+        {
+            robot_blue3.hpMax = 100;
+        }
+        else if(msg->blue_3_robot_HP <= 150)
+        {
+            robot_blue3.hpMax = 150;
+        }
+        else if(msg->blue_3_robot_HP <= 200)
+        {
+            robot_blue3.hpMax = 200;
+        }
+        else if(msg->blue_3_robot_HP <= 250)
+        {
+            robot_blue3.hpMax = 250;
+        }
+        else if(msg->blue_3_robot_HP <= 300)
+        {
+            robot_blue3.hpMax = 300;
+        }
+        else if(msg->blue_3_robot_HP <= 400)
+        {
+            robot_blue3.hpMax = 400;
+        }
+        else if(msg->blue_3_robot_HP <= 500)
+        {
+            robot_blue3.hpMax = 500;
+        }
+    }
+
+    if(msg->blue_4_robot_HP > robot_blue4.hpMax)
+    {
+        if(msg->blue_4_robot_HP <= 100)
+        {
+            robot_blue4.hpMax = 100;
+        }
+        else if(msg->blue_4_robot_HP <= 150)
+        {
+            robot_blue4.hpMax = 150;
+        }
+        else if(msg->blue_4_robot_HP <= 200)
+        {
+            robot_blue4.hpMax = 200;
+        }
+        else if(msg->blue_4_robot_HP <= 250)
+        {
+            robot_blue4.hpMax = 250;
+        }
+        else if(msg->blue_4_robot_HP <= 300)
+        {
+            robot_blue4.hpMax = 300;
+        }
+        else if(msg->blue_4_robot_HP <= 400)
+        {
+            robot_blue4.hpMax = 400;
+        }
+        else if(msg->blue_4_robot_HP <= 500)
+        {
+            robot_blue4.hpMax = 500;
+        }
+    }
+
+    if(msg->blue_5_robot_HP > robot_blue5.hpMax)
+    {
+        if(msg->blue_5_robot_HP <= 100)
+        {
+            robot_blue5.hpMax = 100;
+        }
+        else if(msg->blue_5_robot_HP <= 150)
+        {
+            robot_blue5.hpMax = 150;
+        }
+        else if(msg->blue_5_robot_HP <= 200)
+        {
+            robot_blue5.hpMax = 200;
+        }
+        else if(msg->blue_5_robot_HP <= 250)
+        {
+            robot_blue5.hpMax = 250;
+        }
+        else if(msg->blue_5_robot_HP <= 300)
+        {
+            robot_blue5.hpMax = 300;
+        }
+        else if(msg->blue_5_robot_HP <= 400)
+        {
+            robot_blue5.hpMax = 400;
+        }
+        else if(msg->blue_5_robot_HP <= 500)
+        {
+            robot_blue5.hpMax = 500;
+        }
+    }
+    Q_EMIT logginggameStateUpdate();
+    std::cout << "hah" << std::endl;
+}
+
+void QNode::supplyProjectileActionCallback(const radar_msgs::supply_projectile_actionConstPtr &msg)
+{
+
+}
+
+void QNode::refereeWarningCallback(const radar_msgs::referee_warningConstPtr &msg)
+{
+
+}
+
 void QNode::pubCelibrateResult()
 {
     radar_msgs::dist_point one_point_msg;
@@ -155,7 +437,11 @@ bool QNode::init()
     image_sub_sensor_close = it.subscribe(sensorCloseImgRaw.toStdString(),1,&QNode::imgSensorCloseCallback,this);
     calibration_pub_sensor_far = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorFar.toStdString(), 1);
     calibration_pub_sensor_close = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorClose.toStdString(), 1);
-	start();
+    gameStateSub = n.subscribe(gameStateTopic, 1, &QNode::gameStateCallback, this);
+    supplyProjectileActionSub = n.subscribe(supplyProjectileActionTopic, 1, &QNode::supplyProjectileActionCallback, this);
+    refereeWarningSub = n.subscribe(refereeWarningTopic, 1, &QNode::refereeWarningCallback, this);
+    std::cout << gameStateTopic << std::endl;
+    start();
 	return true;
 }
 
@@ -222,6 +508,13 @@ void QNode::loadParams()
     calibrationTopicSensorFar = QString(str.c_str());
     ros::param::get("/camera/list/closeCam/calibrationTopic", str);
     calibrationTopicSensorClose = QString(str.c_str());
+
+    ros::param::get("/judgeSystem/gameStateTopic", gameStateTopic);
+    std::cout << gameStateTopic << std::endl;
+
+    ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
+
+    ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 
     battle_color = "blue";
     ros::param::get("/battle_color", battle_color);
@@ -307,6 +600,40 @@ void QNode::loadParams()
     ros::param::get("/camera/list/closeCam/calibrationDefault/point4/y", y);
     point = QPoint(x * calibrateMainWindowWidth, y * calibrateMainWindowHeight);
     sensor_close_points[3] = point;
+
+    robot_red2.hpCurrent = 500;
+    robot_red2.hpMax = 500;
+    robot_redGuard.hpCurrent = 600;
+    robot_redGuard.hpMax = 600;
+    robot_redBase.hpCurrent = 5000;
+    robot_redBase.hpMax = 5000;
+    robot_red1.hpCurrent = 150;
+    robot_red1.hpMax = 150;
+    robot_red3.hpCurrent = 100;
+    robot_red3.hpMax = 100;
+    robot_red4.hpCurrent = 100;
+    robot_red4.hpMax = 100;
+    robot_red5.hpCurrent = 100;
+    robot_red5.hpMax = 100;
+    robot_redOutpose.hpMax = 1500;
+    robot_redOutpose.hpCurrent = 1500;
+
+    robot_blue2.hpCurrent = 500;
+    robot_blue2.hpMax = 500;
+    robot_blueGuard.hpCurrent = 600;
+    robot_blueGuard.hpMax = 600;
+    robot_blueBase.hpCurrent = 5000;
+    robot_blueBase.hpMax = 5000;
+    robot_blue1.hpCurrent = 150;
+    robot_blue1.hpMax = 150;
+    robot_blue3.hpCurrent = 100;
+    robot_blue3.hpMax = 100;
+    robot_blue4.hpCurrent = 100;
+    robot_blue4.hpMax = 100;
+    robot_blue5.hpCurrent = 100;
+    robot_blue5.hpMax = 100;
+    robot_blueOutpose.hpMax = 1500;
+    robot_blueOutpose.hpCurrent = 1500;
 }
 
 }  // namespace displayer_qt5

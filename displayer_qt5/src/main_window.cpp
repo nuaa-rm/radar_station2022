@@ -34,10 +34,11 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(&qnode,SIGNAL(loggingCamera()),this,SLOT(updateLogcamera()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateMainWindow()),this,SLOT(updateLogcameraCalibrateMainWindow()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateSecondWindow()),this,SLOT(updateLogcameraCalibrateSecondWindow()));
-    setWindowIcon(QIcon(":/images/icon.png"));
+    setWindowIcon(QIcon(":/images/Icon.ico"));
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     QObject::connect(ui.labelCalibrateCameraMainWindow, SIGNAL(mouseMovePoint(QPoint)), this, SLOT(on_labelCalibrateCameraMainWindow_mouseLocationChanged()));
+    QObject::connect(&qnode, SIGNAL(loggingGameStateUpdate()), this, SLOT(updateGameState()));
     if ( !qnode.init() ) {
         showNoMasterMessage();
     }
@@ -87,6 +88,154 @@ void MainWindow::initUI()
     ui.label_camera2->setPixmap(QPixmap::fromImage(qnode.imageShowSecondWindow));
     ui.label_camera2->resize(ui.label_camera2->pixmap()->size());
     qimage_mutex_.unlock();
+
+    QFile file_red(":/qss/qss/progressBarRed.qss");
+    QFile file_blue(":/qss/qss/progressBarBlue.qss");
+    file_red.open(QFile::ReadOnly);
+    file_blue.open(QFile::ReadOnly);
+    QString style_red = QString::fromLatin1(file_red.readAll());
+    QString style_blue = QString::fromLatin1(file_blue.readAll());
+    if(qnode.battle_color == std::string("red"))
+    {
+        ui.progressBarRobotHealth1_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealth2_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealth3_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealth4_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealth5_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealthBase_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealthGuard_1->setStyleSheet(style_red);
+        ui.progressBarRobotHealthOutpose_1->setStyleSheet(style_red);
+
+        ui.progressBarRobotHealth1_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth2_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth3_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth4_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth5_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthBase_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthGuard_2->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthOutpose_2->setStyleSheet(style_blue);
+
+        ui.labelRobotName1_1->setText("R1");
+        ui.labelRobotName2_1->setText("R2");
+        ui.labelRobotName3_1->setText("R3");
+        ui.labelRobotName4_1->setText("R4");
+        ui.labelRobotName5_1->setText("R5");
+        ui.labelRobotNameGuard_1->setText("R Guard");
+        ui.labelRobotNameOutpose_1->setText("R Outpose");
+        ui.labelRobotNameBase_1->setText("R Base");
+
+        ui.labelRobotName1_2->setText("B1");
+        ui.labelRobotName2_2->setText("B2");
+        ui.labelRobotName3_2->setText("B3");
+        ui.labelRobotName4_2->setText("B4");
+        ui.labelRobotName5_2->setText("B5");
+        ui.labelRobotNameGuard_2->setText("B Guard");
+        ui.labelRobotNameOutpose_2->setText("B Outpose");
+        ui.labelRobotNameBase_2->setText("B Base");
+
+    }
+    else if(qnode.battle_color == std::string("blue"))
+    {
+        ui.progressBarRobotHealth1_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth2_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth3_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth4_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealth5_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthBase_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthGuard_1->setStyleSheet(style_blue);
+        ui.progressBarRobotHealthOutpose_1->setStyleSheet(style_blue);
+
+        ui.progressBarRobotHealth1_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealth2_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealth3_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealth4_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealth5_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealthBase_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealthGuard_2->setStyleSheet(style_red);
+        ui.progressBarRobotHealthOutpose_2->setStyleSheet(style_red);
+
+        ui.labelRobotName1_1->setText("B1");
+        ui.labelRobotName2_1->setText("B2");
+        ui.labelRobotName3_1->setText("B3");
+        ui.labelRobotName4_1->setText("B4");
+        ui.labelRobotName5_1->setText("B5");
+        ui.labelRobotNameGuard_1->setText("B Guard");
+        ui.labelRobotNameOutpose_1->setText("B Outpose");
+        ui.labelRobotNameBase_1->setText("B Base");
+
+        ui.labelRobotName1_2->setText("R1");
+        ui.labelRobotName2_2->setText("R2");
+        ui.labelRobotName3_2->setText("R3");
+        ui.labelRobotName4_2->setText("R4");
+        ui.labelRobotName5_2->setText("R5");
+        ui.labelRobotNameGuard_2->setText("R Guard");
+        ui.labelRobotNameOutpose_2->setText("R Outpose");
+        ui.labelRobotNameBase_2->setText("R Base");
+    }
+    ui.progressBarRobotHealth1_1->setMinimum(0);
+    ui.progressBarRobotHealth1_1->setMaximum(0);
+    ui.progressBarRobotHealth1_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealth2_1->setMinimum(0);
+    ui.progressBarRobotHealth2_1->setMaximum(0);
+    ui.progressBarRobotHealth2_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealth3_1->setMinimum(0);
+    ui.progressBarRobotHealth3_1->setMaximum(0);
+    ui.progressBarRobotHealth3_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealth4_1->setMinimum(0);
+    ui.progressBarRobotHealth4_1->setMaximum(0);
+    ui.progressBarRobotHealth4_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealth5_1->setMinimum(0);
+    ui.progressBarRobotHealth5_1->setMaximum(0);
+    ui.progressBarRobotHealth5_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealthOutpose_1->setMinimum(0);
+    ui.progressBarRobotHealthOutpose_1->setMaximum(0);
+    ui.progressBarRobotHealthOutpose_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealthGuard_1->setMinimum(0);
+    ui.progressBarRobotHealthGuard_1->setMaximum(0);
+    ui.progressBarRobotHealthGuard_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealthBase_1->setMinimum(0);
+    ui.progressBarRobotHealthBase_1->setMaximum(0);
+    ui.progressBarRobotHealthBase_1->setFormat("%v/100");
+
+    ui.progressBarRobotHealth1_2->setMinimum(0);
+    ui.progressBarRobotHealth1_2->setMaximum(0);
+    ui.progressBarRobotHealth1_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealth2_2->setMinimum(0);
+    ui.progressBarRobotHealth2_2->setMaximum(0);
+    ui.progressBarRobotHealth2_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealth3_2->setMinimum(0);
+    ui.progressBarRobotHealth3_2->setMaximum(0);
+    ui.progressBarRobotHealth3_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealth4_2->setMinimum(0);
+    ui.progressBarRobotHealth4_2->setMaximum(0);
+    ui.progressBarRobotHealth4_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealth5_2->setMinimum(0);
+    ui.progressBarRobotHealth5_2->setMaximum(0);
+    ui.progressBarRobotHealth5_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealthOutpose_2->setMinimum(0);
+    ui.progressBarRobotHealthOutpose_2->setMaximum(0);
+    ui.progressBarRobotHealthOutpose_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealthGuard_2->setMinimum(0);
+    ui.progressBarRobotHealthGuard_2->setMaximum(0);
+    ui.progressBarRobotHealthGuard_2->setFormat("%v/100");
+
+    ui.progressBarRobotHealthBase_2->setMinimum(0);
+    ui.progressBarRobotHealthBase_2->setMaximum(0);
+    ui.progressBarRobotHealthBase_2->setFormat("%v/100");
+
 }
 
 void MainWindow::updateLogcamera()
@@ -102,7 +251,6 @@ void MainWindow::updateLogcameraCalibrateMainWindow()
 void MainWindow::updateLogcameraCalibrateSecondWindow()
 {
     cv::Rect r;
-    std::cout << "haha" << std::endl;
     r.width = qnode.calibrateSecondWindowWidth / qnode.calibrateRate;
     r.height = qnode.calibrateSecondWindowHeight / qnode.calibrateRate;
     int halfWidth = (qnode.calibrateSecondWindowWidth * 0.5) / qnode.calibrateRate;
@@ -157,7 +305,6 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
     {
         r.height = qnode.calibrateMainWindowWidth - r.y;
     }
-    std::cout << qnode.sensorFarImgRaw.isEmpty() << std::endl;
     if(qnode.cameraCelibrating == qnode.sensorFarImgRaw && !qnode.sensorFarImgRaw.isEmpty())
     {
         qnode.imgSensorFar(r).copyTo(m);
@@ -297,5 +444,208 @@ void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
     else
     {
         ui.comboBoxCalibrateCamera->setCurrentIndex(1);
+    }
+}
+
+void displayer_qt5::MainWindow::updateGameState()
+{
+    std::string str;
+    if(qnode.battle_color == std::string("red"))
+    {
+        ui.progressBarRobotHealth1_1->setMaximum(qnode.robot_red1.hpMax);
+        ui.progressBarRobotHealth1_1->setValue(qnode.robot_red1.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red1.hpMax);
+        ui.progressBarRobotHealth1_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth3_1->setMaximum(qnode.robot_red3.hpMax);
+        ui.progressBarRobotHealth3_1->setValue(qnode.robot_red3.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red3.hpMax);
+        ui.progressBarRobotHealth3_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth4_1->setMaximum(qnode.robot_red4.hpMax);
+        ui.progressBarRobotHealth4_1->setValue(qnode.robot_red4.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red4.hpMax);
+        ui.progressBarRobotHealth4_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth5_1->setMaximum(qnode.robot_red5.hpMax);
+        ui.progressBarRobotHealth5_1->setValue(qnode.robot_red5.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red5.hpMax);
+        ui.progressBarRobotHealth5_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth2_1->setValue(qnode.robot_red2.hpCurrent);
+        ui.progressBarRobotHealth2_1->setMaximum(qnode.robot_red2.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red2.hpMax);
+        ui.progressBarRobotHealth2_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthBase_1->setValue(qnode.robot_redBase.hpCurrent);
+        ui.progressBarRobotHealthBase_1->setMaximum(qnode.robot_redBase.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redBase.hpMax);
+        ui.progressBarRobotHealthBase_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthOutpose_1->setValue(qnode.robot_redOutpose.hpCurrent);
+        ui.progressBarRobotHealthOutpose_1->setMaximum(qnode.robot_redOutpose.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redOutpose.hpMax);
+        ui.progressBarRobotHealthOutpose_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthGuard_1->setValue(qnode.robot_redGuard.hpCurrent);
+        ui.progressBarRobotHealthGuard_1->setMaximum(qnode.robot_redGuard.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redGuard.hpMax);
+        ui.progressBarRobotHealthGuard_1->setFormat(QString(str.c_str()));
+
+
+        ui.progressBarRobotHealth1_2->setMaximum(qnode.robot_blue1.hpMax);
+        ui.progressBarRobotHealth1_2->setValue(qnode.robot_blue1.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue1.hpMax);
+        ui.progressBarRobotHealth1_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth3_2->setMaximum(qnode.robot_blue3.hpMax);
+        ui.progressBarRobotHealth3_2->setValue(qnode.robot_blue3.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue3.hpMax);
+        ui.progressBarRobotHealth3_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth4_2->setMaximum(qnode.robot_blue4.hpMax);
+        ui.progressBarRobotHealth4_2->setValue(qnode.robot_blue4.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue4.hpMax);
+        ui.progressBarRobotHealth4_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth5_2->setMaximum(qnode.robot_blue5.hpMax);
+        ui.progressBarRobotHealth5_2->setValue(qnode.robot_blue5.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue5.hpMax);
+        ui.progressBarRobotHealth5_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth2_2->setValue(qnode.robot_blue2.hpCurrent);
+        ui.progressBarRobotHealth2_2->setMaximum(qnode.robot_blue2.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue2.hpMax);
+        ui.progressBarRobotHealth2_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthBase_2->setValue(qnode.robot_blueBase.hpCurrent);
+        ui.progressBarRobotHealthBase_2->setMaximum(qnode.robot_blueBase.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueBase.hpMax);
+        ui.progressBarRobotHealthBase_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthOutpose_2->setValue(qnode.robot_blueOutpose.hpCurrent);
+        ui.progressBarRobotHealthOutpose_2->setMaximum(qnode.robot_blueOutpose.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueOutpose.hpMax);
+        ui.progressBarRobotHealthOutpose_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthGuard_2->setValue(qnode.robot_blueGuard.hpCurrent);
+        ui.progressBarRobotHealthGuard_2->setMaximum(qnode.robot_blueGuard.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueGuard.hpMax);
+        ui.progressBarRobotHealthGuard_2->setFormat(QString(str.c_str()));
+    }
+    else if(qnode.battle_color == std::string("blue"))
+    {
+        ui.progressBarRobotHealth1_2->setMaximum(qnode.robot_red1.hpMax);
+        ui.progressBarRobotHealth1_2->setValue(qnode.robot_red1.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red1.hpMax);
+        ui.progressBarRobotHealth1_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth3_2->setMaximum(qnode.robot_red3.hpMax);
+        ui.progressBarRobotHealth3_2->setValue(qnode.robot_red3.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red3.hpMax);
+        ui.progressBarRobotHealth3_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth4_2->setMaximum(qnode.robot_red4.hpMax);
+        ui.progressBarRobotHealth4_2->setValue(qnode.robot_red4.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red4.hpMax);
+        ui.progressBarRobotHealth4_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth5_2->setMaximum(qnode.robot_red5.hpMax);
+        ui.progressBarRobotHealth5_2->setValue(qnode.robot_red5.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red5.hpMax);
+        ui.progressBarRobotHealth5_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth2_2->setValue(qnode.robot_red2.hpCurrent);
+        ui.progressBarRobotHealth2_2->setMaximum(qnode.robot_red2.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_red2.hpMax);
+        ui.progressBarRobotHealth2_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthBase_2->setValue(qnode.robot_redBase.hpCurrent);
+        ui.progressBarRobotHealthBase_2->setMaximum(qnode.robot_redBase.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redBase.hpMax);
+        ui.progressBarRobotHealthBase_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthOutpose_2->setValue(qnode.robot_redOutpose.hpCurrent);
+        ui.progressBarRobotHealthOutpose_2->setMaximum(qnode.robot_redOutpose.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redOutpose.hpMax);
+        ui.progressBarRobotHealthOutpose_2->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthGuard_2->setValue(qnode.robot_redGuard.hpCurrent);
+        ui.progressBarRobotHealthGuard_2->setMaximum(qnode.robot_redGuard.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_redGuard.hpMax);
+        ui.progressBarRobotHealthGuard_2->setFormat(QString(str.c_str()));
+
+
+        ui.progressBarRobotHealth1_1->setMaximum(qnode.robot_blue1.hpMax);
+        ui.progressBarRobotHealth1_1->setValue(qnode.robot_blue1.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue1.hpMax);
+        ui.progressBarRobotHealth1_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth3_1->setMaximum(qnode.robot_blue3.hpMax);
+        ui.progressBarRobotHealth3_1->setValue(qnode.robot_blue3.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue3.hpMax);
+        ui.progressBarRobotHealth3_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth4_1->setMaximum(qnode.robot_blue4.hpMax);
+        ui.progressBarRobotHealth4_1->setValue(qnode.robot_blue4.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue4.hpMax);
+        ui.progressBarRobotHealth4_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth5_1->setMaximum(qnode.robot_blue5.hpMax);
+        ui.progressBarRobotHealth5_1->setValue(qnode.robot_blue5.hpCurrent);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue5.hpMax);
+        ui.progressBarRobotHealth5_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealth2_1->setValue(qnode.robot_blue2.hpCurrent);
+        ui.progressBarRobotHealth2_1->setMaximum(qnode.robot_blue2.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blue2.hpMax);
+        ui.progressBarRobotHealth2_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthBase_1->setValue(qnode.robot_blueBase.hpCurrent);
+        ui.progressBarRobotHealthBase_1->setMaximum(qnode.robot_blueBase.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueBase.hpMax);
+        ui.progressBarRobotHealthBase_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthOutpose_1->setValue(qnode.robot_blueOutpose.hpCurrent);
+        ui.progressBarRobotHealthOutpose_1->setMaximum(qnode.robot_blueOutpose.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueOutpose.hpMax);
+        ui.progressBarRobotHealthOutpose_1->setFormat(QString(str.c_str()));
+
+        ui.progressBarRobotHealthGuard_1->setValue(qnode.robot_blueGuard.hpCurrent);
+        ui.progressBarRobotHealthGuard_1->setMaximum(qnode.robot_blueGuard.hpMax);
+        str = std::string("%v/");
+        str += std::to_string(qnode.robot_blueGuard.hpMax);
+        ui.progressBarRobotHealthGuard_1->setFormat(QString(str.c_str()));
     }
 }

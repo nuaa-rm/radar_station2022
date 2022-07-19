@@ -66,6 +66,7 @@ private slots:
     void on_tabWidget_currentChanged(int index);
 
     void on_pushButtonCalibrate_clicked();
+    void updateGameState();
 
 private:
 	Ui::MainWindowDesign ui;

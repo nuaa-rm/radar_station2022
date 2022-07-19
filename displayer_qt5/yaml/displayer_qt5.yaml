@@ -39,8 +39,9 @@ camera:
 calibrate:
   rate: 3             # 标定时放大的倍数(1-5)
 judgeSystem:
-  hpSubscribe: '/judgeSystem/hp'                  # 返回HP的topic
-  hpLimitSubscribe: '/judgeSystem/hpLimit'        # 返回HP的topic
+  gameStateTopic: "/game_state"
+  supplyProjectileActionTopic: "/supply_projectile_action"
+  refereeWarningTopic: "referee_warning"
 minimap:
-  subscribeTopic: '/world_point'
-  clearTopic: '/clear_point'
+  subscribeTopic: "/world_point"
+  clearTopic: "/clear_point"

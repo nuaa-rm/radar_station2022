@@ -29,7 +29,9 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <QImage>
-
+#include <radar_msgs/game_state.h>
+#include <radar_msgs/referee_warning.h>
+#include <radar_msgs/supply_projectile_action.h>
 #include <QListWidgetItem>
 
 /*****************************************************************************
@@ -41,28 +43,37 @@ namespace displayer_qt5 {
 /*****************************************************************************
 ** Class
 *****************************************************************************/
-enum LogLevel {
+enum LogLevel
+{
          Debug,
          Info,
          Warn,
          Error,
          Fatal
- };
-struct log_information{
+};
+struct log_information
+{
          LogLevel level;
          QString qstring;
 };
-
+struct robot
+{
+    int hpCurrent;
+    int hpMax;
+};
 class QNode : public QThread {
     Q_OBJECT
 public:
 	QNode(int argc, char** argv );
 	virtual ~QNode();
 	bool init();
-	void run();
+    void run();
     void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
     void imgSensorFarCallback(const sensor_msgs::ImageConstPtr& msg);
     void imgSensorCloseCallback(const sensor_msgs::ImageConstPtr& msg);
+    void gameStateCallback(const radar_msgs::game_stateConstPtr& msg);
+    void supplyProjectileActionCallback(const radar_msgs::supply_projectile_actionConstPtr& msg);
+    void refereeWarningCallback(const radar_msgs::referee_warningConstPtr& msg);
     void pubCelibrateResult();
     QImage image;
     QImage imageSensorFar;
@@ -106,6 +117,22 @@ public:
     cv::Mat imgLogo;
     cv::Mat imgShowSecondWindow;
     std::string battle_color;
+    robot robot_red1;
+    robot robot_red2;
+    robot robot_red3;
+    robot robot_red4;
+    robot robot_red5;
+    robot robot_redGuard;
+    robot robot_redOutpose;
+    robot robot_redBase;
+    robot robot_blue1;
+    robot robot_blue2;
+    robot robot_blue3;
+    robot robot_blue4;
+    robot robot_blue5;
+    robot robot_blueGuard;
+    robot robot_blueOutpose;
+    robot robot_blueBase;
 
 Q_SIGNALS:
     void loggingUpdated();
@@ -113,7 +140,7 @@ Q_SIGNALS:
     void loggingCamera();//发出设置相机图片信号
     void loggingCameraCalibrateMainWindow();
     void loggingCameraCalibrateSecondWindow();
-
+    void logginggameStateUpdate();
 
 private:
 	int init_argc;
@@ -123,8 +150,12 @@ private:
     image_transport::Subscriber image_sub_sensor_close;
     ros::Publisher calibration_pub_sensor_far;
     ros::Publisher calibration_pub_sensor_close;
-
-
+    std::string gameStateTopic;
+    std::string supplyProjectileActionTopic;
+    std::string refereeWarningTopic;
+    ros::Subscriber gameStateSub;
+    ros::Subscriber supplyProjectileActionSub;
+    ros::Subscriber refereeWarningSub;
 };
 
 }  // namespace displayer_qt5
