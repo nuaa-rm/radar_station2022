@@ -201,6 +201,8 @@ int main(int argc, char **argv) {
         if (!pub_relative.data.empty()) {
             worldPointPub.publish(pub_relative);
         }
+        imshow("small_map", small_map_copy);
+        waitKey(1);
         loop_rate.sleep();
     }
     return 0;

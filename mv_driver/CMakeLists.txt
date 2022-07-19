@@ -3,7 +3,6 @@ project(mv_driver)
 
 
 add_compile_options(-std=c++17)
-message(WARNING, "  Linux, this is your birthday cake, there are butter, egges, water, flour. You TM compile it yourself!")
 #set(ROS_BUILD_TYPE Debug)
 #set(CMAKE_BUILD_TYPE Debug)
 ## Find catkin macros and libraries
