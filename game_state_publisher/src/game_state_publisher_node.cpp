@@ -44,7 +44,7 @@ int main(int argc, char **argv)
          one_point_msg.y = 0.12 * i;
          one_point_msg.id = 0;
          world_points_msg.data.push_back(one_point_msg);
-         /*one_point_msg.x = 0.13 * i;
+         one_point_msg.x = 0.13 * i;
          one_point_msg.y = 0.14 * i;
          one_point_msg.id = 1;
          world_points_msg.data.push_back(one_point_msg);
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
          one_point_msg.x = 0.01 * i;
          one_point_msg.y = 0.09 * i;
          one_point_msg.id = 13;
-         world_points_msg.data.push_back(one_point_msg);*/
+         world_points_msg.data.push_back(one_point_msg);
          world_point_pub.publish(world_points_msg);
          if(i < 0)
          {

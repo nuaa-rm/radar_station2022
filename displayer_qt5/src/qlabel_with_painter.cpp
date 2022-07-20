@@ -27,10 +27,10 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
     painter.drawPolygon(placeOutpose_en, 4);
     painter.drawPolygon(placeLeap_en, 4);
     painter.drawPolygon(placeHitWindMill_en, 4);*/
-
     for(size_t i = 0; i < worldPoints.size(); i++)
     {
-        if(worldPoints[i].id <= 5 || worldPoints[i].id == 12)
+        int id = worldPoints[i].id;
+        if(id <= 5 || id == 12)
         {
             pen.setColor(Qt::red);
             brush.setColor(Qt::red);
@@ -40,31 +40,31 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
             pen.setColor(Qt::blue);
             brush.setColor(Qt::blue);
         }
-        std::cout << worldPoints[i].id << std::endl;
+
         painter.setPen(pen);
         painter.setBrush(brush);
         painter.drawEllipse(worldPoints[i].point, 10, 10);
-        if(worldPoints[i].id < 12)
+        if(id < 12)
         {
-            if(worldPoints[i].id <= 4)
+            if(id <= 4)
             {
-                worldPoints[i].id += 1;
+                id += 1;
             }
-            else if(worldPoints[i].id == 5)
+            else if(id == 5)
             {
-                worldPoints[i].id = 7;
+                id = 7;
             }
-            else if(worldPoints[i].id <= 10)
+            else if(id <= 10)
             {
-                worldPoints[i].id -= 5;
+                id -= 5;
             }
             else
             {
-                worldPoints[i].id = 7;
+                id = 7;
             }
             pen.setColor(Qt::white);
             painter.setPen(pen);
-            painter.drawText(worldPoints[i].point.x() - 6, worldPoints[i].point.y() + 8, std::to_string(worldPoints[i].id).c_str());
+            painter.drawText(worldPoints[i].point.x() - 6, worldPoints[i].point.y() + 8, std::to_string(id).c_str());
         }
 
     }
