@@ -33,7 +33,14 @@
 #include <radar_msgs/referee_warning.h>
 #include <radar_msgs/supply_projectile_action.h>
 #include <QListWidgetItem>
+#include <radar_msgs/points.h>
+#include <radar_msgs/point.h>
 
+struct world_point
+{
+    QPoint point;
+    int id;
+};
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -61,6 +68,7 @@ struct robot
     int hpCurrent;
     int hpMax;
 };
+
 class QNode : public QThread {
     Q_OBJECT
 public:
@@ -75,6 +83,7 @@ public:
     void supplyProjectileActionCallback(const radar_msgs::supply_projectile_actionConstPtr& msg);
     void refereeWarningCallback(const radar_msgs::referee_warningConstPtr& msg);
     void pubCelibrateResult();
+    void worldPointCallback(const radar_msgs::points& msg);
     QImage image;
     QImage imageSensorFar;
     QImage imageSensorClose;
@@ -98,6 +107,8 @@ public:
     QString calibrationTopicSensorFar;
     QString calibrationTopicSensorClose;
     QString gameProgress;
+    std::string worldPointTopic;
+    std::vector<world_point>worldPoints;
     int stageRemainTime;
     int calibrateRate;
     int calibrateMainWindowWidth;
@@ -143,6 +154,7 @@ Q_SIGNALS:
     void loggingCameraCalibrateMainWindow();
     void loggingCameraCalibrateSecondWindow();
     void loggingGameStateUpdate();
+    void loggingSmallMapUpdate();
 
 private:
 	int init_argc;
@@ -158,6 +170,7 @@ private:
     ros::Subscriber gameStateSub;
     ros::Subscriber supplyProjectileActionSub;
     ros::Subscriber refereeWarningSub;
+    ros::Subscriber worldPointSub;
 };
 
 }  // namespace displayer_qt5

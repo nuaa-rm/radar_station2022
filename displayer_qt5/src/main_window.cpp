@@ -39,6 +39,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     QObject::connect(ui.labelCalibrateCameraMainWindow, SIGNAL(mouseMovePoint(QPoint)), this, SLOT(on_labelCalibrateCameraMainWindow_mouseLocationChanged()));
     QObject::connect(&qnode, SIGNAL(loggingGameStateUpdate()), this, SLOT(updateGameState()));
+    QObject::connect(&qnode, SIGNAL(loggingSmallMapUpdate()), this, SLOT(updateSmallMap()));
     if ( !qnode.init() ) {
         showNoMasterMessage();
     }
@@ -446,6 +447,11 @@ void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
     {
         ui.comboBoxCalibrateCamera->setCurrentIndex(1);
     }
+}
+
+void displayer_qt5::MainWindow::updateSmallMap()
+{
+    ui.labelSmallMap->drawSmallMap(qnode.worldPoints);
 }
 
 void displayer_qt5::MainWindow::updateGameState()

@@ -44,4 +44,3 @@ judgeSystem:
   refereeWarningTopic: "referee_warning"
 minimap:
   subscribeTopic: "/world_point"
-  clearTopic: "/clear_point"

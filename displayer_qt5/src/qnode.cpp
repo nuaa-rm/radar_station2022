@@ -446,6 +446,19 @@ void QNode::pubCelibrateResult()
     }
 }
 
+void QNode::worldPointCallback(const radar_msgs::points &msg)
+{
+    world_point wp;
+    std::vector<world_point>().swap(worldPoints);
+    for(size_t i = 0; i < msg.data.size(); i++)
+    {
+        wp.point = QPoint(msg.data[i].x * smallMapWidth, msg.data[i].y * smallMapHeight);
+        wp.id = msg.data[i].id;
+        worldPoints.push_back(wp);
+    }
+    Q_EMIT loggingSmallMapUpdate();
+}
+
 bool QNode::init()
 {
 	ros::init(init_argc,init_argv,"displayer_qt5");
@@ -466,6 +479,7 @@ bool QNode::init()
     gameStateSub = n.subscribe(gameStateTopic, 1, &QNode::gameStateCallback, this);
     supplyProjectileActionSub = n.subscribe(supplyProjectileActionTopic, 1, &QNode::supplyProjectileActionCallback, this);
     refereeWarningSub = n.subscribe(refereeWarningTopic, 1, &QNode::refereeWarningCallback, this);
+    worldPointSub = n.subscribe(worldPointTopic, 1, &QNode::worldPointCallback, this);
     start();
 	return true;
 }
@@ -537,6 +551,8 @@ void QNode::loadParams()
     ros::param::get("/judgeSystem/gameStateTopic", gameStateTopic);
 
     ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
+
+    ros::param::get("/minimap/subscribeTopic", worldPointTopic);
 
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 
