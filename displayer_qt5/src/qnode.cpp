@@ -380,8 +380,34 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
             robot_blue5.hpMax = 500;
         }
     }
-    Q_EMIT logginggameStateUpdate();
-    std::cout << "hah" << std::endl;
+
+    if(msg->game_progress == 0)
+    {
+        gameProgress = gameProgress.fromLocal8Bit("比赛未开始");
+    }
+    else if(msg->game_progress == 1)
+    {
+        gameProgress = gameProgress.fromLocal8Bit("准备阶段");
+    }
+    else if(msg->game_progress == 2)
+    {
+        gameProgress = gameProgress.fromLocal8Bit("自检阶段");
+    }
+    else if(msg->game_progress == 3)
+    {
+        gameProgress = gameProgress.fromLocal8Bit("5s倒计时");
+    }
+    else if(msg->game_progress == 4)
+    {
+        gameProgress = gameProgress.fromLocal8Bit("比赛中");
+    }
+    else if(msg->game_progress == 1)
+    {
+        gameProgress = "比赛结算";
+    }
+
+    stageRemainTime = msg->stage_remain_time;
+    Q_EMIT loggingGameStateUpdate();
 }
 
 void QNode::supplyProjectileActionCallback(const radar_msgs::supply_projectile_actionConstPtr &msg)
@@ -440,7 +466,6 @@ bool QNode::init()
     gameStateSub = n.subscribe(gameStateTopic, 1, &QNode::gameStateCallback, this);
     supplyProjectileActionSub = n.subscribe(supplyProjectileActionTopic, 1, &QNode::supplyProjectileActionCallback, this);
     refereeWarningSub = n.subscribe(refereeWarningTopic, 1, &QNode::refereeWarningCallback, this);
-    std::cout << gameStateTopic << std::endl;
     start();
 	return true;
 }
@@ -510,7 +535,6 @@ void QNode::loadParams()
     calibrationTopicSensorClose = QString(str.c_str());
 
     ros::param::get("/judgeSystem/gameStateTopic", gameStateTopic);
-    std::cout << gameStateTopic << std::endl;
 
     ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
 

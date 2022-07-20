@@ -18,6 +18,7 @@
 #include <QImage>
 #include <QMutex>
 #include <QListWidgetItem>
+#include <chrono>
 
 
 /*****************************************************************************
@@ -58,15 +59,13 @@ public Q_SLOTS:
     void displayCameraCalibrateMainWindow(const QImage& image);
     void displayCameraCalibrateSecondWindow(const QImage& image);
     void updateLoggingView();
+    void updateGameState();
 
 private slots:
     void on_comboBoxCalibrateCamera_currentIndexChanged(const QString &arg1);
     void on_labelCalibrateCameraMainWindow_mouseLocationChanged();
-
     void on_tabWidget_currentChanged(int index);
-
     void on_pushButtonCalibrate_clicked();
-    void updateGameState();
 
 private:
 	Ui::MainWindowDesign ui;

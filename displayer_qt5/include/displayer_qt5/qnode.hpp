@@ -97,6 +97,8 @@ public:
     QPoint sensor_close_points[4];
     QString calibrationTopicSensorFar;
     QString calibrationTopicSensorClose;
+    QString gameProgress;
+    int stageRemainTime;
     int calibrateRate;
     int calibrateMainWindowWidth;
     int calibrateMainWindowHeight;
@@ -140,7 +142,7 @@ Q_SIGNALS:
     void loggingCamera();//发出设置相机图片信号
     void loggingCameraCalibrateMainWindow();
     void loggingCameraCalibrateSecondWindow();
-    void logginggameStateUpdate();
+    void loggingGameStateUpdate();
 
 private:
 	int init_argc;

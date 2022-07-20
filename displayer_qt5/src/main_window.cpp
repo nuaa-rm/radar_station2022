@@ -236,6 +236,7 @@ void MainWindow::initUI()
     ui.progressBarRobotHealthBase_2->setMaximum(0);
     ui.progressBarRobotHealthBase_2->setFormat("%v/100");
 
+
 }
 
 void MainWindow::updateLogcamera()
@@ -648,4 +649,21 @@ void displayer_qt5::MainWindow::updateGameState()
         str += std::to_string(qnode.robot_blueGuard.hpMax);
         ui.progressBarRobotHealthGuard_1->setFormat(QString(str.c_str()));
     }
+
+    ui.labelGameStage->setText(qnode.gameProgress);
+    QString remain_time = QString(std::to_string(qnode.stageRemainTime).c_str());
+    if(qnode.stageRemainTime <= 5)
+    {
+        QPalette pal = ui.labelRemainTime->palette();
+        pal.setColor(QPalette::WindowText, Qt::red);
+        ui.labelRemainTime->setPalette(pal);
+
+    }
+    else
+    {
+        QPalette pal = ui.labelRemainTime->palette();
+        pal.setColor(QPalette::WindowText, Qt::black);
+        ui.labelRemainTime->setPalette(pal);
+    }
+    ui.labelRemainTime->setText(remain_time);
 }

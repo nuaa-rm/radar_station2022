@@ -6,5 +6,5 @@ QProgressBar{
 }
 QProgressBar::chunk {
         border: 2px groove gray;
-        background: light blue;
+        background: lightBlue;
 }

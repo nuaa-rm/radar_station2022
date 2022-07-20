@@ -29,7 +29,7 @@
       </property>
       <widget class="QWidget" name="tabGame">
        <attribute name="title">
-        <string>Game</string>
+        <string>比赛</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_8">
         <item>
@@ -121,32 +121,44 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="labelRemainTime">
-                  <property name="font">
-                   <font>
-                    <family>ori1Uni</family>
-                    <pointsize>17</pointsize>
-                    <weight>75</weight>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QLabel" name="labelGameStage">
                   <property name="font">
                    <font>
                     <family>ori1Uni</family>
-                    <pointsize>17</pointsize>
+                    <pointsize>30</pointsize>
                     <weight>75</weight>
                     <bold>true</bold>
                    </font>
                   </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
                   <property name="text">
                    <string>TextLabel</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelRemainTime">
+                  <property name="font">
+                   <font>
+                    <family>ori1Uni</family>
+                    <pointsize>40</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="locale">
+                   <locale language="Chinese" country="China"/>
+                  </property>
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
@@ -177,6 +189,7 @@
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -197,7 +210,7 @@
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -246,6 +259,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -266,7 +280,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -303,6 +317,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -323,7 +338,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -360,6 +375,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -380,7 +396,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -417,6 +433,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -437,7 +454,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -487,6 +504,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -507,7 +525,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -544,6 +562,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
+                      <pointsize>11</pointsize>
                       <weight>50</weight>
                       <bold>false</bold>
                      </font>
@@ -564,7 +583,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -622,7 +641,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -684,7 +703,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -742,7 +761,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -800,7 +819,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -858,7 +877,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -916,7 +935,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -987,7 +1006,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -1045,7 +1064,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -1103,7 +1122,7 @@ QProgressBar::chunk {
                     <property name="font">
                      <font>
                       <family>ori1Uni</family>
-                      <pointsize>12</pointsize>
+                      <pointsize>16</pointsize>
                       <weight>75</weight>
                       <bold>true</bold>
                      </font>
@@ -1146,7 +1165,7 @@ QProgressBar::chunk {
       </widget>
       <widget class="QWidget" name="tabCalibrate">
        <attribute name="title">
-        <string>Calibrate</string>
+        <string>标定</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
@@ -1198,19 +1217,6 @@ QProgressBar::chunk {
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QComboBox" name="comboBoxCalibrateCamera"/>
@@ -1224,13 +1230,26 @@ QProgressBar::chunk {
             </item>
            </layout>
           </item>
+          <item>
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tabSetting">
        <attribute name="title">
-        <string>Setting</string>
+        <string>设置</string>
        </attribute>
       </widget>
      </widget>
