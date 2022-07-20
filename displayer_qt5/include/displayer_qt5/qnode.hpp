@@ -77,6 +77,7 @@ public:
 	bool init();
     void run();
     void imgShowCallback(const sensor_msgs::ImageConstPtr& msg);//camera callback function
+    void imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr& msg);
     void imgSensorFarCallback(const sensor_msgs::ImageConstPtr& msg);
     void imgSensorCloseCallback(const sensor_msgs::ImageConstPtr& msg);
     void gameStateCallback(const radar_msgs::game_stateConstPtr& msg);
@@ -109,6 +110,7 @@ public:
     QString gameProgress;
     std::string worldPointTopic;
     std::vector<world_point>worldPoints;
+    std::string secondWindowTopic;
     int stageRemainTime;
     int calibrateRate;
     int calibrateMainWindowWidth;
@@ -151,6 +153,7 @@ Q_SIGNALS:
     void loggingUpdated();
     void rosShutdown();
     void loggingCamera();//发出设置相机图片信号
+    void loggingCameraSecondWindow();
     void loggingCameraCalibrateMainWindow();
     void loggingCameraCalibrateSecondWindow();
     void loggingGameStateUpdate();
@@ -160,6 +163,7 @@ private:
 	int init_argc;
 	char** init_argv;
     image_transport::Subscriber image_sub;
+    image_transport::Subscriber image_sub_second_window;
     image_transport::Subscriber image_sub_sensor_far;
     image_transport::Subscriber image_sub_sensor_close;
     ros::Publisher calibration_pub_sensor_far;

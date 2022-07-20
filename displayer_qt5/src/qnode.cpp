@@ -65,6 +65,28 @@ void QNode::imgShowCallback(const sensor_msgs::ImageConstPtr &msg)
     }
 }
 
+void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
+{
+    if(!if_is_celibrating)
+    {
+        try
+        {
+          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
+          if(!cv_ptr->image.empty())
+          {
+              imgShowSecondWindow = cv_ptr->image;
+              cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
+              imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
+          }
+          Q_EMIT loggingCameraSecondWindow();
+        }
+        catch (cv_bridge::Exception& e)
+        {
+          ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+        }
+    }
+}
+
 void QNode::imgSensorFarCallback(const sensor_msgs::ImageConstPtr &msg)
 {
     if(cameraCelibrating == sensorFarImgRaw && if_is_celibrating)
@@ -407,6 +429,7 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
     }
 
     stageRemainTime = msg->stage_remain_time;
+    log(Info,"Running!");
     Q_EMIT loggingGameStateUpdate();
 }
 
@@ -472,6 +495,7 @@ bool QNode::init()
 	// Add your ros communications here.
     image_transport::ImageTransport it(n);
     image_sub = it.subscribe(realsenseImgRaw.toStdString(),1,&QNode::imgShowCallback,this);
+    image_sub_second_window = it.subscribe(secondWindowTopic,1,&QNode::imgShowSecondWindowCallback,this);
     image_sub_sensor_far = it.subscribe(sensorFarImgRaw.toStdString(),1,&QNode::imgSensorFarCallback,this);
     image_sub_sensor_close = it.subscribe(sensorCloseImgRaw.toStdString(),1,&QNode::imgSensorCloseCallback,this);
     calibration_pub_sensor_far = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorFar.toStdString(), 1);
@@ -552,6 +576,8 @@ void QNode::loadParams()
 
     ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
 
+    ros::param::get("/game/secondWindowTopic", secondWindowTopic);
+
     ros::param::get("/minimap/subscribeTopic", worldPointTopic);
 
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
@@ -597,12 +623,7 @@ void QNode::loadParams()
     img = cv::Mat(showMainWindowHeight, showMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
     imgSensorFar = cv::Mat(calibrateMainWindowHeight, calibrateMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
     imgSensorClose = cv::Mat(calibrateMainWindowHeight, calibrateMainWindowWidth, CV_8UC3, cv::Scalar(255, 255, 255));
-
-    ad = std::string(PROJECT_PATH);
-    ad += "/resources/images/icon.png";
-    imgShowSecondWindow = cv::imread(ad);
-    cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
-    imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);
+    imgShowSecondWindow = cv::Mat(showSecondWindowWidth, showSecondWindowHeight, CV_8UC3, cv::Scalar(255, 255, 255));
 
     if_is_celibrating = false;
 

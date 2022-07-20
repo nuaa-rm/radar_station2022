@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file /src/main_window.cpp
  *
  * @brief Implementation for the qt gui.
@@ -32,6 +32,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 {
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(&qnode,SIGNAL(loggingCamera()),this,SLOT(updateLogcamera()));
+    QObject::connect(&qnode,SIGNAL(loggingCameraSecondWindow()),this,SLOT(updateLogcameraSecondWindow()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateMainWindow()),this,SLOT(updateLogcameraCalibrateMainWindow()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateSecondWindow()),this,SLOT(updateLogcameraCalibrateSecondWindow()));
     setWindowIcon(QIcon(":/images/Icon.ico"));
@@ -237,12 +238,21 @@ void MainWindow::initUI()
     ui.progressBarRobotHealthBase_2->setMaximum(0);
     ui.progressBarRobotHealthBase_2->setFormat("%v/100");
 
-
+    fTimer = new QTimer(this);
+    fTimer->stop();
+    fTimer->setInterval(333);
+    connect(fTimer, SIGNAL(timeout()), this, SLOT(on_timer_timeout()));
+    fTimer->start();
 }
 
 void MainWindow::updateLogcamera()
 {
     displayCamera(qnode.image);
+}
+
+void MainWindow::updateLogcameraSecondWindow()
+{
+    displayCameraSecondWindow(qnode.imageShowSecondWindow);
 }
 
 void MainWindow::updateLogcameraCalibrateMainWindow()
@@ -353,6 +363,15 @@ void MainWindow::displayCameraCalibrateSecondWindow(const QImage &image)
     qimage_mutex_.unlock();
 }
 
+void MainWindow::displayCameraSecondWindow(const QImage &image)
+{
+    qimage_mutex_.lock();
+    qimage_second_window_ = image.copy();
+    ui.label_camera2->setPixmap(QPixmap::fromImage(qimage_second_window_));
+    ui.label_camera2->resize(ui.label_camera2->pixmap()->size());
+    qimage_mutex_.unlock();
+}
+
 void MainWindow::updateLoggingView() {
     QListWidgetItem *item = new QListWidgetItem(ui.view_logging);
     item->setText(qnode.logInformation->qstring);
@@ -452,6 +471,17 @@ void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
 void displayer_qt5::MainWindow::updateSmallMap()
 {
     ui.labelSmallMap->drawSmallMap(qnode.worldPoints);
+}
+
+void displayer_qt5::MainWindow::on_timer_timeout()
+{
+    ui.labelSmallMap->tim = !ui.labelSmallMap->tim;
+    ui.labelSmallMap->update();
+}
+
+void displayer_qt5::MainWindow::on_timer_timeout2()
+{
+
 }
 
 void displayer_qt5::MainWindow::updateGameState()

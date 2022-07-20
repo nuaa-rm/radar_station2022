@@ -8,7 +8,7 @@
 #include <QPainter>
 #include "displayer_qt5/qnode.hpp"
 #include <QPaintEvent>
-
+#include <chrono>
 class QLabel_with_painter : public QLabel
 {
     Q_OBJECT
@@ -28,9 +28,13 @@ private:
     QPoint placeHitWindMill_en[4];
     QPoint placeOutpose_en[4];
     std::vector<world_point> worldPoints;
+
+
 public:
     explicit QLabel_with_painter(QWidget *parent = nullptr);
     void drawSmallMap(std::vector<world_point>& );
+    bool tim;
+private slots:
 };
 
 #endif // QLABEL_WITH_PAINTER_H

@@ -44,3 +44,5 @@ judgeSystem:
   refereeWarningTopic: "referee_warning"
 minimap:
   subscribeTopic: "/world_point"
+game:
+  secondWindowTopic: "/sensor_close/image_raw"

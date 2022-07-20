@@ -19,7 +19,8 @@
 #include <QMutex>
 #include <QListWidgetItem>
 #include <chrono>
-
+#include <QTimer>
+#include <QTime>
 
 /*****************************************************************************
 ** Namespace
@@ -53,11 +54,13 @@ public Q_SLOTS:
     ** Manual connections
     *******************************************/
     void updateLogcamera();
+    void updateLogcameraSecondWindow();
     void updateLogcameraCalibrateMainWindow();
     void updateLogcameraCalibrateSecondWindow();
     void displayCamera(const QImage& image);
     void displayCameraCalibrateMainWindow(const QImage& image);
     void displayCameraCalibrateSecondWindow(const QImage& image);
+    void displayCameraSecondWindow(const QImage& image);
     void updateLoggingView();
     void updateGameState();
 
@@ -67,6 +70,8 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     void on_pushButtonCalibrate_clicked();
     void updateSmallMap();
+    void on_timer_timeout();
+    void on_timer_timeout2();
 
 private:
 	Ui::MainWindowDesign ui;
@@ -76,6 +81,7 @@ private:
     QImage qimage_calibrate_second_window_;
     QImage qimage_second_window_;
     mutable QMutex qimage_mutex_;
+    QTimer *fTimer;
 };
 
 }  // namespace displayer_qt5

@@ -2,31 +2,38 @@
 
 void QLabel_with_painter::paintEvent(QPaintEvent * event)
 {
+    //auto end = std::chrono::system_clock::now();
+    //std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<< "ms" << std::endl;
     QLabel::paintEvent(event);
     QPainter painter(this);
     QPen pen;
-    pen.setColor(Qt::red);
-    pen.setWidth(1);
-    painter.setPen(pen);
     QFont font;
-    font.setPointSize(15);
-    //font.setFamily("ori1uni");
-    painter.setFont(font);
     QBrush brush;
-    brush.setStyle(Qt::SolidPattern);
-    /*painter.drawPolygon(placeRB1_te, 4);
-    painter.drawPolygon(placeRB2_te, 7);
-    painter.drawPolygon(placeRB3_te, 5);
-    painter.drawPolygon(placeOutpose_te, 4);
-    painter.drawPolygon(placeLeap_te, 4);
-    painter.drawPolygon(placeHitWindMill_te, 4);
+    pen.setColor(Qt::red);
+    pen.setWidth(3);
+    painter.setPen(pen); 
+    font.setPointSize(15);
+    painter.setFont(font);
+    if(tim)
+    {
+        brush.setStyle(Qt::Dense7Pattern);
+        brush.setColor(Qt::red);
+        painter.setBrush(brush);
+        painter.drawPolygon(placeRB1_te, 4);
+        painter.drawPolygon(placeRB2_te, 7);
+        painter.drawPolygon(placeRB3_te, 5);
+        painter.drawPolygon(placeOutpose_te, 4);
+        painter.drawPolygon(placeLeap_te, 4);
+        painter.drawPolygon(placeHitWindMill_te, 4);
 
-    painter.drawPolygon(placeRB1_en, 4);
-    painter.drawPolygon(placeRB2_en, 7);
-    painter.drawPolygon(placeRB3_en, 5);
-    painter.drawPolygon(placeOutpose_en, 4);
-    painter.drawPolygon(placeLeap_en, 4);
-    painter.drawPolygon(placeHitWindMill_en, 4);*/
+        painter.drawPolygon(placeRB1_en, 4);
+        painter.drawPolygon(placeRB2_en, 7);
+        painter.drawPolygon(placeRB3_en, 5);
+        painter.drawPolygon(placeOutpose_en, 4);
+        painter.drawPolygon(placeLeap_en, 4);
+        painter.drawPolygon(placeHitWindMill_en, 4);
+    }
+    brush.setStyle(Qt::SolidPattern);
     for(size_t i = 0; i < worldPoints.size(); i++)
     {
         int id = worldPoints[i].id;
@@ -66,14 +73,11 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
             painter.setPen(pen);
             painter.drawText(worldPoints[i].point.x() - 6, worldPoints[i].point.y() + 8, std::to_string(id).c_str());
         }
-
     }
 }
 
 QLabel_with_painter::QLabel_with_painter(QWidget *parent) : QLabel{parent}
 {
-    //450*840
-    //360 672
     placeRB1_te[0] = QPoint(0, 316);
     placeRB1_te[1] = QPoint(0, 450);
     placeRB1_te[2] = QPoint(26, 450);
@@ -131,6 +135,8 @@ QLabel_with_painter::QLabel_with_painter(QWidget *parent) : QLabel{parent}
     placeHitWindMill_en[1] = QPoint(27, 227);
     placeHitWindMill_en[2] = QPoint(64, 227);
     placeHitWindMill_en[3] = QPoint(64, 185);
+
+    tim = false;
 }
 
 void QLabel_with_painter::drawSmallMap(std::vector<world_point>& wp)
