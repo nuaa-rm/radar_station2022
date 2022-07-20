@@ -59,7 +59,7 @@ int MVCamera::Init(int id)
     printf("DONE\n");
 
     //相机初始化。初始化成功后，才能调用任何其他相机相关的操作接口
-    iStatus = CameraInit(&(tCameraEnumList[id]),1,-1,&hCamera);
+    iStatus = CameraInit(&(tCameraEnumList[id]),PARAM_MODE_BY_NAME,-1,&hCamera);
     //初始化失败
     if (iStatus!=CAMERA_STATUS_SUCCESS) {
         printf("ERROR: CAMERA INIT FAILED.\n");

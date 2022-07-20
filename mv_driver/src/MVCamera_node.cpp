@@ -217,10 +217,10 @@ public:
                 return false;
             }
             else if(init_suc==-1&&cam_cnt==1){
-                ROS_WARN("插了两个，但只连上一个相机！");
-                ROS_WARN("插了两个，但只连上一个相机！");
-                ROS_WARN("插了两个，但只连上一个相机！");
-                ROS_WARN("插了两个，但只连上一个相机！");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
                 return false;
             }
             else if(init_suc==true&&cam_cnt==1){
