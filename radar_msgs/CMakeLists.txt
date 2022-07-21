@@ -17,12 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
         FILES
-        relative_coordinate.msg
         point.msg
         points.msg
-        distance_point.msg
-        world_point.msg
-        small_map.msg
         dist_point.msg
         dist_points.msg
         yolo_point.msg
@@ -30,6 +26,7 @@ add_message_files(
         game_state.msg
         referee_warning.msg
         supply_projectile_action.msg
+        small_map.msg
 )
 
 ## Generate services in the 'srv' folder

@@ -13,7 +13,6 @@
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
 #include <radar_msgs/yolo_points.h>
-#include <numeric>
 
 using namespace std;
 using namespace cv;
@@ -133,7 +132,6 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     close_depth_queue, (*input).data[j].id);
             point_it.color = (*input).data[j].color;
             point_it.id = (*input).data[j].id;
-            close_distance_it.data.push_back(point_it);
             close_distance_it.data.push_back(point_it);
             rectangle(close_depth_show,
                       Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
