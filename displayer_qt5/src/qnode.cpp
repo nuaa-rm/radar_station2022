@@ -586,7 +586,7 @@ void QNode::loadParams()
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 
     battle_color = "blue";
-    ros::param::get("/battle_color", battle_color);
+    ros::param::get("/battle_state/battle_color", battle_color);
 
     smallMapWidth = 360;
     smallMapHeight = 672;
