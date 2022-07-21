@@ -39,14 +39,27 @@ int MVCamera::Init(int id)
     printf("CAMERA SDK INIT...\n");
     CameraSdkInit(1);
     printf("DONE\n");
-
     printf("ENUM CAMERA DEVICES...\n");
+    int cam_id;
     //枚举设备，并建立设备列表CameraEnumerateDevice
     tSdkCameraDevInfo tCameraEnumList[4];
     CameraEnumerateDevice(tCameraEnumList,&iCameraCounts);
+    string ns=ros::this_node::getNamespace();
+    string name_space;
+    if(ns=="/sensor_far")name_space="FARCAM";
+    if(ns=="/sensor_close")name_space="CLOSECAM";
+    if(tCameraEnumList[0].acFriendlyName==name_space){
+        id=0;
+
+    }
+    if(tCameraEnumList[1].acFriendlyName==name_space){
+        id=1;
+    }
     cam_cnt=iCameraCounts;
 //    if(iCameraCounts>0)cout<<tCameraEnumList[0].acFriendlyName<<endl;
     //没有连接设备
+
+    cout<<"ns:"<<ns<<endl;
     if(iCameraCounts==0){
         printf("ERROR: NO CAMERA CONNECTED.\n");
         return -1;

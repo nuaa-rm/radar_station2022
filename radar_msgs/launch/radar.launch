@@ -26,17 +26,17 @@
   <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
   <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
-  <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close"/>
-  <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far"/>
+<!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far" /> -->
+<!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close" /> -->
 <!--   <node name="livox_lidar_publisher" -->
 <!--           pkg="livox_ros_driver" -->
 <!--           type="livox_ros_driver_node" required="true" -->
 <!--           output="screen" args="$(arg cmdline_arg)"/> -->
 
-<!--   <node name="displayer_app" pkg="displayer_app" type="main.py" /> -->
-<!--   <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/> -->
-<!--   <node name="get_depth_node" pkg="get_depth" type="get_depth_node" respawn="true"/> -->
-<!--   <node pkg="small_map" type="small_map" name="small_map" respawn="true"/> -->
+  <node name="displayer_app" pkg="displayer_app" type="main.py" />
+  <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/>
+  <node name="get_depth_node" pkg="get_depth" type="get_depth_node" respawn="true"/>
+<!--   <node pkg="small_map" type="small_map" name="small_map" output="screen" respawn="true"/> -->
 <!--   <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
 <!--   <node name="hp_limit_helper" pkg="hp_limit_helper" type="hp_limit_helper_node" /> -->
 <!--   <node name="yolov5"        pkg="yolo"      type="yolov5"  respawn="true"/> -->

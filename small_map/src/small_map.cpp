@@ -188,11 +188,16 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
-        if (far_calc_flag&&close_calc_flag)
+        imshow("small_map", small_map_copy);
+        waitKey(1);
+        if (close_calc_flag)
         {
-            remove_duplicate();
-            warn_on_map(result_points,small_map_copy);
-            for (auto & i : result_points.data) {
+//            remove_duplicate();
+//            warn_on_map(result_points,small_map_copy);
+//            for (auto & i : result_points.data) {
+//                draw_point_on_map(i, small_map_copy);
+//            }
+            for (auto & i : close_points.data) {
                 draw_point_on_map(i, small_map_copy);
             }
             imshow("small_map", small_map_copy);
@@ -201,8 +206,6 @@ int main(int argc, char **argv) {
         if (!pub_relative.data.empty()) {
             worldPointPub.publish(pub_relative);
         }
-        imshow("small_map", small_map_copy);
-        waitKey(1);
         loop_rate.sleep();
     }
     return 0;

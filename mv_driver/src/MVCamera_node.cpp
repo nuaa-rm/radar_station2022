@@ -32,7 +32,7 @@ public:
     int count=0;
     bool flag=true;
     int init_suc;
-    char cam_name[32];
+    char cam_name[32]={'0','0','0','0','0','0','0'};
     char far_or_close;
     // shared image message
     Mat rawImg;
@@ -58,9 +58,6 @@ public:
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
         ros::param::get("exp_time", exposure_);
-        cout<<"deviceid:"<<deviceID<<endl;
-        image_pub_ = it.advertise("image_raw", 1);
-
         node_.param("image_width", image_width_, 640);
         if(large_resolution_)
         {
@@ -79,17 +76,7 @@ public:
         //init camera param
         mv_driver=new MVCamera;
         init_suc=mv_driver->Init(deviceID);
-        CameraGetFriendlyName(mv_driver->hCamera,cam_name);
-        if(string(cam_name) == "FARCAM")
-        {
-            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_far";
-            far_or_close='F';
-        }
-        else if(string(cam_name) == "CLOSECAM")
-        {
-            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_close";
-            far_or_close='C';
-        }
+        image_pub_ = it.advertise("image_raw", 1);
         mv_driver->SetExposureTime(autoexposure_, exposure_);
         mv_driver->SetLargeResolution(large_resolution_);
         mv_driver->Set_fps(fps_mode);
@@ -101,7 +88,8 @@ public:
         mv_driver->Uninit();
     }
     ///
-    /// \brief get_exp
+    /// \brief get_expCLOSECAM!!!!
+
     /// get exposure time
     /// \param exp_time
     ///
@@ -164,36 +152,36 @@ public:
 
         std_msgs::Header imgHead;
         //DoveJH：用于在订阅者节点区分两个相机。
-        if(far_or_close == 'F')
-        {
-            imgHead.frame_id = "sensor_far";
-            imshow("far_img",rawImg);
-            int k = waitKey(30);
-            if(k == 'f' && !rawImg.empty())
-            {
-                ROS_INFO("Get %d far pictures!", count);
-                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
-                stringstream ss;
-                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/far"<<count<<".bmp";
-                cv::imwrite(ss.str(),rawImg);
-                count++;
-            }
-        }
-        else if(far_or_close == 'C')
-        {
-            imgHead.frame_id = "sensor_close";
-            imshow("close_img",rawImg);
-            int k = waitKey(30);
-            if(k == 'c' && !rawImg.empty())
-            {
-                ROS_INFO("Get %d far pictures!", count);
-                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
-                stringstream ss;
-                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/close"<<count<<".bmp";
-                cv::imwrite(ss.str(),rawImg);
-                count++;
-            }
-        }
+//        if(far_or_close == 'F')
+//        {
+//            imgHead.frame_id = "sensor_far";
+//            imshow("far_img",rawImg);
+//            int k = waitKey(30);
+//            if(k == 'f' && !rawImg.empty())
+//            {
+//                ROS_INFO("Get %d far pictures!", count);
+//                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//                stringstream ss;
+//                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/far"<<count<<".bmp";
+//                cv::imwrite(ss.str(),rawImg);
+//                count++;
+//            }
+//        }
+//        else if(far_or_close == 'C')
+//        {
+//            imgHead.frame_id = "sensor_close";
+//            imshow("close_img",rawImg);
+//            int k = waitKey(30);
+//            if(k == 'c' && !rawImg.empty())
+//            {
+//                ROS_INFO("Get %d far pictures!", count);
+//                cout << rawImg.size().width << '\t' << rawImg.size().height <<endl;
+//                stringstream ss;
+//                ss<<"/home/chris/ws_livox/src/camera_lidar_calibration/data/photo/close"<<count<<".bmp";
+//                cv::imwrite(ss.str(),rawImg);
+//                count++;
+//            }
+//        }
         imgHead.stamp=imgTime;
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
