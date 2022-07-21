@@ -18,8 +18,6 @@
 #include "../include/displayer_qt5/qnode.hpp"
 #include "sensor_msgs/image_encodings.h"
 #include "displayer_qt5/qlabel_with_mouse_event.h"
-#include <radar_msgs/dist_points.h>
-#include <radar_msgs/dist_point.h>
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -444,12 +442,13 @@ void QNode::refereeWarningCallback(const radar_msgs::referee_warningConstPtr &ms
 
 void QNode::pubCelibrateResult()
 {
-    radar_msgs::dist_point one_point_msg;
-    radar_msgs::dist_points points_msg;
+    radar_msgs::point one_point_msg;
+    radar_msgs::points points_msg;
     if(cameraCelibrating == sensorFarImgRaw)
     {
         for(int i = 0; i < 4; i++)
         {
+            one_point_msg.id=i;
             one_point_msg.x = sensor_far_points[i].x() * 1.0 / calibrateMainWindowWidth;
             one_point_msg.y = sensor_far_points[i].y() * 1.0 / calibrateMainWindowHeight;
             points_msg.data.push_back(one_point_msg);
@@ -460,6 +459,7 @@ void QNode::pubCelibrateResult()
     {
         for(int i = 0; i < 4; i++)
         {
+            one_point_msg.id=i;
             one_point_msg.x = sensor_close_points[i].x() * 1.0 / calibrateMainWindowWidth;
             one_point_msg.y = sensor_close_points[i].y() * 1.0 / calibrateMainWindowHeight;
             points_msg.data.push_back(one_point_msg);
@@ -497,8 +497,8 @@ bool QNode::init()
     image_sub_second_window = it.subscribe(secondWindowTopic,1,&QNode::imgShowSecondWindowCallback,this);
     image_sub_sensor_far = it.subscribe(sensorFarImgRaw.toStdString(),1,&QNode::imgSensorFarCallback,this);
     image_sub_sensor_close = it.subscribe(sensorCloseImgRaw.toStdString(),1,&QNode::imgSensorCloseCallback,this);
-    calibration_pub_sensor_far = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorFar.toStdString(), 1);
-    calibration_pub_sensor_close = n.advertise <radar_msgs::dist_points>(calibrationTopicSensorClose.toStdString(), 1);
+    calibration_pub_sensor_far = n.advertise <radar_msgs::points>(calibrationTopicSensorFar.toStdString(), 1);
+    calibration_pub_sensor_close = n.advertise <radar_msgs::points>(calibrationTopicSensorClose.toStdString(), 1);
     gameStateSub = n.subscribe(gameStateTopic, 1, &QNode::gameStateCallback, this);
     supplyProjectileActionSub = n.subscribe(supplyProjectileActionTopic, 1, &QNode::supplyProjectileActionCallback, this);
     refereeWarningSub = n.subscribe(refereeWarningTopic, 1, &QNode::refereeWarningCallback, this);

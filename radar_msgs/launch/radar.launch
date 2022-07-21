@@ -1,6 +1,6 @@
 <launch>
   <rosparam command="load" file="$(find radar_msgs)/yaml/radar.yaml" />
-  <rosparam command="load" file="$(find displayer_app)/cfg/RadarDisplayerRos.yaml" />
+  <rosparam command="load" file="$(find displayer_qt5)/yaml/displayer_qt5.yaml" />
   <arg name="lvx_file_path" default="livox_test.lvx"/>
   <arg name="bd_list" default="100000000000000"/>
   <arg name="xfer_format" default="0"/>
@@ -33,7 +33,8 @@
 <!--           type="livox_ros_driver_node" required="true" -->
 <!--           output="screen" args="$(arg cmdline_arg)"/> -->
 
-  <node name="displayer_app" pkg="displayer_app" type="main.py" />
+<!--   <node name="displayer_app" pkg="displayer_app" type="main.py" /> -->
+<node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" respawn="true"/>
   <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/>
   <node name="get_depth_node" pkg="get_depth" type="get_depth_node" respawn="true"/>
 <!--   <node pkg="small_map" type="small_map" name="small_map" output="screen" respawn="true"/> -->
