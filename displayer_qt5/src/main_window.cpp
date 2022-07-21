@@ -35,7 +35,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(&qnode,SIGNAL(loggingCameraSecondWindow()),this,SLOT(updateLogcameraSecondWindow()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateMainWindow()),this,SLOT(updateLogcameraCalibrateMainWindow()));
     QObject::connect(&qnode,SIGNAL(loggingCameraCalibrateSecondWindow()),this,SLOT(updateLogcameraCalibrateSecondWindow()));
-    setWindowIcon(QIcon(":/images/Icon.ico"));
+    setWindowIcon(QIcon(":/image/images/Icon.ico"));
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     QObject::connect(ui.labelCalibrateCameraMainWindow, SIGNAL(mouseMovePoint(QPoint)), this, SLOT(on_labelCalibrateCameraMainWindow_mouseLocationChanged()));
@@ -48,7 +48,8 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+}
 
 /*****************************************************************************
 ** Implementation [Slots]
@@ -243,6 +244,7 @@ void MainWindow::initUI()
     fTimer->setInterval(333);
     connect(fTimer, SIGNAL(timeout()), this, SLOT(on_timer_timeout()));
     fTimer->start();
+
 }
 
 void MainWindow::updateLogcamera()
@@ -479,11 +481,6 @@ void displayer_qt5::MainWindow::on_timer_timeout()
     ui.labelSmallMap->update();
 }
 
-void displayer_qt5::MainWindow::on_timer_timeout2()
-{
-
-}
-
 void displayer_qt5::MainWindow::updateGameState()
 {
     std::string str;
@@ -703,3 +700,4 @@ void displayer_qt5::MainWindow::updateGameState()
     }
     ui.labelRemainTime->setText(remain_time);
 }
+

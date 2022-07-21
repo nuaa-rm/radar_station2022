@@ -429,7 +429,6 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
     }
 
     stageRemainTime = msg->stage_remain_time;
-    log(Info,"Running!");
     Q_EMIT loggingGameStateUpdate();
 }
 
@@ -579,6 +578,10 @@ void QNode::loadParams()
     ros::param::get("/game/secondWindowTopic", secondWindowTopic);
 
     ros::param::get("/minimap/subscribeTopic", worldPointTopic);
+
+    ros::param::get("/game/record/ifRecord", ifRecord);
+
+    ros::param::get("/game/record/recordPath", recordPath);
 
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 

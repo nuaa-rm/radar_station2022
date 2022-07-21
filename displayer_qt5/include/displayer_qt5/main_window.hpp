@@ -21,6 +21,7 @@
 #include <chrono>
 #include <QTimer>
 #include <QTime>
+#include <QApplication>
 
 /*****************************************************************************
 ** Namespace
@@ -71,7 +72,6 @@ private slots:
     void on_pushButtonCalibrate_clicked();
     void updateSmallMap();
     void on_timer_timeout();
-    void on_timer_timeout2();
 
 private:
 	Ui::MainWindowDesign ui;

@@ -148,6 +148,8 @@ public:
     robot robot_blueGuard;
     robot robot_blueOutpose;
     robot robot_blueBase;
+    bool ifRecord;
+    std::string recordPath;
 
 Q_SIGNALS:
     void loggingUpdated();
