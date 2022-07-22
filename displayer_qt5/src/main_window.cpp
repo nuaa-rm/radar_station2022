@@ -684,20 +684,20 @@ void displayer_qt5::MainWindow::updateGameState()
     }
 
     ui.labelGameStage->setText(qnode.gameProgress);
-    QString remain_time = QString(std::to_string(qnode.stageRemainTime).c_str());
+    int min = qnode.stageRemainTime / 60;
+    int sec = qnode.stageRemainTime % 60;
+    QString remain_time = QString((std::to_string(min) + std::string(":") + std::to_string(sec)).c_str());
+    QPalette pal = ui.labelRemainTime->palette();
     if(qnode.stageRemainTime <= 5)
     {
-        QPalette pal = ui.labelRemainTime->palette();
         pal.setColor(QPalette::WindowText, Qt::red);
-        ui.labelRemainTime->setPalette(pal);
 
     }
     else
     {
-        QPalette pal = ui.labelRemainTime->palette();
         pal.setColor(QPalette::WindowText, Qt::black);
-        ui.labelRemainTime->setPalette(pal);
     }
+    ui.labelRemainTime->setPalette(pal);
     ui.labelRemainTime->setText(remain_time);
 }
 

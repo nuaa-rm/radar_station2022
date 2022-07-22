@@ -188,15 +188,19 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
-        if (far_calc_flag&&close_calc_flag)
+        if (close_calc_flag&&far_calc_flag)
         {
             remove_duplicate();
             warn_on_map(result_points,small_map_copy);
             for (auto & i : result_points.data) {
                 draw_point_on_map(i, small_map_copy);
             }
-            imshow("small_map", small_map_copy);
-            waitKey(1);
+//            for (auto & i : close_points.data) {
+//                draw_point_on_map(i, small_map_copy);
+//            }
+//            for (auto & i : far_points.data) {
+//                draw_point_on_map(i, small_map_copy);
+//            }
         }
         if (!pub_relative.data.empty()) {
             worldPointPub.publish(pub_relative);
@@ -255,11 +259,12 @@ void remove_duplicate() {
     vector<Point2f> right_region = {Point(255, 0), Point(255, 840), Point(450, 840), Point(450, 0)};
     for (auto &i: far_points.data) {
         int test = pointPolygonTest(left_region, calculate_pixel_codi(i), false);
+        int right_test = pointPolygonTest(right_region, calculate_pixel_codi(i), false);
         if (test > 0) {
             result_points.data.emplace_back(i);
-        } else if (test == 0 && i.x != 150) {
+        } else if (test == 0 && i.x != 200) {
             result_points.data.emplace_back(i);
-        } else if(!pointPolygonTest(right_region, calculate_pixel_codi(i),false)){
+        } else if(-pointPolygonTest(right_region, calculate_pixel_codi(i),false)){
             left_may_overlap_points.data.emplace_back(i);
         }
     }
@@ -269,7 +274,7 @@ void remove_duplicate() {
             result_points.data.emplace_back(i);
         } else if (test == 0 && i.x != 255) {
             result_points.data.emplace_back(i);
-        } else if(!pointPolygonTest(left_region, calculate_pixel_codi(i), false)){
+        } else if(-pointPolygonTest(left_region, calculate_pixel_codi(i), false)){
             right_may_overlap_points.data.emplace_back(i);
         }
     }
@@ -556,6 +561,7 @@ void close_calibration(const radar_msgs::points &msg) {
     }
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
     cv::Mat abc;
+    cout<<"close obj points:"<<close_objectPoints<<endl;
     int suc = cv::solvePnPRansac(close_objectPoints, close_imagePoints, close_CamMatrix_, close_distCoeffs_,
                                  close_Rjacob, close_T, false, 100, 8.0, 0.99,
                                  abc, cv::SOLVEPNP_AP3P);
