@@ -47,7 +47,7 @@ judgeSystem:
 minimap:
   subscribeTopic: "/world_point"
 game:
-  secondWindowTopic: "/sensor_close/image_raw"
+  secondWindowTopic: "/sensor_far/image_raw"
   record:
     ifRecord: True
     recordPath: "/home/dovejh/project/radar_station/recorder.avi"

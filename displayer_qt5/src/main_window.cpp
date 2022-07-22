@@ -319,11 +319,11 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
     {
         r.height = qnode.calibrateMainWindowWidth - r.y;
     }
-    if(qnode.cameraCelibrating == qnode.sensorFarImgRaw && !qnode.sensorFarImgRaw.isEmpty())
+    if(qnode.cameraCelibrating == qnode.sensorFarImgRaw && !qnode.imgSensorFar.empty())
     {
         qnode.imgSensorFar(r).copyTo(m);
     }
-    else if(qnode.cameraCelibrating == qnode.sensorCloseImgRaw && !qnode.sensorCloseImgRaw.isEmpty())
+    else if(qnode.cameraCelibrating == qnode.sensorCloseImgRaw && !qnode.imgSensorClose.empty())
     {
         qnode.imgSensorClose(r).copyTo(m);
     }
@@ -343,7 +343,12 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
         }
         else if(qnode.cameraCelibrating == qnode.sensorCloseImgRaw)
         {
-
+            for(int i = 0; i < 4; i++)
+            {
+                cv::Point center((ui.labelCalibrateCameraMainWindow->sensor_close_points[i].x() - r.x) * qnode.calibrateRate, (ui.labelCalibrateCameraMainWindow->sensor_close_points[i].y() - r.y) * qnode.calibrateRate);
+                cv::circle(m, center, 5 * qnode.calibrateRate, cv::Scalar(255, 255, 255), 2);
+                cv::circle(m, center, 2, cv::Scalar(255, 0, 0), 2);
+            }
         }
         qnode.imageCalibrateSecondWindow = QImage(m.data,m.cols,m.rows,m.step[0],QImage::Format_RGB888);
         displayCameraCalibrateSecondWindow(qnode.imageCalibrateSecondWindow);

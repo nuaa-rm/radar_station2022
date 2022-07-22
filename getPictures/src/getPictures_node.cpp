@@ -30,6 +30,6 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "getPictures_node");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("/camera/color/image_raw", 1, &imgCallback);
+    ros::Subscriber sub = n.subscribe("/sensor_far/image_raw", 1, &imgCallback);
     ros::spin();
 }

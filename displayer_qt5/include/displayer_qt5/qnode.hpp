@@ -152,6 +152,9 @@ public:
     std::string recordPath;
     int rawImageWidth;
     int rawImageHeight;
+    cv::VideoWriter recorder;
+    cv::VideoCapture replayer;
+    double recorder_fps;
 
 Q_SIGNALS:
     void loggingUpdated();

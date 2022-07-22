@@ -28,8 +28,6 @@ private:
     QPoint placeHitWindMill_en[4];
     QPoint placeOutpose_en[4];
     std::vector<world_point> worldPoints;
-
-
 public:
     explicit QLabel_with_painter(QWidget *parent = nullptr);
     void drawSmallMap(std::vector<world_point>& );
