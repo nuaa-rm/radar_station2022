@@ -39,7 +39,7 @@ camera:
 calibrate:
   rate: 3             # 标定时放大的倍数(1-5)
   rawImageWidth: 1280
-  rawImageHeight: 720
+  rawImageHeight: 1024
 judgeSystem:
   gameStateTopic: "/game_state"
   supplyProjectileActionTopic: "/supply_projectile_action"
@@ -47,7 +47,7 @@ judgeSystem:
 minimap:
   subscribeTopic: "/world_point"
 game:
-  secondWindowTopic: "/sensor_close/image_raw"
+  secondWindowTopic: "/sensor_far/image_raw"
   record:
     ifRecord: True
     recordPath: "/home/dovejh/project/radar_station/recorder.avi"

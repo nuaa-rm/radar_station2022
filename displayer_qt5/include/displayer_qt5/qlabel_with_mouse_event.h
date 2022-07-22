@@ -25,7 +25,7 @@ protected:
     void  mouseReleaseEvent(QMouseEvent *event);
     void  paintEvent(QPaintEvent* );
 private:
-    bool if_is_dragging;
+
     bool if_point_being_selected;
 public:
     explicit QLabel_with_mouse_event(QWidget *parent = nullptr);
@@ -35,6 +35,7 @@ public:
     QString sensorCloseImgRaw;
     QPoint* sensor_far_points;
     QPoint* sensor_close_points;
+    bool if_is_dragging;
 signals:
     void mouseMovePoint(QPoint point);
     void mouseClicked(QPoint point);

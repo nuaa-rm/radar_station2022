@@ -65,6 +65,8 @@ void QNode::imgShowCallback(const sensor_msgs::ImageConstPtr &msg)
 
 void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
 {
+    static int i = 0;
+    static std::string path(PROJECT_PATH);
     if(!if_is_celibrating)
     {
         try
@@ -72,7 +74,60 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
           cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
           if(!cv_ptr->image.empty())
           {
+              if(recorder_fps <= 1e-5)
+              {
+                  static ros::Time begin;
+                  static ros::Time end;
+                  if(i == 0)
+                  {
+                      begin = ros::Time::now();
+                  }
+                  else if(i == 10)
+                  {
+                      end = ros::Time::now();
+                      recorder_fps = 10 / (end - begin).toSec();
+                      std::cout << recorder_fps << std::endl;
+                  }
+                  i++;
+              }
+              else if(i == 11)
+              {
+                  int codec = cv::VideoWriter::fourcc('D', 'I', 'V', '3');
+                  path += "/recorded.avi";
+                  recorder.open(path, codec, recorder_fps, cv_ptr->image.size(), true);
+                  std::cout << path << std::endl;
+                  i++;
+              }
+
               imgShowSecondWindow = cv_ptr->image;
+              if(i < 100 && i > 11)
+              {
+                  recorder << imgShowSecondWindow;
+                  std::cout << i << std::endl;
+                  i++;
+              }
+              else if(i == 100)
+              {
+                  recorder.release();
+                  replayer.open(path);
+                  std::cout << "done" << std::endl;
+                  i++;
+              }
+              else if(i == 101)
+              {
+                  cv::Mat m;
+                  replayer >> m;
+                  if(!m.empty())
+                  {
+                      cv::Rect re(0, 0, m.cols / 2, m.rows / 2);
+                      m(re).copyTo(imgShowSecondWindow);
+                  }
+                  else
+                  {
+                      i++;
+                  }
+              }
+
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
               imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
           }
@@ -474,7 +529,7 @@ void QNode::worldPointCallback(const radar_msgs::points &msg)
     std::vector<world_point>().swap(worldPoints);
     for(size_t i = 0; i < msg.data.size(); i++)
     {
-        wp.point = QPoint(msg.data[i].x * smallMapWidth, msg.data[i].y * smallMapHeight);
+        wp.point = QPoint(msg.data[i].x * smallMapWidth, (1 - msg.data[i].y) * smallMapHeight);
         wp.id = msg.data[i].id;
         worldPoints.push_back(wp);
     }
@@ -592,11 +647,6 @@ void QNode::loadParams()
 
     ros::param::get("/calibrate/rawImageHeight", rawImageHeight);
 
-    /*calibrate:
-  rate: 3             # 标定时放大的倍数(1-5)
-  rawImageWidth: 1280
-  rawImageHeight: 720*/
-
     smallMapWidth = 360;
     smallMapHeight = 672;
 
@@ -707,6 +757,7 @@ void QNode::loadParams()
     robot_blue5.hpMax = 100;
     robot_blueOutpose.hpMax = 1500;
     robot_blueOutpose.hpCurrent = 1500;
+    recorder_fps = 0;
 }
 
 }  // namespace displayer_qt5
