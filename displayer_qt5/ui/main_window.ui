@@ -1229,7 +1229,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <widget class="QLabel_with_painter" name="labelCalibrateCameraSecondWindow">
+           <widget class="QLabel" name="labelCalibrateCameraSecondWindow">
             <property name="font">
              <font>
               <family>ori1Uni</family>
@@ -1243,12 +1243,64 @@
            </widget>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelPointLocation">
+              <property name="font">
+               <font>
+                <family>ori1Uni</family>
+                <pointsize>20</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>No Point</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QComboBox" name="comboBoxCalibrateCamera"/>
             </item>
             <item>
              <widget class="QPushButton" name="pushButtonCalibrate">
+              <property name="font">
+               <font>
+                <family>ori1Uni</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Calibrate</string>
               </property>

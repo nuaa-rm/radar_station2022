@@ -332,8 +332,35 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
         cv::resize(m, m, cv::Size(qnode.calibrateSecondWindowWidth, qnode.calibrateSecondWindowHeight));
         cv::line(m, cv::Point(0, (ui.labelCalibrateCameraMainWindow->selectedPoint.y() - r.y) * qnode.calibrateRate), cv::Point(qnode.calibrateSecondWindowWidth, (ui.labelCalibrateCameraMainWindow->selectedPoint.y() - r.y) * qnode.calibrateRate), cv::Scalar(255, 255, 255));
         cv::line(m, cv::Point((ui.labelCalibrateCameraMainWindow->selectedPoint.x() - r.x) * qnode.calibrateRate, 0), cv::Point((ui.labelCalibrateCameraMainWindow->selectedPoint.x() - r.x) * qnode.calibrateRate, qnode.calibrateSecondWindowHeight), cv::Scalar(255, 255, 255));
+        if(qnode.cameraCelibrating == qnode.sensorFarImgRaw)
+        {
+            for(int i = 0; i < 4; i++)
+            {
+                cv::Point center((ui.labelCalibrateCameraMainWindow->sensor_far_points[i].x() - r.x) * qnode.calibrateRate, (ui.labelCalibrateCameraMainWindow->sensor_far_points[i].y() - r.y) * qnode.calibrateRate);
+                cv::circle(m, center, 5 * qnode.calibrateRate, cv::Scalar(255, 255, 255), 2);
+                cv::circle(m, center, 2, cv::Scalar(255, 0, 0), 2);
+            }
+        }
+        else if(qnode.cameraCelibrating == qnode.sensorCloseImgRaw)
+        {
+
+        }
         qnode.imageCalibrateSecondWindow = QImage(m.data,m.cols,m.rows,m.step[0],QImage::Format_RGB888);
         displayCameraCalibrateSecondWindow(qnode.imageCalibrateSecondWindow);
+        QString qstr((std::string("(") + std::to_string(ui.labelCalibrateCameraMainWindow->selectedPoint.x() * qnode.rawImageWidth / qnode.calibrateMainWindowWidth) + std::string(", ") + std::to_string(ui.labelCalibrateCameraMainWindow->selectedPoint.y() * qnode.rawImageHeight / qnode.calibrateMainWindowHeight) + std::string(")")).c_str());
+        QPalette pal = ui.labelPointLocation->palette();
+        if(ui.labelCalibrateCameraMainWindow->if_is_dragging)
+        {
+            pal.setColor(QPalette::WindowText, Qt::red);
+
+        }
+        else
+        {
+            pal.setColor(QPalette::WindowText, Qt::black);
+        }
+        ui.labelPointLocation->setPalette(pal);
+
+        ui.labelPointLocation->setText(qstr);
     }
 }
 

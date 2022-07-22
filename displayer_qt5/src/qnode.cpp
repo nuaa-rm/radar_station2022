@@ -592,11 +592,6 @@ void QNode::loadParams()
 
     ros::param::get("/calibrate/rawImageHeight", rawImageHeight);
 
-    /*calibrate:
-  rate: 3             # 标定时放大的倍数(1-5)
-  rawImageWidth: 1280
-  rawImageHeight: 720*/
-
     smallMapWidth = 360;
     smallMapHeight = 672;
 
