@@ -1,11 +1,6 @@
-
 battle_state:
   battle_color: blue
-  if_red: False
-  is_record: False
-  ifshow: True
   fps_mode: 0
-  exp_time: 29000
 
 
 length_of_cloud_queue: 10
@@ -60,7 +55,7 @@ sensor_far:
 
 sensor_close:
   deviceID: 1
-  exp_time: 25000
+  exp_time: 28000
   camera_name: guangjiao
   camera_matrix:
     zerozero: 1854.425947

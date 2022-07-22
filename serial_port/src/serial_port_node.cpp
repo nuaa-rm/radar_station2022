@@ -256,7 +256,7 @@ public:
         else
         {
             robotInteractiveMsgs.data.sender_id = 9;
-            robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
+            robotInteractiveMsgs.data.receiver_id = receiver_id;
         }
         memcpy(robotInteractiveMsgs.data.content,content,113);
         robotInteractiveMsgs.crc = get_CRC16_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs) - sizeof(robotInteractiveMsgs.crc)), 0xffff);
@@ -478,6 +478,21 @@ void worldPointsCallback(const radar_msgs::points& msg)
     }
 }
 
+void GuardCallback(const radar_msgs::points &msg){
+    serial_port guard_serial;
+    uint8_t content[113];
+    content[0]=0xcc;
+    auto x=(int16_t)msg.data[0].x;
+    auto y=(int16_t)msg.data[0].y;
+    content[1]=x>>8;
+    content[2]=x;
+    content[3]=y>>8;
+    content[4]=y;
+    content[5]=0x0;
+    content[6]=0x0;
+    guard_serial.sendInteractiveMsgs(content,7);
+}
+
 int main (int argc, char** argv)
 {
     //初始化节点
@@ -498,7 +513,7 @@ int main (int argc, char** argv)
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
     string exchange;
-    ros::param::get("battle_color", exchange);
+    ros::param::get("battle_state/battle_color", exchange);
     if(exchange == "red")
     {
         sp.is_enemy_red = false;
@@ -508,7 +523,8 @@ int main (int argc, char** argv)
         sp.is_enemy_red = true;
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
-    ros::Rate loop(1);
+    ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
+    ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
     while(ros::ok())
@@ -550,11 +566,11 @@ int main (int argc, char** argv)
 //            count = 0;
 //        }
         ros::spinOnce();
-        uint8_t test[113];
-        memset(test,0x01,113);
-        test[0]=0xcc;
-        sp.receiveMsgs();
-        sp.sendInteractiveMsgs(test, 7);
+//        uint8_t test[113];
+//        memset(test,0x01,113);
+//        test[0]=0xcc;
+//        sp.receiveMsgs();
+//        sp.sendInteractiveMsgs(test, 7);
 //        sp.sendInteractiveMsgs(test, 1);
         //循环休眠
         loop.sleep();
