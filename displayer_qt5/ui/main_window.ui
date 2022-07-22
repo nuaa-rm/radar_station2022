@@ -25,7 +25,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabGame">
        <attribute name="title">
@@ -1229,7 +1229,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <widget class="QLabel" name="labelCalibrateCameraSecondWindow">
+           <widget class="QLabel_with_painter" name="labelCalibrateCameraSecondWindow">
             <property name="font">
              <font>
               <family>ori1Uni</family>

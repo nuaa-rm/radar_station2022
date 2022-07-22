@@ -150,6 +150,8 @@ public:
     robot robot_blueBase;
     bool ifRecord;
     std::string recordPath;
+    int rawImageWidth;
+    int rawImageHeight;
 
 Q_SIGNALS:
     void loggingUpdated();

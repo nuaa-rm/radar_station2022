@@ -588,6 +588,15 @@ void QNode::loadParams()
     battle_color = "blue";
     ros::param::get("/battle_state/battle_color", battle_color);
 
+    ros::param::get("/calibrate/rawImageWidth", rawImageWidth);
+
+    ros::param::get("/calibrate/rawImageHeight", rawImageHeight);
+
+    /*calibrate:
+  rate: 3             # 标定时放大的倍数(1-5)
+  rawImageWidth: 1280
+  rawImageHeight: 720*/
+
     smallMapWidth = 360;
     smallMapHeight = 672;
 

@@ -38,6 +38,8 @@ camera:
           y: 0.189
 calibrate:
   rate: 3             # 标定时放大的倍数(1-5)
+  rawImageWidth: 1280
+  rawImageHeight: 720
 judgeSystem:
   gameStateTopic: "/game_state"
   supplyProjectileActionTopic: "/supply_projectile_action"
