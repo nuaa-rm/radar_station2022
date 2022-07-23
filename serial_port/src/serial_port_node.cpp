@@ -321,6 +321,7 @@ public:
                 gameStateRosMsg.red_7_robot_HP = robotHealthMsgs.data.red_7_robot_HP;
                 gameStateRosMsg.red_base_HP = robotHealthMsgs.data.red_base_HP;
                 gameStateRosMsg.red_outpose_HP = robotHealthMsgs.data.red_outpose_HP;
+                std::cout <<  << std::endl;
                 if_pub = true;
             }
             if((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg.head) - sizeof(gameResultMsg.head.crc)), 0xff)) && (gameResultMsg.crc == get_CRC16_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg) - sizeof(gameResultMsg.crc)), 0xffff)))
@@ -364,6 +365,7 @@ public:
             }
             if(if_pub)
             {
+                gameStatePub.publish(gameStateRosMsg);
                 return true;
             }
             return false;
@@ -574,11 +576,12 @@ int main (int argc, char** argv)
             }
             count = 0;
         }
-        ros::spinOnce();
+
 //        uint8_t test[113];
 //        memset(test,0x01,113);
 //        test[0]=0xcc;
         sp.receiveMsgs();
+        ros::spinOnce();
 //        sp.sendInteractiveMsgs(test, 7);
 //        sp.sendInteractiveMsgs(test, 1);
         //循环休眠
