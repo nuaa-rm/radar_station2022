@@ -11,6 +11,7 @@
 #include "radar_msgs/game_state.h"
 #include "radar_msgs/supply_projectile_action.h"
 #include "radar_msgs/referee_warning.h"
+
 using namespace std;
 using namespace cv;
 
@@ -28,8 +29,7 @@ struct map_data//小地图消息数据 10hz 发送
     float target_position_x;
     float target_position_y;
 } __attribute__((packed));
-struct map_msg
-{
+struct map_msg {
     frame_header head;
     uint16_t cmd_id = 0x0305;
     map_data data;
@@ -41,10 +41,58 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint16_t cmd_id;
     uint16_t sender_id;
     uint16_t receiver_id;
-    uint8_t content[11];
+    uint8_t content;
 } __attribute__((packed));
-struct robot_interactive_msgs
+
+struct graphic_data_struct_t
 {
+    uint8_t graphic_name[3];
+    uint32_t operate_tpye:3;
+    uint32_t graphic_tpye:3;
+    uint32_t layer:4;
+    uint32_t color:4;
+    uint32_t start_angle:9;
+    uint32_t end_angle:9;
+    uint32_t width:10;
+    uint32_t start_x:11;
+    uint32_t start_y:11;
+    uint32_t radius:10;
+    uint32_t end_x:11;
+    uint32_t end_y:11;
+} __attribute__((packed));
+struct client_ui_data//最大10HZ 发送和接收
+{
+    uint16_t cmd_id;
+    uint16_t sender_id;
+    uint16_t receiver_id;
+    graphic_data_struct_t data;
+} __attribute__((packed));
+struct client_ui_msgs {
+    frame_header head;
+    uint16_t cmd_id = 0x0301;
+    client_ui_data data;
+    uint16_t crc;
+} __attribute__((packed));
+
+struct _graphic_delete_t
+{
+    uint8_t operate_tpye;
+    uint8_t layer;
+} __attribute__((packed));
+struct client_ui_delete_data//最大10HZ 发送和接收
+{
+    uint16_t cmd_id;
+    uint16_t sender_id;
+    uint16_t receiver_id;
+    _graphic_delete_t data;
+} __attribute__((packed));
+struct client_ui_delete_msgs {
+    frame_header head;
+    uint16_t cmd_id = 0x0301;
+    client_ui_delete_data data;
+    uint16_t crc;
+} __attribute__((packed));
+struct robot_interactive_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0301;
     robot_interactive_data data;
@@ -55,8 +103,7 @@ struct robot_interactive_control_data //30HZ 发送和接收
 {
     uint8_t content[30];
 } __attribute__((packed));
-struct robot_interactive_control_msgs
-{
+struct robot_interactive_control_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0302;
     robot_interactive_control_data data;
@@ -93,14 +140,13 @@ struct robot_health_msgs //1HZ
 
 struct game_status_data //1hz 接收
 {
-    uint8_t game_type : 4; //1：机甲大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
-    uint8_t game_progress : 4; //0：未开始比赛 1：准备阶段 2：自检阶段 3：5s倒计时 4：对战中 5：比赛结算中
+    uint8_t game_type: 4; //1：机甲大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
+    uint8_t game_progress: 4; //0：未开始比赛 1：准备阶段 2：自检阶段 3：5s倒计时 4：对战中 5：比赛结算中
     uint16_t stage_remain_time = 0; //当前阶段剩余时间，单位s
     uint64_t SyncTimeStamp = 0; //机器人接收到该指令的精确Unix时间,当机载端收到有效的NTP服务器授时后生效
 
 } __attribute__((packed));
-struct game_status_msgs
-{
+struct game_status_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0001;
     game_status_data data;
@@ -111,16 +157,14 @@ struct game_result_data//比赛结束发送 接收
 {
     uint8_t winner; //0平局 1红方胜利 2蓝方胜利
 } __attribute__((packed));
-struct game_result_msg
-{
+struct game_result_msg {
     frame_header head;
     uint16_t cmd_id = 0x0002;
     game_result_data data;
     uint16_t crc;
 } __attribute__((packed));
 
-struct dart_interactivate_msg_data
-{
+struct dart_interactivate_msg_data {
     uint8_t dart_launch_opening_status; //fei biao fa she kou zhuang tai 1 guan bi 2 zheng zai huo dong 0 yi jing kai qi
     uint8_t dart_attack_target; //飞镖的打击目标,默认为前哨站;0:前哨站; 1:基地。
     uint16_t target_change_time; //切换打击目标时的比赛剩余时间,单位秒,从未切换默认为 0。
@@ -144,8 +188,7 @@ struct site_event_data //1hz 接收
     //bit 10:己方前哨战状态: 1 为前哨战存活; 0 为前哨战被击毁;
     //bit 10 -31: 保留
 } __attribute__((packed));
-struct site_event_msgs
-{
+struct site_event_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0101;
     site_event_data data;
@@ -159,8 +202,7 @@ struct supply_projectile_action_data //触发时发送 接收
     uint8_t supply_projectile_step; //出弹口开闭状态 0关闭 1子弹准备中 2子弹下落
     uint8_t supply_projectile_num; //补单数量 50:50颗子弹 100:100颗子弹 150...... 200......
 } __attribute__((packed));
-struct supply_projectile_action_msg
-{
+struct supply_projectile_action_msg {
     frame_header head;
     uint16_t cmd_id = 0x0102;
     supply_projectile_action_data data;
@@ -172,8 +214,7 @@ struct referee_warning_data //触发时发送 接收
     uint8_t level; //1黄牌 2红牌 3判负
     uint8_t foul_robot_id; //犯规机器人ID 判负时为0
 } __attribute__((packed));
-struct referee_warning_msg
-{
+struct referee_warning_msg {
     frame_header head;
     uint16_t cmd_id = 0x0104;
     referee_warning_data data;
@@ -184,26 +225,25 @@ struct dart_remaining_time_data //1hz 接收
 {
     uint8_t dart_remaining_time; //15s倒计时
 } __attribute__((packed));
-struct dart_remaining_time_msg
-{
+struct dart_remaining_time_msg {
     frame_header head;
     uint16_t cmd_id = 0x0105;
     dart_remaining_time_data data;
     uint16_t crc;
 } __attribute__((packed));
-
-struct car_point
-{
+struct car_point {
     uint16_t id;
     Point2f point;
     bool color; //红色为0 蓝色为1
 };
 uint8_t warn_state;
-class serial_port
-{
+
+class serial_port {
 public:
     serial::Serial ser;
     map_msg mapMsg;
+    client_ui_msgs ui_Msgs;
+    client_ui_delete_msgs ui_delete_Msgs;
     robot_interactive_msgs robotInteractiveMsgs;
     robot_interactive_control_msgs robotInteractiveControlMsgs;
     robot_health_msgs robotHealthMsgs;
@@ -221,90 +261,130 @@ public:
     radar_msgs::referee_warning refereeWarningRosMsg;
     uint8_t receiveData[1024];
     bool is_enemy_red = false;
-    int serial_port_init()
-    {
+
+    int serial_port_init() {
         ser.setPort("/dev/ttyUSB0");
         ser.setBaudrate(115200);
         serial::Timeout to = serial::Timeout::simpleTimeout(1000);
         ser.setTimeout(to);
         ser.open();
     }
-    serial_port()
-    {
+
+    serial_port() {
         serial_port_init();
     }
-    bool sendMapMsgs(uint16_t id, float x, float y)
-    {
+
+    bool sendMapMsgs(uint16_t id, float x, float y) {
         mapMsg.head.SOF = 0xA5;
         mapMsg.head.data_length = 10;
         mapMsg.head.seq = 1;
-        mapMsg.head.crc = get_CRC8_check_sum((uint8_t*)&mapMsg, (sizeof(mapMsg.head) - sizeof(mapMsg.head.crc)), 0xff);
+        mapMsg.head.crc = get_CRC8_check_sum((uint8_t *) &mapMsg, (sizeof(mapMsg.head) - sizeof(mapMsg.head.crc)),
+                                             0xff);
         mapMsg.cmd_id = 0x0305;
         mapMsg.data.target_position_x = x;
         mapMsg.data.target_position_y = y;
         mapMsg.data.target_robot_id = id;
-        mapMsg.crc = get_CRC16_check_sum((uint8_t*)&mapMsg, (sizeof(mapMsg) - sizeof(mapMsg.crc)), 0xffff);
-        ser.write((uint8_t* )&mapMsg, sizeof(map_msg));
-        cout << "Send one map msg target_id = " << mapMsg.data.target_robot_id << " x = " << mapMsg.data.target_position_x << " y = " << mapMsg.data.target_position_y << endl;
+        mapMsg.crc = get_CRC16_check_sum((uint8_t *) &mapMsg, (sizeof(mapMsg) - sizeof(mapMsg.crc)), 0xffff);
+        ser.write((uint8_t *) &mapMsg, sizeof(map_msg));
+        cout << "Send one map msg target_id = " << mapMsg.data.target_robot_id << " x = "
+             << mapMsg.data.target_position_x << " y = " << mapMsg.data.target_position_y << endl;
         return true;
     }
-    bool sendInteractiveMsgs(uint8_t *content, uint16_t receiver_id)//接受者ID以红方为准
+
+    bool sendInteractiveMsgs(uint16_t receiver_id)//接受者ID以红方为准
     {
         //构造头
         robotInteractiveMsgs.head.SOF = 0xA5;
-        robotInteractiveMsgs.head.data_length = sizeof(robot_health_data);
+        robotInteractiveMsgs.head.data_length = sizeof(robot_interactive_data);
         robotInteractiveMsgs.head.seq = 1;
-        robotInteractiveMsgs.head.crc = get_CRC8_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs.head) - sizeof(robotInteractiveMsgs.head.crc)), 0xff);
+        robotInteractiveMsgs.head.crc = get_CRC8_check_sum((uint8_t *) &robotInteractiveMsgs,
+                                                           (sizeof(robotInteractiveMsgs.head) -
+                                                            sizeof(robotInteractiveMsgs.head.crc)), 0xff);
         robotInteractiveMsgs.cmd_id = 0x0301;
         robotInteractiveMsgs.data.cmd_id = 0x0210;
-        if(is_enemy_red)
-        {
+        if (is_enemy_red) {
             robotInteractiveMsgs.data.sender_id = 109;
             robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
-        }
-        else
-        {
+        } else {
             robotInteractiveMsgs.data.sender_id = 9;
             robotInteractiveMsgs.data.receiver_id = receiver_id;
         }
-        memcpy(robotInteractiveMsgs.data.content,content,11);
-        robotInteractiveMsgs.crc = get_CRC16_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs) - sizeof(robotInteractiveMsgs.crc)), 0xffff);
-        ser.write((uint8_t* )&robotInteractiveMsgs, sizeof(robotInteractiveMsgs));
+        cout << robotInteractiveMsgs.data.sender_id << robotInteractiveMsgs.data.receiver_id << endl;
+        robotInteractiveMsgs.crc = get_CRC16_check_sum((uint8_t *) &robotInteractiveMsgs,
+                                                       (sizeof(robotInteractiveMsgs) -
+                                                        sizeof(robotInteractiveMsgs.crc)), 0xffff);
+        ser.write((uint8_t *) &robotInteractiveMsgs, sizeof(robotInteractiveMsgs));
         cout << "Send one interactive msg " << endl;
+        std::cout << robotInteractiveMsgs.data.receiver_id << std::endl;
         return true;
     }
-    bool receiveMsgs()
-    {
-        if(ser.available())
-        {
+
+    bool sendUIMsgs() {
+        //构造头
+        ui_delete_Msgs.head.SOF = 0xA5;
+        ui_delete_Msgs.head.data_length = sizeof(robot_interactive_data);
+        ui_delete_Msgs.head.seq = 1;
+        ui_delete_Msgs.head.crc = get_CRC8_check_sum((uint8_t *) &robotInteractiveMsgs,
+                                                           (sizeof(robotInteractiveMsgs.head) -
+                                                            sizeof(robotInteractiveMsgs.head.crc)), 0xff);
+        ui_delete_Msgs.cmd_id = 0x0301;
+        ui_delete_Msgs.data.cmd_id = 0x0100;
+        ui_delete_Msgs.data.sender_id = 4;
+        ui_delete_Msgs.data.receiver_id = 0x0104;
+        ui_delete_Msgs.data.data.layer=0;
+        ui_delete_Msgs.data.data.operate_tpye=1;
+        cout << ui_delete_Msgs.data.sender_id << ui_delete_Msgs.data.receiver_id << endl;
+        ui_delete_Msgs.crc = get_CRC16_check_sum((uint8_t *) &ui_delete_Msgs,
+                                                       (sizeof(ui_delete_Msgs) -
+                                                        sizeof(ui_delete_Msgs.crc)), 0xffff);
+        ser.write((uint8_t *) &ui_delete_Msgs, sizeof(ui_delete_Msgs));
+        cout << "Send one ui_delete_Msgs msg " << endl;
+        std::cout << ui_delete_Msgs.data.receiver_id << std::endl;
+        return true;
+    }
+
+    bool receiveMsgs() {
+        if (ser.available()) {
             bool if_pub = false;
             ser.read(receiveData, ser.available());
-            gameStatusMsgs = (*(game_status_msgs*)receiveData);
-            dartRemainingTimeMsg = (*(dart_remaining_time_msg*)receiveData);
-            robotHealthMsgs = (*(robot_health_msgs*)receiveData);
-            gameResultMsg = (*(game_result_msg*)receiveData);
-            siteEventMsgs = (*(site_event_msgs*)receiveData);
-            supplyProjectileActionMsg = (*(supply_projectile_action_msg*)receiveData);
-            refereeWarningMsg = (*(referee_warning_msg*)receiveData);
-            dartRemainingTimeMsg = (*(dart_remaining_time_msg*)receiveData);
+            gameStatusMsgs = (*(game_status_msgs *) receiveData);
+            dartRemainingTimeMsg = (*(dart_remaining_time_msg *) receiveData);
+            robotHealthMsgs = (*(robot_health_msgs *) receiveData);
+            gameResultMsg = (*(game_result_msg *) receiveData);
+            siteEventMsgs = (*(site_event_msgs *) receiveData);
+            supplyProjectileActionMsg = (*(supply_projectile_action_msg *) receiveData);
+            refereeWarningMsg = (*(referee_warning_msg *) receiveData);
+            dartRemainingTimeMsg = (*(dart_remaining_time_msg *) receiveData);
 
             gameStateRosMsg.dart_remaining_time = 16;
             gameStateRosMsg.winner = 3;
-            if((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs.head) - sizeof(gameStatusMsgs.head.crc)), 0xff)) && (gameStatusMsgs.crc == get_CRC16_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)), 0xffff)))
-            {
+            if ((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &gameStatusMsgs,
+                                                               (sizeof(gameStatusMsgs.head) -
+                                                                sizeof(gameStatusMsgs.head.crc)), 0xff)) &&
+                (gameStatusMsgs.crc ==
+                 get_CRC16_check_sum((uint8_t *) &gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)),
+                                     0xffff))) {
 
                 gameStateRosMsg.game_progress = gameStatusMsgs.data.game_progress;
                 gameStateRosMsg.game_type = gameStatusMsgs.data.game_type;
                 gameStateRosMsg.stage_remain_time = gameStatusMsgs.data.stage_remain_time;
                 if_pub = true;
             }
-            if((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg.head) - sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) && (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg) - sizeof(dartRemainingTimeMsg.crc)), 0xffff)))
-            {
+            if ((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t *) &dartRemainingTimeMsg,
+                                                                     (sizeof(dartRemainingTimeMsg.head) -
+                                                                      sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) &&
+                (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t *) &dartRemainingTimeMsg,
+                                                                 (sizeof(dartRemainingTimeMsg) -
+                                                                  sizeof(dartRemainingTimeMsg.crc)), 0xffff))) {
                 gameStateRosMsg.dart_remaining_time = dartRemainingTimeMsg.data.dart_remaining_time;
                 if_pub = true;
             }
-            if((robotHealthMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&robotHealthMsgs, (sizeof(robotHealthMsgs.head) - sizeof(robotHealthMsgs.head.crc)), 0xff)) && (robotHealthMsgs.crc == get_CRC16_check_sum((uint8_t*)&robotHealthMsgs, (sizeof(robotHealthMsgs) - sizeof(robotHealthMsgs.crc)), 0xffff)))
-            {
+            if ((robotHealthMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &robotHealthMsgs,
+                                                                (sizeof(robotHealthMsgs.head) -
+                                                                 sizeof(robotHealthMsgs.head.crc)), 0xff)) &&
+                (robotHealthMsgs.crc == get_CRC16_check_sum((uint8_t *) &robotHealthMsgs,
+                                                            (sizeof(robotHealthMsgs) - sizeof(robotHealthMsgs.crc)),
+                                                            0xffff))) {
                 gameStateRosMsg.blue_1_robot_HP = robotHealthMsgs.data.blue_1_robot_HP;
                 gameStateRosMsg.blue_2_robot_HP = robotHealthMsgs.data.blue_2_robot_HP;
                 gameStateRosMsg.blue_3_robot_HP = robotHealthMsgs.data.blue_3_robot_HP;
@@ -321,16 +401,26 @@ public:
                 gameStateRosMsg.red_7_robot_HP = robotHealthMsgs.data.red_7_robot_HP;
                 gameStateRosMsg.red_base_HP = robotHealthMsgs.data.red_base_HP;
                 gameStateRosMsg.red_outpose_HP = robotHealthMsgs.data.red_outpose_HP;
-                std::cout <<  << std::endl;
+//                std::cout << "receive hp msg" << std::endl;
                 if_pub = true;
             }
-            if((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg.head) - sizeof(gameResultMsg.head.crc)), 0xff)) && (gameResultMsg.crc == get_CRC16_check_sum((uint8_t*)&gameResultMsg, (sizeof(gameResultMsg) - sizeof(gameResultMsg.crc)), 0xffff)))
-            {
+            if ((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t *) &gameResultMsg, (sizeof(gameResultMsg.head) -
+                                                                                           sizeof(gameResultMsg.head.crc)),
+                                                              0xff)) && (gameResultMsg.crc ==
+                                                                         get_CRC16_check_sum((uint8_t *) &gameResultMsg,
+                                                                                             (sizeof(gameResultMsg) -
+                                                                                              sizeof(gameResultMsg.crc)),
+                                                                                             0xffff))) {
                 gameStateRosMsg.winner = gameResultMsg.data.winner;
                 if_pub = true;
             }
-            if((siteEventMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&siteEventMsgs, (sizeof(siteEventMsgs.head) - sizeof(siteEventMsgs.head.crc)), 0xff)) && (siteEventMsgs.crc == get_CRC16_check_sum((uint8_t*)&siteEventMsgs, (sizeof(siteEventMsgs) - sizeof(siteEventMsgs.crc)), 0xffff)))
-            {
+            if ((siteEventMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &siteEventMsgs, (sizeof(siteEventMsgs.head) -
+                                                                                           sizeof(siteEventMsgs.head.crc)),
+                                                              0xff)) && (siteEventMsgs.crc ==
+                                                                         get_CRC16_check_sum((uint8_t *) &siteEventMsgs,
+                                                                                             (sizeof(siteEventMsgs) -
+                                                                                              sizeof(siteEventMsgs.crc)),
+                                                                                             0xffff))) {
                 gameStateRosMsg.if_supply_projectile_one_occupied = (siteEventMsgs.data.event_type | 0x80000000);
                 gameStateRosMsg.if_supply_projectile_two_occupied = (siteEventMsgs.data.event_type | 0x40000000);
                 gameStateRosMsg.if_supply_projectile_three_occupied = (siteEventMsgs.data.event_type | 0x20000000);
@@ -344,27 +434,41 @@ public:
                 gameStateRosMsg.if_outpose_alive = (siteEventMsgs.data.event_type | 0x00400000);
                 if_pub = true;
             }
-            if((supplyProjectileActionMsg.head.crc == get_CRC8_check_sum((uint8_t*)&supplyProjectileActionMsg, (sizeof(supplyProjectileActionMsg.head) - sizeof(supplyProjectileActionMsg.head.crc)), 0xff)) && (supplyProjectileActionMsg.crc == get_CRC16_check_sum((uint8_t*)&supplyProjectileActionMsg, (sizeof(supplyProjectileActionMsg) - sizeof(supplyProjectileActionMsg.crc)), 0xffff)))
-            {
+            if ((supplyProjectileActionMsg.head.crc == get_CRC8_check_sum((uint8_t *) &supplyProjectileActionMsg,
+                                                                          (sizeof(supplyProjectileActionMsg.head) -
+                                                                           sizeof(supplyProjectileActionMsg.head.crc)),
+                                                                          0xff)) && (supplyProjectileActionMsg.crc ==
+                                                                                     get_CRC16_check_sum(
+                                                                                             (uint8_t *) &supplyProjectileActionMsg,
+                                                                                             (sizeof(supplyProjectileActionMsg) -
+                                                                                              sizeof(supplyProjectileActionMsg.crc)),
+                                                                                             0xffff))) {
                 supplyProjectileActionRosMsg.supply_projectile_id = supplyProjectileActionMsg.data.supply_projectile_id;
                 supplyProjectileActionRosMsg.supply_robot_id = supplyProjectileActionMsg.data.supply_robot_id;
                 supplyProjectileActionRosMsg.supply_projectile_step = supplyProjectileActionMsg.data.supply_projectile_step;
                 supplyProjectileActionRosMsg.supply_projectile_num = supplyProjectileActionMsg.data.supply_projectile_num;
                 if_pub = true;
             }
-            if((refereeWarningMsg.head.crc == get_CRC8_check_sum((uint8_t*)&refereeWarningMsg, (sizeof(refereeWarningMsg.head) - sizeof(refereeWarningMsg.head.crc)), 0xff)) && (refereeWarningMsg.crc == get_CRC16_check_sum((uint8_t*)&refereeWarningMsg, (sizeof(refereeWarningMsg) - sizeof(refereeWarningMsg.crc)), 0xffff)))
-            {
+            if ((refereeWarningMsg.head.crc == get_CRC8_check_sum((uint8_t *) &refereeWarningMsg,
+                                                                  (sizeof(refereeWarningMsg.head) -
+                                                                   sizeof(refereeWarningMsg.head.crc)), 0xff)) &&
+                (refereeWarningMsg.crc == get_CRC16_check_sum((uint8_t *) &refereeWarningMsg,
+                                                              (sizeof(refereeWarningMsg) -
+                                                               sizeof(refereeWarningMsg.crc)), 0xffff))) {
                 refereeWarningRosMsg.level = refereeWarningMsg.data.level;
                 refereeWarningRosMsg.foul_robot_id = refereeWarningMsg.data.foul_robot_id;
                 if_pub = true;
             }
-            if((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg.head) - sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) && (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t*)&dartRemainingTimeMsg, (sizeof(dartRemainingTimeMsg) - sizeof(dartRemainingTimeMsg.crc)), 0xffff)))
-            {
+            if ((dartRemainingTimeMsg.head.crc == get_CRC8_check_sum((uint8_t *) &dartRemainingTimeMsg,
+                                                                     (sizeof(dartRemainingTimeMsg.head) -
+                                                                      sizeof(dartRemainingTimeMsg.head.crc)), 0xff)) &&
+                (dartRemainingTimeMsg.crc == get_CRC16_check_sum((uint8_t *) &dartRemainingTimeMsg,
+                                                                 (sizeof(dartRemainingTimeMsg) -
+                                                                  sizeof(dartRemainingTimeMsg.crc)), 0xffff))) {
                 gameStateRosMsg.dart_remaining_time = dartRemainingTimeMsg.data.dart_remaining_time;
                 if_pub = true;
             }
-            if(if_pub)
-            {
+            if (if_pub) {
                 gameStatePub.publish(gameStateRosMsg);
                 return true;
             }
@@ -373,58 +477,41 @@ public:
         return false;
     }
 };
-serial_port sp;
-vector<car_point>worldPoints;
 
-void worldPointsCallback(const radar_msgs::points& msg)
-{
-    warn_state=msg.id;
+serial_port sp;
+vector<car_point> worldPoints;
+
+void worldPointsCallback(const radar_msgs::points &msg) {
+    warn_state = msg.id;
     static int pubCount = 0;
-    if(sp.is_enemy_red)
-    {
-        for(int i = 0; i < msg.data.size(); i++)
-        {
-            if(msg.data[i].id <= 4)
-            {
+    if (sp.is_enemy_red) {
+        for (int i = 0; i < msg.data.size(); i++) {
+            if (msg.data[i].id <= 4) {
                 car_point carPoint;
                 carPoint.id = msg.data[i].id + 1;
                 carPoint.color = 0;
                 carPoint.point = Point2f((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
-            }
-            else if(msg.data[i].id == 5)
-            {
+            } else if (msg.data[i].id == 5) {
                 car_point carPoint;
                 carPoint.id = 7;
                 carPoint.color = 0;
                 carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
-            }
-            else if(msg.data[i].id == 12)
-            {
+            } else if (msg.data[i].id == 12) {
                 car_point carPoint;
-                if(pubCount == 0)
-                {
-                    carPoint.id = 6; 
+                if (pubCount == 0) {
+                    carPoint.id = 6;
+                } else if (pubCount == 1) {
+                    carPoint.id = 9;
+                } else if (pubCount == 2) {
+                    carPoint.id = 10;
+                } else if (pubCount == 3) {
+                    carPoint.id = 11;
                 }
-                else if(pubCount == 1)
-                {
-                    carPoint.id = 9; 
-                }
-                else if(pubCount == 2)
-                {
-                    carPoint.id = 10; 
-                }
-                else if(pubCount == 3)
-                {
-                    carPoint.id = 11; 
-                }
-                if(pubCount >= 3)
-                {
+                if (pubCount >= 3) {
                     pubCount = 0;
-                }
-                else 
-                {
+                } else {
                     pubCount++;
                 }
                 carPoint.color = 0;
@@ -432,53 +519,35 @@ void worldPointsCallback(const radar_msgs::points& msg)
                 worldPoints.insert(worldPoints.begin(), carPoint);
             }
         }
-    }
-    else
-    {
-        for(int i = 0; i < msg.data.size(); i++)
-        {
-            if(msg.data[i].id >= 6 || msg.data[i].id <= 10)
-            {
+    } else {
+        for (int i = 0; i < msg.data.size(); i++) {
+            if (msg.data[i].id >= 6 || msg.data[i].id <= 10) {
                 car_point carPoint;
                 carPoint.id = msg.data[i].id - 5;
                 carPoint.color = 1;
                 carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
-            }
-            else if(msg.data[i].id == 11)
-            {
+            } else if (msg.data[i].id == 11) {
                 car_point carPoint;
                 carPoint.id = 7;
                 carPoint.color = 1;
                 carPoint.point = Point((msg.data[i].x * 15.0), (msg.data[i].y * 28.0));
                 worldPoints.insert(worldPoints.begin(), carPoint);
-            }
-            else if(msg.data[i].id == 13)
-            {
+            } else if (msg.data[i].id == 13) {
                 car_point carPoint;
                 carPoint.id = 6;
-                if(pubCount == 0)
-                {
-                    carPoint.id = 6; 
+                if (pubCount == 0) {
+                    carPoint.id = 6;
+                } else if (pubCount == 1) {
+                    carPoint.id = 9;
+                } else if (pubCount == 2) {
+                    carPoint.id = 10;
+                } else if (pubCount == 3) {
+                    carPoint.id = 11;
                 }
-                else if(pubCount == 1)
-                {
-                    carPoint.id = 9; 
-                }
-                else if(pubCount == 2)
-                {
-                    carPoint.id = 10; 
-                }
-                else if(pubCount == 3)
-                {
-                    carPoint.id = 11; 
-                }
-                if(pubCount >= 3)
-                {
+                if (pubCount >= 3) {
                     pubCount = 0;
-                }
-                else 
-                {
+                } else {
                     pubCount++;
                 }
                 carPoint.color = 1;
@@ -489,23 +558,21 @@ void worldPointsCallback(const radar_msgs::points& msg)
     }
 }
 
-void GuardCallback(const radar_msgs::points &msg){
-    serial_port guard_serial;
-    uint8_t content[11];
-    content[0]=0xcc;
-    auto x=(int16_t)msg.data[0].x;
-    auto y=(int16_t)msg.data[0].y;
-    content[1]=x>>8;
-    content[2]=x;
-    content[3]=y>>8;
-    content[4]=y;
-    content[5]=0x0;
-    content[6]=0x0;
-    guard_serial.sendInteractiveMsgs(content,7);
+void GuardCallback(const radar_msgs::points &msg) {
+    //serial_port guard_serial;
+//    sp.robotInteractiveMsgs.data.content[0]=0xcc;
+//    auto x=(int16_t)msg.data[0].x;
+//    auto y=(int16_t)msg.data[0].y;
+//    sp.robotInteractiveMsgs.data.content[1]=x>>8;
+//    sp.robotInteractiveMsgs.data.content[2]=x;
+//    sp.robotInteractiveMsgs.data.content[3]=y>>8;
+//    sp.robotInteractiveMsgs.data.content[4]=y;
+//    sp.robotInteractiveMsgs.data.content[5]=0x0;
+//    sp.robotInteractiveMsgs.data.content[6]=0x0;
+    sp.robotInteractiveMsgs.data.content = 0xcc;
 }
 
-int main (int argc, char** argv)
-{
+int main(int argc, char **argv) {
     //初始化节点
     ros::init(argc, argv, "serial_port_node");
     //声明节点句柄
@@ -514,23 +581,17 @@ int main (int argc, char** argv)
     sp.gameStatePub = nh.advertise<radar_msgs::game_state>("game_state", 1);
     sp.supplyProjectileActionPub = nh.advertise<radar_msgs::supply_projectile_action>("supply_projectile_action", 1);
     sp.refereeWarningPub = nh.advertise<radar_msgs::referee_warning>("referee_warning", 1);
-    if(!sp.ser.isOpen())
-    {
+    if (!sp.ser.isOpen()) {
         ROS_ERROR_STREAM("Unable to open port, please check USB2TTL! ");
         return -1;
-    }
-    else
-    {
+    } else {
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
     string exchange;
     ros::param::get("battle_state/battle_color", exchange);
-    if(exchange == "red")
-    {
+    if (exchange == "red") {
         sp.is_enemy_red = false;
-    }
-    else
-    {
+    } else {
         sp.is_enemy_red = true;
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
@@ -538,40 +599,31 @@ int main (int argc, char** argv)
     ros::Rate loop(100);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
-    while(ros::ok())
-    {
+    while (ros::ok()) {
         count++;
-        if(count >= 10)
-        {
-            if(!worldPoints.empty())
-            {
-                if(worldPoints[0].color)
-                {
+        if (count >= 10) {
+            sp.sendInteractiveMsgs(3);
+//            sp.sendUIMsgs();
+            if (!worldPoints.empty()) {
+                if (worldPoints[0].color) {
                     sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                else
-                {
+                } else {
                     sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
                 }
                 worldPoints.erase(worldPoints.begin());
-            }
-            else
-            {
+            } else {
                 ros::spinOnce();
-                /*for(int i = 0; i < 10; i++)
-                {
+                for (int i = 0; i < 10; i++) {
                     car_point carPoint;
                     carPoint.point = Point2f(1.4 * i, 2.8 * i);
-                    if(i < 5)
-                    {
+                    carPoint.id = 6;
+                    if (i < 5) {
                         carPoint.color = true;
-                    }
-                    else
-                    {
+                    } else {
                         carPoint.color = false;
                     }
                     worldPoints.push_back(carPoint);
-                }*/
+                }
                 //测试用
             }
             count = 0;

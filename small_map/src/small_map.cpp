@@ -203,8 +203,15 @@ int main(int argc, char **argv) {
         if (!guard_relative.data.empty()) {
             GuardPub.publish(guard_relative);
         }
-        imshow("small_map", small_map_copy);
-        waitKey(1);
+        else  {
+            radar_msgs::point abc;
+            abc.x=30000;
+            abc.y=30000;
+            guard_relative.data.emplace_back(abc);
+            GuardPub.publish(guard_relative);
+        }
+//        imshow("small_map", small_map_copy);
+//        waitKey(1);
         loop_rate.sleep();
     }
     return 0;
