@@ -8,15 +8,19 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+    string battle_color;
     ros::init(argc, argv, "game_state_publisher_node");
     ros::NodeHandle n;
     ros::Publisher game_state_pub = n.advertise<radar_msgs::game_state>("/game_state", 1);
     ros::Publisher world_point_pub = n.advertise<radar_msgs::points>("/world_point", 1);
+    ros::Publisher referee_warning_pub = n.advertise<radar_msgs::referee_warning>("/referee_warning", 1);
+    ros::param::get("/battle_state/battle_color", battle_color);
     ros::Rate loop_rate(1);
     radar_msgs::game_state msg_game_state;
     radar_msgs::point one_point_msg;
+    radar_msgs::referee_warning referee_warning_msg;
 
-    int i = 10;
+    int i = 100;
     while(ros::ok)
     {
          radar_msgs::points world_points_msg;
@@ -40,6 +44,37 @@ int main(int argc, char **argv)
          msg_game_state.blue_outpose_HP = 0;
          msg_game_state.stage_remain_time = i--;
 
+         if(i <= 90 && i >= 75)
+         {
+             msg_game_state.dart_remaining_time = i - 75;
+         }
+         if(i <= 40 && i >= 25)
+         {
+             msg_game_state.dart_remaining_time = i - 25;
+         }
+         if(i == 10)
+         {
+             if(battle_color == string("blue"))
+             {
+                 referee_warning_msg.foul_robot_id = 101;
+                 referee_warning_msg.level = 2;
+             }
+             else
+             {
+                 referee_warning_msg.foul_robot_id = 1;
+                 referee_warning_msg.level = 2;
+             }
+             referee_warning_pub.publish(referee_warning_msg);
+         }
+         if(i == 1)
+         {
+             if(battle_color == string("blue"))
+             {
+                 referee_warning_msg.foul_robot_id = 0;
+                 referee_warning_msg.level = 3;
+             }
+             referee_warning_pub.publish(referee_warning_msg);
+         }
          one_point_msg.x = 0.1 * i;
          one_point_msg.y = 0.12 * i;
          one_point_msg.id = 0;
@@ -99,9 +134,10 @@ int main(int argc, char **argv)
          world_point_pub.publish(world_points_msg);
          if(i < 0)
          {
-             i = 10;
+             i = 100;
          }
          game_state_pub.publish(msg_game_state);
          loop_rate.sleep();
+
     }
 }
