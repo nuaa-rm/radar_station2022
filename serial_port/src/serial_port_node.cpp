@@ -41,7 +41,7 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint16_t cmd_id;
     uint16_t sender_id;
     uint16_t receiver_id;
-    uint8_t content[113];
+    uint8_t content[11];
 } __attribute__((packed));
 struct robot_interactive_msgs
 {
@@ -117,6 +117,14 @@ struct game_result_msg
     uint16_t cmd_id = 0x0002;
     game_result_data data;
     uint16_t crc;
+} __attribute__((packed));
+
+struct dart_interactivate_msg_data
+{
+    uint8_t dart_launch_opening_status; //fei biao fa she kou zhuang tai 1 guan bi 2 zheng zai huo dong 0 yi jing kai qi
+    uint8_t dart_attack_target; //飞镖的打击目标,默认为前哨站;0:前哨站; 1:基地。
+    uint16_t target_change_time; //切换打击目标时的比赛剩余时间,单位秒,从未切换默认为 0。
+    uint16_t operate_launch_cmd_time; //最近一次操作手确定发射指令时的比赛剩余时间,单位秒, 初始值为 0。
 } __attribute__((packed));
 
 struct site_event_data //1hz 接收
@@ -248,6 +256,7 @@ public:
         robotInteractiveMsgs.head.seq = 1;
         robotInteractiveMsgs.head.crc = get_CRC8_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs.head) - sizeof(robotInteractiveMsgs.head.crc)), 0xff);
         robotInteractiveMsgs.cmd_id = 0x0301;
+        robotInteractiveMsgs.data.cmd_id = 0x0210;
         if(is_enemy_red)
         {
             robotInteractiveMsgs.data.sender_id = 109;
@@ -258,7 +267,7 @@ public:
             robotInteractiveMsgs.data.sender_id = 9;
             robotInteractiveMsgs.data.receiver_id = receiver_id;
         }
-        memcpy(robotInteractiveMsgs.data.content,content,113);
+        memcpy(robotInteractiveMsgs.data.content,content,11);
         robotInteractiveMsgs.crc = get_CRC16_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs) - sizeof(robotInteractiveMsgs.crc)), 0xffff);
         ser.write((uint8_t* )&robotInteractiveMsgs, sizeof(robotInteractiveMsgs));
         cout << "Send one interactive msg " << endl;
@@ -278,12 +287,12 @@ public:
             supplyProjectileActionMsg = (*(supply_projectile_action_msg*)receiveData);
             refereeWarningMsg = (*(referee_warning_msg*)receiveData);
             dartRemainingTimeMsg = (*(dart_remaining_time_msg*)receiveData);
+
             gameStateRosMsg.dart_remaining_time = 16;
             gameStateRosMsg.winner = 3;
             if((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs.head) - sizeof(gameStatusMsgs.head.crc)), 0xff)) && (gameStatusMsgs.crc == get_CRC16_check_sum((uint8_t*)&gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)), 0xffff)))
             {
 
-                cout << gameStatusMsgs.data.game_progress << endl;
                 gameStateRosMsg.game_progress = gameStatusMsgs.data.game_progress;
                 gameStateRosMsg.game_type = gameStatusMsgs.data.game_type;
                 gameStateRosMsg.stage_remain_time = gameStatusMsgs.data.stage_remain_time;
@@ -480,7 +489,7 @@ void worldPointsCallback(const radar_msgs::points& msg)
 
 void GuardCallback(const radar_msgs::points &msg){
     serial_port guard_serial;
-    uint8_t content[113];
+    uint8_t content[11];
     content[0]=0xcc;
     auto x=(int16_t)msg.data[0].x;
     auto y=(int16_t)msg.data[0].y;
@@ -524,52 +533,52 @@ int main (int argc, char** argv)
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
-    ros::Rate loop(10);
+    ros::Rate loop(100);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
     while(ros::ok())
     {
         count++;
-//        if(count >= 100)
-//        {
-//            if(!worldPoints.empty())
-//            {
-//                if(worldPoints[0].color)
-//                {
-//                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-//                }
-//                else
-//                {
-//                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-//                }
-//                worldPoints.erase(worldPoints.begin());
-//            }
-//            else
-//            {
-//                ros::spinOnce();
-//                /*for(int i = 0; i < 10; i++)
-//                {
-//                    car_point carPoint;
-//                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
-//                    if(i < 5)
-//                    {
-//                        carPoint.color = true;
-//                    }
-//                    else
-//                    {
-//                        carPoint.color = false;
-//                    }
-//                    worldPoints.push_back(carPoint);
-//                }*/
-//                //测试用
-//            }
-//            count = 0;
-//        }
+        if(count >= 10)
+        {
+            if(!worldPoints.empty())
+            {
+                if(worldPoints[0].color)
+                {
+                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+                }
+                else
+                {
+                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+                }
+                worldPoints.erase(worldPoints.begin());
+            }
+            else
+            {
+                ros::spinOnce();
+                /*for(int i = 0; i < 10; i++)
+                {
+                    car_point carPoint;
+                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+                    if(i < 5)
+                    {
+                        carPoint.color = true;
+                    }
+                    else
+                    {
+                        carPoint.color = false;
+                    }
+                    worldPoints.push_back(carPoint);
+                }*/
+                //测试用
+            }
+            count = 0;
+        }
         ros::spinOnce();
 //        uint8_t test[113];
 //        memset(test,0x01,113);
 //        test[0]=0xcc;
-//        sp.receiveMsgs();
+        sp.receiveMsgs();
 //        sp.sendInteractiveMsgs(test, 7);
 //        sp.sendInteractiveMsgs(test, 1);
         //循环休眠
