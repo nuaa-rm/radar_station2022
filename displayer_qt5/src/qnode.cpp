@@ -71,9 +71,9 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
     {
         try
         {
-          cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
-          if(!cv_ptr->image.empty())
-          {
+            cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
+            if(!cv_ptr->image.empty())
+            {
               if(recorder_fps <= 1e-5)
               {
                   static ros::Time begin;
@@ -86,7 +86,6 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
                   {
                       end = ros::Time::now();
                       recorder_fps = 10 / (end - begin).toSec();
-                      std::cout << recorder_fps << std::endl;
                   }
                   i++;
               }
@@ -95,7 +94,6 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
                   int codec = cv::VideoWriter::fourcc('D', 'I', 'V', '3');
                   path += "/recorded.avi";
                   recorder.open(path, codec, recorder_fps, cv_ptr->image.size(), true);
-                  std::cout << path << std::endl;
                   i++;
               }
 
@@ -103,14 +101,12 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
               if(i < 100 && i > 11)
               {
                   recorder << imgShowSecondWindow;
-                  std::cout << i << std::endl;
                   i++;
               }
               else if(i == 100)
               {
                   recorder.release();
                   replayer.open(path);
-                  std::cout << "done" << std::endl;
                   i++;
               }
               else if(i == 101)
@@ -127,10 +123,9 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
                       i++;
                   }
               }
-
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
               imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
-          }
+            }
           Q_EMIT loggingCameraSecondWindow();
         }
         catch (cv_bridge::Exception& e)
@@ -758,6 +753,8 @@ void QNode::loadParams()
     robot_blueOutpose.hpMax = 1500;
     robot_blueOutpose.hpCurrent = 1500;
     recorder_fps = 0;
+
+    ifBeginToRecord = false;
 }
 
 }  // namespace displayer_qt5

@@ -182,6 +182,7 @@ private:
     ros::Subscriber supplyProjectileActionSub;
     ros::Subscriber refereeWarningSub;
     ros::Subscriber worldPointSub;
+    bool ifBeginToRecord;
 };
 
 }  // namespace displayer_qt5
