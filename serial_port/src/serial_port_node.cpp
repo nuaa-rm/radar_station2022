@@ -93,7 +93,7 @@ struct robot_health_msgs //1HZ
 
 struct game_status_data //1hz 接收
 {
-    uint8_t game_type : 4; //1：机架大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
+    uint8_t game_type : 4; //1：机甲大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
     uint8_t game_progress : 4; //0：未开始比赛 1：准备阶段 2：自检阶段 3：5s倒计时 4：对战中 5：比赛结算中
     uint16_t stage_remain_time = 0; //当前阶段剩余时间，单位s
     uint64_t SyncTimeStamp = 0; //机器人接收到该指令的精确Unix时间,当机载端收到有效的NTP服务器授时后生效
@@ -190,7 +190,7 @@ struct car_point
     Point2f point;
     bool color; //红色为0 蓝色为1
 };
-
+uint8_t warn_state;
 class serial_port
 {
 public:
@@ -256,8 +256,9 @@ public:
         else
         {
             robotInteractiveMsgs.data.sender_id = 9;
-            robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
+            robotInteractiveMsgs.data.receiver_id = receiver_id;
         }
+        memcpy(robotInteractiveMsgs.data.content,content,113);
         robotInteractiveMsgs.crc = get_CRC16_check_sum((uint8_t*)&robotInteractiveMsgs, (sizeof(robotInteractiveMsgs) - sizeof(robotInteractiveMsgs.crc)), 0xffff);
         ser.write((uint8_t* )&robotInteractiveMsgs, sizeof(robotInteractiveMsgs));
         cout << "Send one interactive msg " << endl;
@@ -366,6 +367,7 @@ vector<car_point>worldPoints;
 
 void worldPointsCallback(const radar_msgs::points& msg)
 {
+    warn_state=msg.id;
     static int pubCount = 0;
     if(sp.is_enemy_red)
     {
@@ -476,6 +478,21 @@ void worldPointsCallback(const radar_msgs::points& msg)
     }
 }
 
+void GuardCallback(const radar_msgs::points &msg){
+    serial_port guard_serial;
+    uint8_t content[113];
+    content[0]=0xcc;
+    auto x=(int16_t)msg.data[0].x;
+    auto y=(int16_t)msg.data[0].y;
+    content[1]=x>>8;
+    content[2]=x;
+    content[3]=y>>8;
+    content[4]=y;
+    content[5]=0x0;
+    content[6]=0x0;
+    guard_serial.sendInteractiveMsgs(content,7);
+}
+
 int main (int argc, char** argv)
 {
     //初始化节点
@@ -496,7 +513,7 @@ int main (int argc, char** argv)
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
     string exchange;
-    ros::param::get("battle_color", exchange);
+    ros::param::get("battle_state/battle_color", exchange);
     if(exchange == "red")
     {
         sp.is_enemy_red = false;
@@ -506,61 +523,55 @@ int main (int argc, char** argv)
         sp.is_enemy_red = true;
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
-    ros::Rate loop(1000);
+    ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
+    ros::Rate loop(10);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
     while(ros::ok())
     {
         count++;
-        if(count >= 100)
-        {
-            if(!worldPoints.empty())
-            {
-                if(worldPoints[0].color)
-                {
-                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                else
-                {
-                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                worldPoints.erase(worldPoints.begin());
-            }
-            else
-            {
-                ros::spinOnce();
-                if(worldPoints[0].color)
-                {
-                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                else
-                {
-                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                worldPoints.erase(worldPoints.begin());
-                
-                /*for(int i = 0; i < 10; i++)
-                {
-                    car_point carPoint;
-                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
-                    if(i < 5)
-                    {
-                        carPoint.color = true;
-                    }
-                    else
-                    {
-                        carPoint.color = false;
-                    }
-                    worldPoints.push_back(carPoint);
-                }*/
-                //测试用
-            }
-            count = 0;
-        }
-        uint8_t test[113] = {1};
-        sp.receiveMsgs();
-        sp.sendInteractiveMsgs(test, 7);
-        sp.sendInteractiveMsgs(test, 1);
+//        if(count >= 100)
+//        {
+//            if(!worldPoints.empty())
+//            {
+//                if(worldPoints[0].color)
+//                {
+//                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+//                }
+//                else
+//                {
+//                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+//                }
+//                worldPoints.erase(worldPoints.begin());
+//            }
+//            else
+//            {
+//                ros::spinOnce();
+//                /*for(int i = 0; i < 10; i++)
+//                {
+//                    car_point carPoint;
+//                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+//                    if(i < 5)
+//                    {
+//                        carPoint.color = true;
+//                    }
+//                    else
+//                    {
+//                        carPoint.color = false;
+//                    }
+//                    worldPoints.push_back(carPoint);
+//                }*/
+//                //测试用
+//            }
+//            count = 0;
+//        }
+        ros::spinOnce();
+//        uint8_t test[113];
+//        memset(test,0x01,113);
+//        test[0]=0xcc;
+//        sp.receiveMsgs();
+//        sp.sendInteractiveMsgs(test, 7);
+//        sp.sendInteractiveMsgs(test, 1);
         //循环休眠
         loop.sleep();
     }

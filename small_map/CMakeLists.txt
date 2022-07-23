@@ -13,11 +13,13 @@ find_package(OpenCV 4 REQUIRED)
 catkin_package(
 
 )
+
 include_directories(
         ${catkin_INCLUDE_DIRS}
         "${CATKIN_DEVEL_PREFIX}/include"
+#        "/usr/include/opencv2"
 )
-
+message("include dirs:${catkin_INCLUDE_DIRS}")
 add_compile_options(-std=c++17)
 add_executable(${PROJECT_NAME}
         src/small_map.cpp

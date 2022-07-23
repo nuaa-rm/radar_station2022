@@ -6,7 +6,7 @@
 #include <ros/ros.h>
 
 #include <signal.h>
- 
+extern int cam_cnt;
 void MySigintHandler(int sig)
 {
 	//这里主要进行退出前的数据保存、内存清理、告知其他节点等工作
@@ -39,12 +39,27 @@ int MVCamera::Init(int id)
     printf("CAMERA SDK INIT...\n");
     CameraSdkInit(1);
     printf("DONE\n");
-
     printf("ENUM CAMERA DEVICES...\n");
-    //枚举设备，并建立设备列表
+    int cam_id;
+    //枚举设备，并建立设备列表CameraEnumerateDevice
     tSdkCameraDevInfo tCameraEnumList[4];
     CameraEnumerateDevice(tCameraEnumList,&iCameraCounts);
+    string ns=ros::this_node::getNamespace();
+    string name_space;
+    if(ns=="/sensor_far")name_space="FARCAM";
+    if(ns=="/sensor_close")name_space="CLOSECAM";
+    if(tCameraEnumList[0].acFriendlyName==name_space){
+        id=0;
+
+    }
+    if(tCameraEnumList[1].acFriendlyName==name_space){
+        id=1;
+    }
+    cam_cnt=iCameraCounts;
+//    if(iCameraCounts>0)cout<<tCameraEnumList[0].acFriendlyName<<endl;
     //没有连接设备
+
+    cout<<"ns:"<<ns<<endl;
     if(iCameraCounts==0){
         printf("ERROR: NO CAMERA CONNECTED.\n");
         return -1;
@@ -57,7 +72,7 @@ int MVCamera::Init(int id)
     printf("DONE\n");
 
     //相机初始化。初始化成功后，才能调用任何其他相机相关的操作接口
-    iStatus = CameraInit(&(tCameraEnumList[id]),-1,-1,&hCamera);
+    iStatus = CameraInit(&(tCameraEnumList[id]),PARAM_MODE_BY_NAME,-1,&hCamera);
     //初始化失败
     if (iStatus!=CAMERA_STATUS_SUCCESS) {
         printf("ERROR: CAMERA INIT FAILED.\n");
@@ -67,12 +82,14 @@ int MVCamera::Init(int id)
     }
 
     //设置色温模式
-    //  iStatus = CameraSetPresetClrTemp(hCamera, 1);
-    //	if (iStatus == CAMERA_STATUS_SUCCESS) {
-    //    printf("CAMERA SETPRESETCLRTEMP SUCCESS!\n");
-    //	} else {
-    //    printf("CAMERA SETPRESETCLRTEMP FAILED! ERROR CODE: %d\n", iStatus);
-    //	}
+//      if(id==0) {
+//          iStatus = CameraSetPresetClrTemp(hCamera, 0);
+//          if (iStatus == CAMERA_STATUS_SUCCESS) {
+//              printf("CAMERA SETPRESETCLRTEMP SUCCESS!\n");
+//          } else {
+//              printf("CAMERA SETPRESETCLRTEMP FAILED! ERROR CODE: %d\n", iStatus);
+//          }
+//      }
 
     //  iStatus = CameraSetClrTempMode(hCamera, 1);
     //	if (iStatus == CAMERA_STATUS_SUCCESS) {
@@ -83,7 +100,7 @@ int MVCamera::Init(int id)
 
     //获得相机的特性描述结构体。该结构体中包含了相机可设置的各种参数的范围信息。决定了相关函数的参数
 //    CameraGetCapability(hCamera,&tCapability);
-//    CameraPlay(hCamera);
+    CameraPlay(hCamera);
 
     //设置输出为彩色
     channel = 3;
@@ -93,6 +110,7 @@ int MVCamera::Init(int id)
     g_pRgbBuffer[0] = (unsigned char*)malloc(tCapability.sResolutionRange.iHeightMax*tCapability.sResolutionRange.iWidthMax*3);
     g_pRgbBuffer[1] = (unsigned char*)malloc(tCapability.sResolutionRange.iHeightMax*tCapability.sResolutionRange.iWidthMax*3);
     started=1;
+    return true;
 }
 
 int MVCamera::Uninit()

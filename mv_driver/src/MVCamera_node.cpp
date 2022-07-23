@@ -5,8 +5,6 @@ using namespace std;
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
-#include <sstream>
-#include <iostream>
 #include "opencv2/opencv.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -14,6 +12,7 @@ using namespace std;
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include "video_saver.h"
+#include <CameraStatus.h>
 #define FARCAM 0
 #define CLOSECAM 1
 using namespace std;
@@ -21,8 +20,8 @@ using namespace cv;
 
 MVCamera *mv_driver=NULL;
 Size dist_size=Size(640,512);
-
 ros::Time imgTime;
+int cam_cnt;//the number of cameras connected
 
 class MVCamNode
 {
@@ -32,6 +31,9 @@ public:
     int deviceID=0;
     int count=0;
     bool flag=true;
+    int init_suc;
+    char cam_name[32]={'0','0','0','0','0','0','0'};
+    char far_or_close;
     // shared image message
     Mat rawImg;
     sensor_msgs::ImagePtr msg;
@@ -40,22 +42,22 @@ public:
     ros::Subscriber is_large_sub;
     ros::Subscriber is_rcd_sub;
 
-    int image_width_, image_height_, framerate_, exposure_=2400, brightness_, contrast_, saturation_, sharpness_, focus_,
+    int image_width_, image_height_, framerate_, exposure_=24000, brightness_, contrast_, saturation_, sharpness_, focus_,
     white_balance_, gain_,fps_mode=1;
-    bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=1, auto_white_balance_=1;
+    bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=0, auto_white_balance_=0;
     string rcd_path_;
     VideoSaver saver;
+
     MVCamNode():
         node_()
     {
+
         image_transport::ImageTransport it(node_);
-        cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
+        cfg_exp_sub=node_.subscribe("exp_time",1,&MVCamNode::get_exp,this);
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
-        ros::param::get("/battle_state/exp_time", exposure_);
-        image_pub_ = it.advertise("image_raw", 1);
-
+        ros::param::get("exp_time", exposure_);
         node_.param("image_width", image_width_, 640);
         if(large_resolution_)
         {
@@ -66,31 +68,19 @@ public:
         {
             node_.param("image_height", image_height_, 480);
             node_.param("framerate", framerate_, 30);
-
-
         }
         node_.param("/framerate", framerate_, 360);
         node_.getParam("/is_record", is_record_);
         string project_path(PROJECT_PATH);
-        if(deviceID == FARCAM)
-        {
-            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_far";
-        }
-        else if(deviceID == CLOSECAM)
-        {
-            rcd_path_ = std::string(PROJECT_PATH) + "/sensor_close";
-        }
         node_.getParam("/battle_state/fps_mode", fps_mode);
         //init camera param
         mv_driver=new MVCamera;
-
-        mv_driver->Init(deviceID);
+        init_suc=mv_driver->Init(deviceID);
+        image_pub_ = it.advertise("image_raw", 1);
         mv_driver->SetExposureTime(autoexposure_, exposure_);
         mv_driver->SetLargeResolution(large_resolution_);
         mv_driver->Set_fps(fps_mode);
         mv_driver->Play();
-
-
     }
     ~MVCamNode()
     {
@@ -98,7 +88,8 @@ public:
         mv_driver->Uninit();
     }
     ///
-    /// \brief get_exp
+    /// \brief get_expCLOSECAM!!!!
+
     /// get exposure time
     /// \param exp_time
     ///
@@ -160,11 +151,10 @@ public:
             resize(rawImg,rawImg,dist_size);
 
         std_msgs::Header imgHead;
-
         //DoveJH：用于在订阅者节点区分两个相机。
-        if(deviceID == FARCAM)
-        {
-            imgHead.frame_id = "sensor_far";
+//        if(far_or_close == 'F')
+//        {
+//            imgHead.frame_id = "sensor_far";
 //            imshow("far_img",rawImg);
 //            int k = waitKey(30);
 //            if(k == 'f' && !rawImg.empty())
@@ -176,10 +166,10 @@ public:
 //                cv::imwrite(ss.str(),rawImg);
 //                count++;
 //            }
-        }
-        else if(deviceID == CLOSECAM)
-        {
-            imgHead.frame_id = "sensor_close";
+//        }
+//        else if(far_or_close == 'C')
+//        {
+//            imgHead.frame_id = "sensor_close";
 //            imshow("close_img",rawImg);
 //            int k = waitKey(30);
 //            if(k == 'c' && !rawImg.empty())
@@ -191,7 +181,7 @@ public:
 //                cv::imwrite(ss.str(),rawImg);
 //                count++;
 //            }
-        }
+//        }
         imgHead.stamp=imgTime;
         msg= cv_bridge::CvImage(imgHead, "bgr8", rawImg).toImageMsg();
         // publish the image
@@ -207,12 +197,34 @@ public:
         while (node_.ok())
         {
             imgTime=ros::Time::now();
-            if (!mv_driver->stopped) {
-                if (!take_and_send_image()) ROS_WARN("MVcamera did not respond in time.");
+            if(cam_cnt==0){
+                ROS_WARN("No camera connected!");
+                ROS_WARN("No camera connected!");
+                ROS_WARN("No camera connected!");
+                ROS_WARN("No camera connected!");
+                return false;
+            }
+            else if(init_suc==-1&&cam_cnt==1){
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                ROS_WARN("Two cameras, but only 1 connected!");
+                return false;
+            }
+            else if(init_suc==true&&cam_cnt==1){
+                if (!take_and_send_image()) {
+                    ROS_WARN("MVcamera did not respond in time.");
+                    return false;
+                }
+            }
+            else if (init_suc==true&&cam_cnt==2) {
+                if (!take_and_send_image()) {
+                    ROS_WARN("MVcamera did not respond in time.");
+                    return false;
+                }
             }
             ros::spinOnce();
             loop_rate.sleep();
-
         }
         return true;
     }
@@ -225,12 +237,12 @@ public:
 int main(int argc, char **argv)
 {
     ros::init(argc,argv,"MVcamera_node");
-
     MVCamNode mv_node;
-
-
-    mv_node.spin();
-    return EXIT_SUCCESS;
+    int spin_suc=mv_node.spin();
+    if(spin_suc==false)
+    {
+        return EXIT_SUCCESS;
+    }
 
 
 }
