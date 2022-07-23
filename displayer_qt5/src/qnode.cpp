@@ -96,21 +96,19 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
                   recorder.open(path, codec, recorder_fps, cv_ptr->image.size(), true);
                   i++;
               }
-
               imgShowSecondWindow = cv_ptr->image;
-              if(i < 100 && i > 11)
+              if(ifBeginToRecord)
               {
                   recorder << imgShowSecondWindow;
-                  i++;
               }
-              else if(i == 100)
+              if(ifBeginToReplay)
               {
-                  recorder.release();
-                  replayer.open(path);
-                  i++;
-              }
-              else if(i == 101)
-              {
+                  if(ifReplayDone)
+                  {
+                      recorder.release();
+                      replayer.open(path);
+                      ifReplayDone = false;
+                  }
                   cv::Mat m;
                   replayer >> m;
                   if(!m.empty())
@@ -120,7 +118,8 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
                   }
                   else
                   {
-                      i++;
+                      ifReplayDone = true;
+                      ifBeginToReplay = false;
                   }
               }
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
@@ -476,6 +475,15 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
         gameProgress = "比赛结算";
     }
 
+    if(msg->dart_remaining_time != 16 && msg->dart_remaining_time != 0)
+    {
+        ifBeginToRecord = true;
+    }
+    else
+    {
+        ifBeginToRecord = false;
+        ifBeginToReplay = true;
+    }
     stageRemainTime = msg->stage_remain_time;
     Q_EMIT loggingGameStateUpdate();
 }
@@ -755,6 +763,8 @@ void QNode::loadParams()
     recorder_fps = 0;
 
     ifBeginToRecord = false;
+    ifBeginToReplay = false;
+    ifReplayDone = true;
 }
 
 }  // namespace displayer_qt5

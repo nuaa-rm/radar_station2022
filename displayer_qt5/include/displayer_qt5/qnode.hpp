@@ -183,6 +183,8 @@ private:
     ros::Subscriber refereeWarningSub;
     ros::Subscriber worldPointSub;
     bool ifBeginToRecord;
+    bool ifBeginToReplay;
+    bool ifReplayDone;
 };
 
 }  // namespace displayer_qt5
