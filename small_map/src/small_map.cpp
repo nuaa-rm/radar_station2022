@@ -206,8 +206,8 @@ int main(int argc, char **argv) {
         if (!guard_relative.data.empty()) {
             GuardPub.publish(guard_relative);
             Point2f ab;
-            ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450-X_shift;
-            ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840-Y_shift;
+            ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
+            ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840 - Y_shift;
             circle(small_map_copy, ab, 10,
                    Scalar(255, 255, 255), -1, LINE_8, 0);
         } else {
@@ -356,7 +356,7 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
                                                          calculate_pixel_codi(car),
                                                          false) > 0) {
                 relative_coordinates.data.push_back(calculate_relative_codi(our_guard, car, 0));
-                if (pointPolygonTest(our_warn_regions[i],calculate_pixel_codi(car),false) > 0) {
+                if (pointPolygonTest(our_warn_regions[i], calculate_pixel_codi(car), false) > 0) {
                     warn_region_state |= (0x01 << (i + 5));
                     drawContours(image, our_warn_regions, i, light_green, -1);
                 }
