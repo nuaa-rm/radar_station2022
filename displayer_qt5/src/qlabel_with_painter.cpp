@@ -186,4 +186,5 @@ void QLabel_with_painter::drawSmallMap(std::vector<world_point>& wp)
 void QLabel_with_painter::drawROI(unsigned short* input)
 {
     roiWarnState = *input;
+
 }

@@ -494,8 +494,7 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
     {
         gameProgress = "比赛结算";
     }
-
-    if(msg->dart_remaining_time <= 15 && msg->dart_remaining_time > 0)
+    if(msg->dart_remaining_time <= 15 && msg->dart_remaining_time > 1)
     {
         ifBeginToRecord = true;
         ifReplayDone = false;
@@ -503,15 +502,25 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
         {
             log(Info, std::string("我方飞镖闸门成功开启！"));
         }
+        log(Info, std::string("飞镖闸门关闭倒计时：！") + std::to_string(msg->dart_remaining_time));
     }
-    else if(msg->dart_remaining_time <= 0)
+    else if(msg->dart_remaining_time <= 1)
     {
         ifRecordDone = true;
         ifBeginToRecord = false;
         ifBeginToReplay = true;
         ifReplayDone = false;
+        dart_first_close_time = msg->stage_remain_time;
     }
     stageRemainTime = msg->stage_remain_time;
+    if(stageRemainTime >= 385 && stageRemainTime <= 390)
+    {
+        log(Error, std::string("请及时击发飞镖！"));
+    }
+    if((dart_first_close_time - stageRemainTime) >= 21 && (dart_first_close_time - stageRemainTime) <= 26)
+    {
+        log(Error, std::string("飞镖冷却结束，请及时击发飞镖！"));
+    }
     Q_EMIT loggingGameStateUpdate();
 }
 
@@ -522,7 +531,33 @@ void QNode::supplyProjectileActionCallback(const radar_msgs::supply_projectile_a
 
 void QNode::refereeWarningCallback(const radar_msgs::referee_warningConstPtr &msg)
 {
+    if(msg->foul_robot_id == 0)
+    {
+        log(Fatal, std::string("我方被判负！比赛结束。"));
+    }
+    else if(msg->foul_robot_id >= 100)
+    {
+        if(msg->level == 1)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id - 100) + std::string("号被裁判给黄牌！"));
+        }
+        else if(msg->level == 2)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id - 100) + std::string("号被裁判罚下！"));
+        }
 
+    }
+    else
+    {
+        if(msg->level == 1)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id) + std::string("号被裁判给黄牌！"));
+        }
+        else if(msg->level == 2)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id) + std::string("号被裁判罚下！"));
+        }
+    }
 }
 
 void QNode::pubCelibrateResult()
@@ -563,7 +598,7 @@ void QNode::worldPointCallback(const radar_msgs::points &msg)
         wp.id = msg.data[i].id;
         worldPoints.push_back(wp);
     }
-    memcpy(roiWarnState, msg.text.c_str(), 2);
+    memcpy(&roiWarnState, msg.text.c_str(), 2);
     Q_EMIT loggingSmallMapUpdate();
 }
 
