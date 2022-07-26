@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
     image_transport
     sensor_msgs
     std_msgs
-    OpenCV
     )
+find_package(OpenCV 4 REQUIRED)
 find_package(Qt5 REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Widgets)
 include_directories(
@@ -66,12 +66,11 @@ file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINK
 ##############################################################################
 
 add_executable(displayer_qt5 ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-target_link_libraries(displayer_qt5 ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(displayer_qt5 ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 install(TARGETS displayer_qt5 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 target_link_libraries(displayer_qt5
     /usr/lib/x86_64-linux-gnu/libtiff.so.5
-
     /usr/lib/x86_64-linux-gnu/libsqlite3.so.0
     )
 message(STATUS "OpenCV_INCLUDE_DIRS ?" : ${OpenCV_INCLUDE_DIRS})
