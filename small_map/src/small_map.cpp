@@ -11,11 +11,6 @@
 using namespace std;
 using namespace cv;
 cv::Mat img;
-
-double Ky_right = 0.41;
-double C_right = 550.0;
-double Ky_left = -0.507;
-double C_left = -200.53;//x+Ky_left*y-C_left;
 int field_width = 28, field_height = 15;
 double imgCols = 1280.0, imgRows = 1024.0;
 ros::Publisher worldPointPub;
@@ -61,6 +56,9 @@ vector<Point> enemy_dafu = {Point(80, 282), Point(80, 231), Point(34, 231), Poin
 vector<Point> enemy_outpost = {Point(36, 282), Point(36, 395), Point(133, 395), Point(133, 282)};
 vector<Point> enemy_hero_hide = {Point(417, 333), Point(417, 445), Point(450, 445), Point(450, 333)};
 vector<Point> enemy_R3 = {Point(450, 268), Point(450, 135), Point(293, 135), Point(293, 186), Point(419, 268)};
+vector<Point> guard_forbidden_zone{Point(160, 647), Point(160, 705), Point(287, 705), Point(287, 647)};
+vector<Point> guidao_houbian{Point(0, 676), Point(0, 840), Point(450, 840), Point(450, 676)};
+uint8_t in_our_base_cnt;
 vector<vector<Point>> our_warn_regions;
 vector<vector<Point>> enemy_warn_regions;
 uint16_t warn_region_state = 0x0000;
@@ -204,12 +202,27 @@ int main(int argc, char **argv) {
             worldPointPub.publish(result_points);
         }
         if (!guard_relative.data.empty()) {
-            GuardPub.publish(guard_relative);
             Point2f ab;
             ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
             ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840 - Y_shift;
-            circle(small_map_copy, ab, 10,
-                   Scalar(255, 255, 255), -1, LINE_8, 0);
+            cout<<(int)in_our_base_cnt<<endl;
+            if(pointPolygonTest(guidao_houbian, ab, false)>=0)
+            {
+                in_our_base_cnt++;
+                if(in_our_base_cnt>10){
+                    in_our_base_cnt=10;
+                    GuardPub.publish(guard_relative);
+                }
+                circle(small_map_copy, ab, 10,Scalar(255, 255, 255), -1, LINE_8, 0);
+            }
+            else if (pointPolygonTest(guard_forbidden_zone, ab, false)<=0) {
+                in_our_base_cnt=0;
+                GuardPub.publish(guard_relative);
+                circle(small_map_copy, ab, 10,Scalar(255, 255, 255), -1, LINE_8, 0);
+            }
+            else {
+                circle(small_map_copy, ab, 10,Scalar(0, 255, 255), -1, LINE_8, 0);
+            }
         } else {
             radar_msgs::point abc;
             abc.x = 30000;
@@ -367,7 +380,7 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
     double dist;
     uint8_t position = 0;
     for (int i = 0; i < relative_coordinates.data.size(); i++) {
-        dist = Point2PointDist(relative_coordinates.data[i], our_guard);
+        dist = Point2PointDist(relative_coordinates.data[i], Point3f(0, 0, 0));
         if (dist < nearest) {
             nearest = dist;
             position = (uint8_t) i;
@@ -387,6 +400,7 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
                     if (i == 4 && car.id == 6) {
                         guard_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 1));//敌方英雄到达敌方公路区，可能会打前哨站
+
                     } else if (i == 2 && car.id != 7 && guard_relative.data.empty()) {
                         guard_relative.data.emplace_back(
                                 calculate_relative_codi(our_guard, car, 2));//敌方车辆到达敌方前哨站(工程除外)

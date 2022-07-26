@@ -41,7 +41,7 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint16_t cmd_id;
     uint16_t sender_id;
     uint16_t receiver_id;
-    uint8_t content[7];
+    uint8_t content[13];
 } __attribute__((packed));
 
 struct graphic_data_struct_t
@@ -587,15 +587,18 @@ void worldPointsCallback(const radar_msgs::points &msg) {
 
 void GuardCallback(const radar_msgs::points &msg) {
     sp.robotInteractiveMsgs.data.content[0]=0xcc;
-    auto x=(int16_t)msg.data[0].x;
-    auto y=(int16_t)msg.data[0].y;
-    auto z=(int16_t)msg.data[0].z;
-    sp.robotInteractiveMsgs.data.content[1]=x;
-    sp.robotInteractiveMsgs.data.content[2]=x>>8;
-    sp.robotInteractiveMsgs.data.content[3]=y;
-    sp.robotInteractiveMsgs.data.content[4]=y>>8;
-    sp.robotInteractiveMsgs.data.content[5]=z;
-    sp.robotInteractiveMsgs.data.content[6]=z>>8;
+    sp.robotInteractiveMsgs.data.content[1]=(int16_t)msg.data[0].x;
+    sp.robotInteractiveMsgs.data.content[2]=(int16_t)msg.data[0].x>>8;
+    sp.robotInteractiveMsgs.data.content[3]=(int16_t)msg.data[0].y;
+    sp.robotInteractiveMsgs.data.content[4]=(int16_t)msg.data[0].y>>8;
+    sp.robotInteractiveMsgs.data.content[5]=(int16_t)msg.data[0].z;
+    sp.robotInteractiveMsgs.data.content[6]=(int16_t)msg.data[0].z>>8;
+    sp.robotInteractiveMsgs.data.content[7]=(int16_t)msg.data[1].x;
+    sp.robotInteractiveMsgs.data.content[8]=(int16_t)msg.data[1].x>>8;
+    sp.robotInteractiveMsgs.data.content[9]=(int16_t)msg.data[1].y;
+    sp.robotInteractiveMsgs.data.content[10]=(int16_t)msg.data[1].y>>8;
+    sp.robotInteractiveMsgs.data.content[11]=(int16_t)msg.data[1].z;
+    sp.robotInteractiveMsgs.data.content[12]=(int16_t)msg.data[1].z>>8;
 }
 
 int main(int argc, char **argv) {
@@ -629,32 +632,30 @@ int main(int argc, char **argv) {
         count++;
         if (count >= 10) {
             sp.sendInteractiveMsgs(7);
-//            sp.sendCtrlMsgs();
-//            if (!worldPoints.empty()) {
-//                if (worldPoints[0].color) {
-//                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-//                } else {
-//                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-//                }
-//                worldPoints.erase(worldPoints.begin());
-//            } else {
-//                ros::spinOnce();
-//                for (int i = 0; i < 10; i++) {
-//                    car_point carPoint;
-//                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
-//                    carPoint.id = 6;
-//                    if (i < 5) {
-//                        carPoint.color = true;
-//                    } else {
-//                        carPoint.color = false;
-//                    }
-//                    worldPoints.push_back(carPoint);
-//                }
-//                //测试用
-//            }
+            if (!worldPoints.empty()) {
+                if (worldPoints[0].color) {
+                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+                } else {
+                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+                }
+                worldPoints.erase(worldPoints.begin());
+            } else {
+                ros::spinOnce();
+                for (int i = 0; i < 10; i++) {
+                    car_point carPoint;
+                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+                    carPoint.id = 6;
+                    if (i < 5) {
+                        carPoint.color = true;
+                    } else {
+                        carPoint.color = false;
+                    }
+                    worldPoints.push_back(carPoint);
+                }
+                //测试用
+            }
             count = 0;
         }
-
         sp.receiveMsgs();
         ros::spinOnce();
         //循环休眠
