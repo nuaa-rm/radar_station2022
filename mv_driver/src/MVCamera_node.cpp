@@ -53,7 +53,7 @@ public:
     {
 
         image_transport::ImageTransport it(node_);
-        cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
+        cfg_exp_sub=node_.subscribe("exp_time",1,&MVCamNode::get_exp,this);
         //is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
