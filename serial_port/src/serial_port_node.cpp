@@ -41,7 +41,7 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint16_t cmd_id;
     uint16_t sender_id;
     uint16_t receiver_id;
-    uint8_t content;
+    uint8_t content[7];
 } __attribute__((packed));
 
 struct graphic_data_struct_t
@@ -301,7 +301,7 @@ public:
                                                            (sizeof(robotInteractiveMsgs.head) -
                                                             sizeof(robotInteractiveMsgs.head.crc)), 0xff);
         robotInteractiveMsgs.cmd_id = 0x0301;
-        robotInteractiveMsgs.data.cmd_id = 0x0210;
+        robotInteractiveMsgs.data.cmd_id = 0x0201;
         if (is_enemy_red) {
             robotInteractiveMsgs.data.sender_id = 109;
             robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
@@ -401,7 +401,6 @@ public:
                 gameStateRosMsg.red_7_robot_HP = robotHealthMsgs.data.red_7_robot_HP;
                 gameStateRosMsg.red_base_HP = robotHealthMsgs.data.red_base_HP;
                 gameStateRosMsg.red_outpose_HP = robotHealthMsgs.data.red_outpose_HP;
-//                std::cout << "receive hp msg" << std::endl;
                 if_pub = true;
             }
             if ((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t *) &gameResultMsg, (sizeof(gameResultMsg.head) -
@@ -559,17 +558,16 @@ void worldPointsCallback(const radar_msgs::points &msg) {
 }
 
 void GuardCallback(const radar_msgs::points &msg) {
-    //serial_port guard_serial;
-//    sp.robotInteractiveMsgs.data.content[0]=0xcc;
-//    auto x=(int16_t)msg.data[0].x;
-//    auto y=(int16_t)msg.data[0].y;
-//    sp.robotInteractiveMsgs.data.content[1]=x>>8;
-//    sp.robotInteractiveMsgs.data.content[2]=x;
-//    sp.robotInteractiveMsgs.data.content[3]=y>>8;
-//    sp.robotInteractiveMsgs.data.content[4]=y;
-//    sp.robotInteractiveMsgs.data.content[5]=0x0;
-//    sp.robotInteractiveMsgs.data.content[6]=0x0;
-    sp.robotInteractiveMsgs.data.content = 0xcc;
+    sp.robotInteractiveMsgs.data.content[0]=0xcc;
+    auto x=(int16_t)msg.data[0].x;
+    auto y=(int16_t)msg.data[0].y;
+    auto z=(int16_t)msg.data[0].z;
+    sp.robotInteractiveMsgs.data.content[1]=x;
+    sp.robotInteractiveMsgs.data.content[2]=x>>8;
+    sp.robotInteractiveMsgs.data.content[3]=y;
+    sp.robotInteractiveMsgs.data.content[4]=y>>8;
+    sp.robotInteractiveMsgs.data.content[5]=z;
+    sp.robotInteractiveMsgs.data.content[6]=z>>8;
 }
 
 int main(int argc, char **argv) {
@@ -602,30 +600,29 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         count++;
         if (count >= 10) {
-            sp.sendInteractiveMsgs(3);
-//            sp.sendUIMsgs();
-            if (!worldPoints.empty()) {
-                if (worldPoints[0].color) {
-                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                } else {
-                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
-                }
-                worldPoints.erase(worldPoints.begin());
-            } else {
-                ros::spinOnce();
-                for (int i = 0; i < 10; i++) {
-                    car_point carPoint;
-                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
-                    carPoint.id = 6;
-                    if (i < 5) {
-                        carPoint.color = true;
-                    } else {
-                        carPoint.color = false;
-                    }
-                    worldPoints.push_back(carPoint);
-                }
-                //测试用
-            }
+            sp.sendInteractiveMsgs(7);
+//            if (!worldPoints.empty()) {
+//                if (worldPoints[0].color) {
+//                    sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+//                } else {
+//                    sp.sendMapMsgs(worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
+//                }
+//                worldPoints.erase(worldPoints.begin());
+//            } else {
+//                ros::spinOnce();
+//                for (int i = 0; i < 10; i++) {
+//                    car_point carPoint;
+//                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+//                    carPoint.id = 6;
+//                    if (i < 5) {
+//                        carPoint.color = true;
+//                    } else {
+//                        carPoint.color = false;
+//                    }
+//                    worldPoints.push_back(carPoint);
+//                }
+//                //测试用
+//            }
             count = 0;
         }
 

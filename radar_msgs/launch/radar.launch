@@ -30,12 +30,12 @@
 <!--     <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml"> -->
 <!--     </include> -->
 <!--   </group> -->
-  <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far" />
-  <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close" />
-  <node name="livox_lidar_publisher"
-          pkg="livox_ros_driver"
-          type="livox_ros_driver_node" required="true"
-          output="screen" args="$(arg cmdline_arg)"/>
+<!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far" /> -->
+<!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close" /> -->
+<!--   <node name="livox_lidar_publisher" -->
+<!--           pkg="livox_ros_driver" -->
+<!--           type="livox_ros_driver_node" required="true" -->
+<!--           output="screen" args="$(arg cmdline_arg)"/> -->
 
   <node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" respawn="true"/>
   <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/>
