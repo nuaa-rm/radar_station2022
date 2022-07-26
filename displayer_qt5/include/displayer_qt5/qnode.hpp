@@ -155,6 +155,7 @@ public:
     cv::VideoWriter recorder;
     cv::VideoCapture replayer;
     double recorder_fps;
+    unsigned char roiWarnState[2];
 
 Q_SIGNALS:
     void loggingUpdated();

@@ -563,6 +563,7 @@ void QNode::worldPointCallback(const radar_msgs::points &msg)
         wp.id = msg.data[i].id;
         worldPoints.push_back(wp);
     }
+    memcpy(roiWarnState, msg.text.c_str(), 2);
     Q_EMIT loggingSmallMapUpdate();
 }
 

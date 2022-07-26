@@ -505,6 +505,7 @@ void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
 void displayer_qt5::MainWindow::updateSmallMap()
 {
     ui.labelSmallMap->drawSmallMap(qnode.worldPoints);
+    ui.labelSmallMap->drawROI((unsigned short *)qnode.roiWarnState);
 }
 
 void displayer_qt5::MainWindow::on_timer_timeout()

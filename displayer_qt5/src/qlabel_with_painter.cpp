@@ -19,19 +19,53 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
         brush.setStyle(Qt::Dense7Pattern);
         brush.setColor(Qt::red);
         painter.setBrush(brush);
-        painter.drawPolygon(placeRB1_te, 4);
-        painter.drawPolygon(placeRB2_te, 7);
-        painter.drawPolygon(placeRB3_te, 5);
-        painter.drawPolygon(placeOutpose_te, 4);
-        painter.drawPolygon(placeLeap_te, 4);
-        painter.drawPolygon(placeHitWindMill_te, 4);
+        if(roiWarnState & 0x01)
+        {
+            painter.drawPolygon(placeLeap_en, 4);
+        }
+        if(roiWarnState & 0x02)
+        {
+            painter.drawPolygon(placeHitWindMill_en, 4);
+        }
+        if(roiWarnState & 0x04)
+        {
+            painter.drawPolygon(placeOutpose_en, 4);
+        }
+        if(roiWarnState & 0x08)
+        {
+            painter.drawPolygon(placeRB1_en, 4);
+        }
+        if(roiWarnState & 16)
+        {
+            painter.drawPolygon(placeRB3_en, 5);
+        }
+        if(roiWarnState & 32)
+        {
+            painter.drawPolygon(placeRB1_te, 4);
+        }
+        if(roiWarnState & 64)
+        {
+            painter.drawPolygon(placeRB2_te, 7);
+        }
+        if(roiWarnState & 128)
+        {
+            painter.drawPolygon(placeRB3_te, 5);
+        }
+        if(roiWarnState & 256)
+        {
+            painter.drawPolygon(placeHitWindMill_te, 4);
+        }
+        if(roiWarnState & 512)
+        {
+            painter.drawPolygon(placeLeap_te, 4);
+        }
+        if(roiWarnState & 1024)
+        {
+            painter.drawPolygon(placeOutpose_te, 4);
+        }
 
-        painter.drawPolygon(placeRB1_en, 4);
-        painter.drawPolygon(placeRB2_en, 7);
-        painter.drawPolygon(placeRB3_en, 5);
-        painter.drawPolygon(placeOutpose_en, 4);
-        painter.drawPolygon(placeLeap_en, 4);
-        painter.drawPolygon(placeHitWindMill_en, 4);
+        //painter.drawPolygon(placeRB2_en, 7);
+
     }
     brush.setStyle(Qt::SolidPattern);
     for(size_t i = 0; i < worldPoints.size(); i++)
@@ -137,6 +171,8 @@ QLabel_with_painter::QLabel_with_painter(QWidget *parent) : QLabel{parent}
     placeHitWindMill_en[3] = QPoint(64, 185);
 
     tim = false;
+
+    roiWarnState = 0x00;
 }
 
 void QLabel_with_painter::drawSmallMap(std::vector<world_point>& wp)
@@ -147,4 +183,9 @@ void QLabel_with_painter::drawSmallMap(std::vector<world_point>& wp)
         worldPoints.push_back(wp[i]);
     }
     update();
+}
+
+void QLabel_with_painter::drawROI(unsigned short* input)
+{
+    roiWarnState = *input;
 }
