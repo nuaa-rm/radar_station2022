@@ -95,7 +95,6 @@ public:
     QImage imageShowSecondWindow;
     QListWidgetItem *listWidgetItem;
     log_information *logInformation;
-    QString one_log;
 	void log( const LogLevel &level, const std::string &msg);
     void loadParams();
     QString sensorFarImgRaw;
