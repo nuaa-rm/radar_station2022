@@ -155,6 +155,7 @@ public:
     cv::VideoWriter recorder;
     cv::VideoCapture replayer;
     double recorder_fps;
+    unsigned short roiWarnState;
 
 Q_SIGNALS:
     void loggingUpdated();
@@ -183,8 +184,10 @@ private:
     ros::Subscriber refereeWarningSub;
     ros::Subscriber worldPointSub;
     bool ifBeginToRecord;
+    bool ifRecordDone;
     bool ifBeginToReplay;
     bool ifReplayDone;
+    int dart_first_close_time;
 };
 
 }  // namespace displayer_qt5

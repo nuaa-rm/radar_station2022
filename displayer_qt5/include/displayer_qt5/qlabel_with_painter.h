@@ -28,9 +28,11 @@ private:
     QPoint placeHitWindMill_en[4];
     QPoint placeOutpose_en[4];
     std::vector<world_point> worldPoints;
+    unsigned short roiWarnState;
 public:
     explicit QLabel_with_painter(QWidget *parent = nullptr);
     void drawSmallMap(std::vector<world_point>& );
+    void drawROI(unsigned short* );
     bool tim;
 private slots:
 };

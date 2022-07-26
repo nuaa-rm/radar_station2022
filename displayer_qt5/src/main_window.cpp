@@ -505,6 +505,55 @@ void displayer_qt5::MainWindow::on_pushButtonCalibrate_clicked()
 void displayer_qt5::MainWindow::updateSmallMap()
 {
     ui.labelSmallMap->drawSmallMap(qnode.worldPoints);
+    unsigned short i = qnode.roiWarnState;
+    ui.labelSmallMap->drawROI(&i);
+    if(i)
+    {
+        if(i & 0x01)
+        {
+            qnode.log(Fatal, std::string("敌方飞坡！敌方飞坡！敌方飞坡！"));
+        }
+        if(i & 0x02)
+        {
+            qnode.log(Warn, std::string("敌方登上能量机关激活点。"));
+        }
+        if(i & 0x04)
+        {
+            //qnode.log(Info, std::string("敌方登上能量机关激活点。"));
+        }
+        if(i & 0x08)
+        {
+            qnode.log(Warn, std::string("敌方位于英雄快乐点。"));
+        }
+        if(i & 16)
+        {
+            qnode.log(Warn, std::string("敌方位于狙击点。"));
+        }
+        if(i & 32)
+        {
+            qnode.log(Error, std::string("敌方位于我方公路区。"));
+        }
+        if(i & 64)
+        {
+            qnode.log(Fatal, std::string("敌方位于我方环高，注意保护哨兵。"));
+        }
+        if(i & 128)
+        {
+            qnode.log(Error, std::string("敌方位于我方狙击点。"));
+        }
+        if(i & 256)
+        {
+            qnode.log(Error, std::string("敌方位于我方能量机关激活点。"));
+        }
+        if(i & 512)
+        {
+            qnode.log(Error, std::string("敌方位于我方飞坡点。"));
+        }
+        if(i & 1024)
+        {
+            qnode.log(Error, std::string("敌方位于我方前哨站处。"));
+        }
+    }
 }
 
 void displayer_qt5::MainWindow::on_timer_timeout()

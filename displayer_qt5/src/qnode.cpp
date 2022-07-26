@@ -99,29 +99,49 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
               imgShowSecondWindow = cv_ptr->image;
               if(ifBeginToRecord)
               {
+                  ifRecordDone = false;
                   recorder << imgShowSecondWindow;
               }
+              if(ifRecordDone)
+              {
+                  recorder.release();
+                  replayer.open(path);
+                  log(Info, std::string("我方飞镖闸门关闭，开始回放！"));
+              }
+              static int i = 0;
               if(ifBeginToReplay)
               {
-                  if(ifReplayDone)
-                  {
-                      recorder.release();
-                      replayer.open(path);
-                      ifReplayDone = false;
-                  }
+                  ifRecordDone = false;
                   cv::Mat m;
                   replayer >> m;
                   if(!m.empty())
                   {
                       cv::Rect re(0, 0, m.cols / 2, m.rows / 2);
                       m(re).copyTo(imgShowSecondWindow);
+
                   }
                   else
                   {
-                      ifReplayDone = true;
-                      ifBeginToReplay = false;
+                      if(i == 2)
+                      {
+                          ifReplayDone = true;
+                          ifBeginToReplay = false;
+                          i = 0;
+                          log(Info, std::string("第3次回放结束！"));
+                      }
+                      else
+                      {
+                          i++;
+                          replayer.open(path);
+                          log(Info, std::string("第") + std::to_string(i) + std::string("次回放结束！"));
+                      }
                   }
               }
+              if(ifReplayDone)
+              {
+                  replayer.release();
+              }
+
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
               imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
             }
@@ -474,17 +494,33 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
     {
         gameProgress = "比赛结算";
     }
-
-    if(msg->dart_remaining_time != 16 && msg->dart_remaining_time != 0)
+    if(msg->dart_remaining_time <= 15 && msg->dart_remaining_time > 1)
     {
         ifBeginToRecord = true;
+        ifReplayDone = false;
+        if(msg->dart_remaining_time == 15)
+        {
+            log(Info, std::string("我方飞镖闸门成功开启！"));
+        }
+        log(Info, std::string("飞镖闸门关闭倒计时：！") + std::to_string(msg->dart_remaining_time));
     }
-    else
+    else if(msg->dart_remaining_time <= 1)
     {
+        ifRecordDone = true;
         ifBeginToRecord = false;
         ifBeginToReplay = true;
+        ifReplayDone = false;
+        dart_first_close_time = msg->stage_remain_time;
     }
     stageRemainTime = msg->stage_remain_time;
+    if(stageRemainTime >= 385 && stageRemainTime <= 390)
+    {
+        log(Error, std::string("请及时击发飞镖！"));
+    }
+    if((dart_first_close_time - stageRemainTime) >= 21 && (dart_first_close_time - stageRemainTime) <= 26)
+    {
+        log(Error, std::string("飞镖冷却结束，请及时击发飞镖！"));
+    }
     Q_EMIT loggingGameStateUpdate();
 }
 
@@ -495,7 +531,33 @@ void QNode::supplyProjectileActionCallback(const radar_msgs::supply_projectile_a
 
 void QNode::refereeWarningCallback(const radar_msgs::referee_warningConstPtr &msg)
 {
+    if(msg->foul_robot_id == 0)
+    {
+        log(Fatal, std::string("我方被判负！比赛结束。"));
+    }
+    else if(msg->foul_robot_id >= 100)
+    {
+        if(msg->level == 1)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id - 100) + std::string("号被裁判给黄牌！"));
+        }
+        else if(msg->level == 2)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id - 100) + std::string("号被裁判罚下！"));
+        }
 
+    }
+    else
+    {
+        if(msg->level == 1)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id) + std::string("号被裁判给黄牌！"));
+        }
+        else if(msg->level == 2)
+        {
+            log(Fatal, std::string("我方") + std::to_string(msg->foul_robot_id) + std::string("号被裁判罚下！"));
+        }
+    }
 }
 
 void QNode::pubCelibrateResult()
@@ -536,6 +598,7 @@ void QNode::worldPointCallback(const radar_msgs::points &msg)
         wp.id = msg.data[i].id;
         worldPoints.push_back(wp);
     }
+    memcpy(&roiWarnState, msg.text.c_str(), 2);
     Q_EMIT loggingSmallMapUpdate();
 }
 
@@ -569,7 +632,7 @@ bool QNode::init()
 void QNode::run()
 {
 
-    log(Info,"Running!");
+    log(Debug,std::string("程序开始！"));
     ros::spin();
     std::cout << "Ros shutdown" << std::endl;
     Q_EMIT rosShutdown();
@@ -614,40 +677,55 @@ void QNode::log( const LogLevel &level, const std::string &msg) {
 void QNode::loadParams()
 {
     std::string str;
+    sensorFarImgRaw = "/sensor_far/image_raw";
     ros::param::get("/camera/list/farCam/topic", str);
     sensorFarImgRaw = QString(str.c_str());
+    sensorCloseImgRaw = "/sensor_close/image_raw";
     ros::param::get("/camera/list/closeCam/topic", str);
     sensorCloseImgRaw = QString(str.c_str());
 
+    calibrateRate = 3;
     ros::param::get("/calibrate/rate", calibrateRate);
 
+    realsenseImgRaw = "/camera/color/image_raw";
     ros::param::get("/camera/list/realsense/topic", str);
     realsenseImgRaw = QString(str.c_str());
 
+    calibrationTopicSensorFar = "/sensor_far/calibration";
     ros::param::get("/camera/list/farCam/calibrationTopic", str);
     calibrationTopicSensorFar = QString(str.c_str());
+    calibrationTopicSensorClose = "/sensor_close/calibration";
     ros::param::get("/camera/list/closeCam/calibrationTopic", str);
     calibrationTopicSensorClose = QString(str.c_str());
 
+    gameStateTopic = "/game_state";
     ros::param::get("/judgeSystem/gameStateTopic", gameStateTopic);
 
+    supplyProjectileActionTopic = "/supply_projectile_action";
     ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
 
+    secondWindowTopic = "/sensor_far/image_raw";
     ros::param::get("/game/secondWindowTopic", secondWindowTopic);
 
+    worldPointTopic = "/world_point";
     ros::param::get("/minimap/subscribeTopic", worldPointTopic);
 
+    ifRecord = false;
     ros::param::get("/game/record/ifRecord", ifRecord);
 
+    recordPath = "/home/dovejh/project/radar_station/recorder.avi";
     ros::param::get("/game/record/recordPath", recordPath);
 
+    refereeWarningTopic = "/referee_warning";
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 
     battle_color = "blue";
     ros::param::get("/battle_state/battle_color", battle_color);
 
+    rawImageWidth = 1280;
     ros::param::get("/calibrate/rawImageWidth", rawImageWidth);
 
+    rawImageHeight = 1024;
     ros::param::get("/calibrate/rawImageHeight", rawImageHeight);
 
     smallMapWidth = 360;
@@ -656,24 +734,27 @@ void QNode::loadParams()
     std::string ad(PROJECT_PATH);
     if(battle_color == std::string("red"))
     {
-        ad += "/resources/images/blue_minimap.png";
+        ad += "/resources/images/red_minimap.png";
     }
     else if(battle_color == std::string("blue"))
     {
-        ad += "/resources/images/red_minimap.png";
+        ad += "/resources/images/blue_minimap.png";
     }
     imgSmallMap = cv::imread(ad);
-
+    cv::cvtColor(imgSmallMap, imgSmallMap, CV_BGR2RGB);
     cv::resize(imgSmallMap, imgSmallMap, cv::Size(smallMapWidth, smallMapHeight));
     imageSmallMap = QImage(imgSmallMap.data,imgSmallMap.cols,imgSmallMap.rows,imgSmallMap.step[0],QImage::Format_RGB888);
 
     logoHeight = 448;
     logoWidth = 222;
     ad = std::string(PROJECT_PATH);
-    ad += "/resources/images/radar_logo.jpg";
+    ad += "/resources/images/radar_logo.png";
     imgLogo = cv::imread(ad);
-    cv::resize(imgLogo, imgLogo, cv::Size(logoWidth, logoHeight));
-    imageLogo = QImage(imgLogo.data,imgLogo.cols,imgLogo.rows,imgLogo.step[0],QImage::Format_RGB888);
+    cv::cvtColor(imgLogo, imgLogo, CV_BGR2RGB);
+    imageLogo.load(ad.c_str());
+    imageLogo = imageLogo.scaled(logoWidth, logoHeight, Qt::KeepAspectRatio);
+    //cv::resize(imgLogo, imgLogo, cv::Size(logoWidth, logoHeight));
+    //imageLogo = QImage(imgLogo.data,imgLogo.cols,imgLogo.rows,imgLogo.step[0],QImage::Format_RGB888);
 
     calibrateMainWindowWidth = 1256;
     calibrateMainWindowHeight = 1005;
@@ -692,7 +773,7 @@ void QNode::loadParams()
 
     if_is_celibrating = false;
 
-    float x, y;
+    float x = 0, y = 0;
     QPoint point;
     ros::param::get("/camera/list/farCam/calibrationDefault/point1/x", x);
     ros::param::get("/camera/list/farCam/calibrationDefault/point1/y", y);
@@ -764,7 +845,8 @@ void QNode::loadParams()
 
     ifBeginToRecord = false;
     ifBeginToReplay = false;
-    ifReplayDone = true;
+    ifReplayDone = false;
+    ifRecordDone = false;
 }
 
 }  // namespace displayer_qt5
