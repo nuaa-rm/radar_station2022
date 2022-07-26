@@ -95,6 +95,7 @@ public:
     QImage imageShowSecondWindow;
     QListWidgetItem *listWidgetItem;
     log_information *logInformation;
+    QString one_log;
 	void log( const LogLevel &level, const std::string &msg);
     void loadParams();
     QString sensorFarImgRaw;
@@ -183,6 +184,7 @@ private:
     ros::Subscriber refereeWarningSub;
     ros::Subscriber worldPointSub;
     bool ifBeginToRecord;
+    bool ifRecordDone;
     bool ifBeginToReplay;
     bool ifReplayDone;
 };

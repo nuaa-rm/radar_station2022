@@ -99,29 +99,49 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
               imgShowSecondWindow = cv_ptr->image;
               if(ifBeginToRecord)
               {
+                  ifRecordDone = false;
                   recorder << imgShowSecondWindow;
               }
+              if(ifRecordDone)
+              {
+                  recorder.release();
+                  replayer.open(path);
+                  log(Info, std::string("我方飞镖闸门关闭，开始回放！"));
+              }
+              static int i = 0;
               if(ifBeginToReplay)
               {
-                  if(ifReplayDone)
-                  {
-                      recorder.release();
-                      replayer.open(path);
-                      ifReplayDone = false;
-                  }
+                  ifRecordDone = false;
                   cv::Mat m;
                   replayer >> m;
                   if(!m.empty())
                   {
                       cv::Rect re(0, 0, m.cols / 2, m.rows / 2);
                       m(re).copyTo(imgShowSecondWindow);
+
                   }
                   else
                   {
-                      ifReplayDone = true;
-                      ifBeginToReplay = false;
+                      if(i == 2)
+                      {
+                          ifReplayDone = true;
+                          ifBeginToReplay = false;
+                          i = 0;
+                          log(Info, std::string("第3次回放结束！"));
+                      }
+                      else
+                      {
+                          i++;
+                          replayer.open(path);
+                          log(Info, std::string("第") + std::to_string(i) + std::string("次回放结束！"));
+                      }
                   }
               }
+              if(ifReplayDone)
+              {
+                  replayer.release();
+              }
+
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
               imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
             }
@@ -475,14 +495,21 @@ void QNode::gameStateCallback(const radar_msgs::game_stateConstPtr &msg)
         gameProgress = "比赛结算";
     }
 
-    if(msg->dart_remaining_time != 16 && msg->dart_remaining_time != 0)
+    if(msg->dart_remaining_time <= 15 && msg->dart_remaining_time > 0)
     {
         ifBeginToRecord = true;
+        ifReplayDone = false;
+        if(msg->dart_remaining_time == 15)
+        {
+            log(Info, std::string("我方飞镖闸门成功开启！"));
+        }
     }
-    else
+    else if(msg->dart_remaining_time <= 0)
     {
+        ifRecordDone = true;
         ifBeginToRecord = false;
         ifBeginToReplay = true;
+        ifReplayDone = false;
     }
     stageRemainTime = msg->stage_remain_time;
     Q_EMIT loggingGameStateUpdate();
@@ -656,24 +683,27 @@ void QNode::loadParams()
     std::string ad(PROJECT_PATH);
     if(battle_color == std::string("red"))
     {
-        ad += "/resources/images/blue_minimap.png";
+        ad += "/resources/images/red_minimap.png";
     }
     else if(battle_color == std::string("blue"))
     {
-        ad += "/resources/images/red_minimap.png";
+        ad += "/resources/images/blue_minimap.png";
     }
     imgSmallMap = cv::imread(ad);
-
+    cv::cvtColor(imgSmallMap, imgSmallMap, CV_BGR2RGB);
     cv::resize(imgSmallMap, imgSmallMap, cv::Size(smallMapWidth, smallMapHeight));
     imageSmallMap = QImage(imgSmallMap.data,imgSmallMap.cols,imgSmallMap.rows,imgSmallMap.step[0],QImage::Format_RGB888);
 
     logoHeight = 448;
     logoWidth = 222;
     ad = std::string(PROJECT_PATH);
-    ad += "/resources/images/radar_logo.jpg";
+    ad += "/resources/images/radar_logo.png";
     imgLogo = cv::imread(ad);
-    cv::resize(imgLogo, imgLogo, cv::Size(logoWidth, logoHeight));
-    imageLogo = QImage(imgLogo.data,imgLogo.cols,imgLogo.rows,imgLogo.step[0],QImage::Format_RGB888);
+    cv::cvtColor(imgLogo, imgLogo, CV_BGR2RGB);
+    imageLogo.load(ad.c_str());
+    imageLogo = imageLogo.scaled(logoWidth, logoHeight, Qt::KeepAspectRatio);
+    //cv::resize(imgLogo, imgLogo, cv::Size(logoWidth, logoHeight));
+    //imageLogo = QImage(imgLogo.data,imgLogo.cols,imgLogo.rows,imgLogo.step[0],QImage::Format_RGB888);
 
     calibrateMainWindowWidth = 1256;
     calibrateMainWindowHeight = 1005;
@@ -764,7 +794,8 @@ void QNode::loadParams()
 
     ifBeginToRecord = false;
     ifBeginToReplay = false;
-    ifReplayDone = true;
+    ifReplayDone = false;
+    ifRecordDone = false;
 }
 
 }  // namespace displayer_qt5

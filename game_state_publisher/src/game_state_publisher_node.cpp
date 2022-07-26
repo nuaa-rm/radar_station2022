@@ -44,6 +44,7 @@ int main(int argc, char **argv)
          msg_game_state.blue_outpose_HP = 0;
          msg_game_state.stage_remain_time = i--;
 
+         msg_game_state.dart_remaining_time = 16;
          if(i <= 90 && i >= 75)
          {
              msg_game_state.dart_remaining_time = i - 75;
@@ -52,6 +53,7 @@ int main(int argc, char **argv)
          {
              msg_game_state.dart_remaining_time = i - 25;
          }
+
          if(i == 10)
          {
              if(battle_color == string("blue"))
