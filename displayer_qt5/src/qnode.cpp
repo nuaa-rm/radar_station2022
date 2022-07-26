@@ -597,7 +597,7 @@ bool QNode::init()
 void QNode::run()
 {
 
-    log(Info,"Running!");
+    log(Debug,std::string("程序开始！"));
     ros::spin();
     std::cout << "Ros shutdown" << std::endl;
     Q_EMIT rosShutdown();
@@ -642,40 +642,55 @@ void QNode::log( const LogLevel &level, const std::string &msg) {
 void QNode::loadParams()
 {
     std::string str;
+    sensorFarImgRaw = "/sensor_far/image_raw";
     ros::param::get("/camera/list/farCam/topic", str);
     sensorFarImgRaw = QString(str.c_str());
+    sensorCloseImgRaw = "/sensor_close/image_raw";
     ros::param::get("/camera/list/closeCam/topic", str);
     sensorCloseImgRaw = QString(str.c_str());
 
+    calibrateRate = 3;
     ros::param::get("/calibrate/rate", calibrateRate);
 
+    realsenseImgRaw = "/camera/color/image_raw";
     ros::param::get("/camera/list/realsense/topic", str);
     realsenseImgRaw = QString(str.c_str());
 
+    calibrationTopicSensorFar = "/sensor_far/calibration";
     ros::param::get("/camera/list/farCam/calibrationTopic", str);
     calibrationTopicSensorFar = QString(str.c_str());
+    calibrationTopicSensorClose = "/sensor_close/calibration";
     ros::param::get("/camera/list/closeCam/calibrationTopic", str);
     calibrationTopicSensorClose = QString(str.c_str());
 
+    gameStateTopic = "/game_state";
     ros::param::get("/judgeSystem/gameStateTopic", gameStateTopic);
 
+    supplyProjectileActionTopic = "/supply_projectile_action";
     ros::param::get("/judgeSystem/supplyProjectileActionTopic", supplyProjectileActionTopic);
 
+    secondWindowTopic = "/sensor_far/image_raw";
     ros::param::get("/game/secondWindowTopic", secondWindowTopic);
 
+    worldPointTopic = "/world_point";
     ros::param::get("/minimap/subscribeTopic", worldPointTopic);
 
+    ifRecord = false;
     ros::param::get("/game/record/ifRecord", ifRecord);
 
+    recordPath = "/home/dovejh/project/radar_station/recorder.avi";
     ros::param::get("/game/record/recordPath", recordPath);
 
+    refereeWarningTopic = "/referee_warning";
     ros::param::get("/judgeSystem/refereeWarningTopic", refereeWarningTopic);
 
     battle_color = "blue";
     ros::param::get("/battle_state/battle_color", battle_color);
 
+    rawImageWidth = 1280;
     ros::param::get("/calibrate/rawImageWidth", rawImageWidth);
 
+    rawImageHeight = 1024;
     ros::param::get("/calibrate/rawImageHeight", rawImageHeight);
 
     smallMapWidth = 360;
@@ -723,7 +738,7 @@ void QNode::loadParams()
 
     if_is_celibrating = false;
 
-    float x, y;
+    float x = 0, y = 0;
     QPoint point;
     ros::param::get("/camera/list/farCam/calibrationDefault/point1/x", x);
     ros::param::get("/camera/list/farCam/calibrationDefault/point1/y", y);

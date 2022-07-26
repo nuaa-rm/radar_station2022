@@ -43,11 +43,11 @@ calibrate:
 judgeSystem:
   gameStateTopic: "/game_state"
   supplyProjectileActionTopic: "/supply_projectile_action"
-  refereeWarningTopic: "referee_warning"
+  refereeWarningTopic: "/referee_warning"
 minimap:
   subscribeTopic: "/world_point"
 game:
   secondWindowTopic: "/sensor_far/image_raw"
   record:
-    ifRecord: True
+    ifRecord: False
     recordPath: "/home/dovejh/project/radar_station/recorder.avi"

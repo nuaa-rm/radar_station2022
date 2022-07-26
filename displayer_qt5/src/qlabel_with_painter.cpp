@@ -63,9 +63,7 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
         {
             painter.drawPolygon(placeOutpose_te, 4);
         }
-
         //painter.drawPolygon(placeRB2_en, 7);
-
     }
     brush.setStyle(Qt::SolidPattern);
     for(size_t i = 0; i < worldPoints.size(); i++)
