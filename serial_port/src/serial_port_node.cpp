@@ -41,7 +41,7 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint16_t cmd_id;
     uint16_t sender_id;
     uint16_t receiver_id;
-    uint8_t content;
+    uint8_t content[13];
 } __attribute__((packed));
 
 struct graphic_data_struct_t
@@ -245,6 +245,7 @@ public:
     client_ui_msgs ui_Msgs;
     client_ui_delete_msgs ui_delete_Msgs;
     robot_interactive_msgs robotInteractiveMsgs;
+    robot_interactive_msgs HeroMsgs;
     robot_interactive_control_msgs robotInteractiveControlMsgs;
     robot_health_msgs robotHealthMsgs;
     game_result_msg gameResultMsg;
@@ -301,7 +302,7 @@ public:
                                                            (sizeof(robotInteractiveMsgs.head) -
                                                             sizeof(robotInteractiveMsgs.head.crc)), 0xff);
         robotInteractiveMsgs.cmd_id = 0x0301;
-        robotInteractiveMsgs.data.cmd_id = 0x0210;
+        robotInteractiveMsgs.data.cmd_id = 0x0201;
         if (is_enemy_red) {
             robotInteractiveMsgs.data.sender_id = 109;
             robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
@@ -318,28 +319,55 @@ public:
         std::cout << robotInteractiveMsgs.data.receiver_id << std::endl;
         return true;
     }
-
-    bool sendUIMsgs() {
+    bool sendHeroMsgs(){
         //构造头
-        ui_delete_Msgs.head.SOF = 0xA5;
-        ui_delete_Msgs.head.data_length = sizeof(robot_interactive_data);
-        ui_delete_Msgs.head.seq = 1;
-        ui_delete_Msgs.head.crc = get_CRC8_check_sum((uint8_t *) &robotInteractiveMsgs,
-                                                           (sizeof(robotInteractiveMsgs.head) -
-                                                            sizeof(robotInteractiveMsgs.head.crc)), 0xff);
-        ui_delete_Msgs.cmd_id = 0x0301;
-        ui_delete_Msgs.data.cmd_id = 0x0100;
-        ui_delete_Msgs.data.sender_id = 4;
-        ui_delete_Msgs.data.receiver_id = 0x0104;
-        ui_delete_Msgs.data.data.layer=0;
-        ui_delete_Msgs.data.data.operate_tpye=1;
-        cout << ui_delete_Msgs.data.sender_id << ui_delete_Msgs.data.receiver_id << endl;
-        ui_delete_Msgs.crc = get_CRC16_check_sum((uint8_t *) &ui_delete_Msgs,
-                                                       (sizeof(ui_delete_Msgs) -
-                                                        sizeof(ui_delete_Msgs.crc)), 0xffff);
-        ser.write((uint8_t *) &ui_delete_Msgs, sizeof(ui_delete_Msgs));
-        cout << "Send one ui_delete_Msgs msg " << endl;
-        std::cout << ui_delete_Msgs.data.receiver_id << std::endl;
+        HeroMsgs.head.SOF = 0xA5;
+        HeroMsgs.head.data_length = sizeof(robot_interactive_data);
+        HeroMsgs.head.seq = 1;
+        HeroMsgs.head.crc = get_CRC8_check_sum((uint8_t *) &HeroMsgs,
+                                                           (sizeof(HeroMsgs.head) -
+                                                            sizeof(HeroMsgs.head.crc)), 0xff);
+        HeroMsgs.cmd_id = 0x0301;
+        HeroMsgs.data.cmd_id = 0x0202;
+        if (is_enemy_red) {
+            HeroMsgs.data.sender_id = 109;
+            HeroMsgs.data.receiver_id = 100 + 1;
+        } else {
+            HeroMsgs.data.sender_id = 9;
+            HeroMsgs.data.receiver_id = 1;
+        }
+        cout << HeroMsgs.data.sender_id << HeroMsgs.data.receiver_id << endl;
+        HeroMsgs.crc = get_CRC16_check_sum((uint8_t *) &HeroMsgs,
+                                                       (sizeof(HeroMsgs) -
+                                                        sizeof(HeroMsgs.crc)), 0xffff);
+        ser.write((uint8_t *) &HeroMsgs, sizeof(HeroMsgs));
+        cout << "Send one Hero msg " << endl;
+        std::cout << HeroMsgs.data.receiver_id << std::endl;
+        return true;
+    }
+    bool sendCtrlMsgs() {
+        //构造头
+        robotInteractiveControlMsgs.head.SOF = 0xA5;
+        robotInteractiveControlMsgs.head.data_length = sizeof(robot_interactive_control_data);
+        robotInteractiveControlMsgs.head.seq = robotInteractiveControlMsgs.head.seq+1;
+        robotInteractiveControlMsgs.head.crc = get_CRC8_check_sum((uint8_t *) &robotInteractiveControlMsgs,
+                                                           (sizeof(robotInteractiveControlMsgs.head) -
+                                                            sizeof(robotInteractiveControlMsgs.head.crc)), 0xff);
+        robotInteractiveControlMsgs.data.content[0]=0x00;
+        robotInteractiveControlMsgs.data.content[1]=0x01;
+        robotInteractiveControlMsgs.data.content[2]=0x02;
+        robotInteractiveControlMsgs.data.content[3]=0x03;
+        robotInteractiveControlMsgs.data.content[4]=0x04;
+        robotInteractiveControlMsgs.data.content[5]=0x05;
+        robotInteractiveControlMsgs.data.content[6]=0x06;
+        robotInteractiveControlMsgs.data.content[7]=0x07;
+        robotInteractiveControlMsgs.data.content[8]=0x08;
+        robotInteractiveControlMsgs.crc = get_CRC16_check_sum((uint8_t *) &robotInteractiveControlMsgs,
+                                                       (sizeof(robotInteractiveControlMsgs) -
+                                                        sizeof(robotInteractiveControlMsgs.crc)), 0xffff);
+        ser.write((uint8_t *) &robotInteractiveControlMsgs, sizeof(robotInteractiveControlMsgs));
+        cout << "Send one robot ControlMsgs msg " << endl;
+        cout << robotInteractiveControlMsgs.data.content[0] <<  endl;
         return true;
     }
 
@@ -401,7 +429,6 @@ public:
                 gameStateRosMsg.red_7_robot_HP = robotHealthMsgs.data.red_7_robot_HP;
                 gameStateRosMsg.red_base_HP = robotHealthMsgs.data.red_base_HP;
                 gameStateRosMsg.red_outpose_HP = robotHealthMsgs.data.red_outpose_HP;
-//                std::cout << "receive hp msg" << std::endl;
                 if_pub = true;
             }
             if ((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t *) &gameResultMsg, (sizeof(gameResultMsg.head) -
@@ -559,17 +586,19 @@ void worldPointsCallback(const radar_msgs::points &msg) {
 }
 
 void GuardCallback(const radar_msgs::points &msg) {
-    //serial_port guard_serial;
-//    sp.robotInteractiveMsgs.data.content[0]=0xcc;
-//    auto x=(int16_t)msg.data[0].x;
-//    auto y=(int16_t)msg.data[0].y;
-//    sp.robotInteractiveMsgs.data.content[1]=x>>8;
-//    sp.robotInteractiveMsgs.data.content[2]=x;
-//    sp.robotInteractiveMsgs.data.content[3]=y>>8;
-//    sp.robotInteractiveMsgs.data.content[4]=y;
-//    sp.robotInteractiveMsgs.data.content[5]=0x0;
-//    sp.robotInteractiveMsgs.data.content[6]=0x0;
-    sp.robotInteractiveMsgs.data.content = 0xcc;
+    sp.robotInteractiveMsgs.data.content[0]=0xcc;
+    sp.robotInteractiveMsgs.data.content[1]=(int16_t)msg.data[0].x;
+    sp.robotInteractiveMsgs.data.content[2]=(int16_t)msg.data[0].x>>8;
+    sp.robotInteractiveMsgs.data.content[3]=(int16_t)msg.data[0].y;
+    sp.robotInteractiveMsgs.data.content[4]=(int16_t)msg.data[0].y>>8;
+    sp.robotInteractiveMsgs.data.content[5]=(int16_t)msg.data[0].z;
+    sp.robotInteractiveMsgs.data.content[6]=(int16_t)msg.data[0].z>>8;
+    sp.robotInteractiveMsgs.data.content[7]=(int16_t)msg.data[1].x;
+    sp.robotInteractiveMsgs.data.content[8]=(int16_t)msg.data[1].x>>8;
+    sp.robotInteractiveMsgs.data.content[9]=(int16_t)msg.data[1].y;
+    sp.robotInteractiveMsgs.data.content[10]=(int16_t)msg.data[1].y>>8;
+    sp.robotInteractiveMsgs.data.content[11]=(int16_t)msg.data[1].z;
+    sp.robotInteractiveMsgs.data.content[12]=(int16_t)msg.data[1].z>>8;
 }
 
 int main(int argc, char **argv) {
@@ -602,8 +631,7 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         count++;
         if (count >= 10) {
-            sp.sendInteractiveMsgs(3);
-//            sp.sendUIMsgs();
+            sp.sendInteractiveMsgs(7);
             if (!worldPoints.empty()) {
                 if (worldPoints[0].color) {
                     sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
@@ -628,14 +656,8 @@ int main(int argc, char **argv) {
             }
             count = 0;
         }
-
-//        uint8_t test[113];
-//        memset(test,0x01,113);
-//        test[0]=0xcc;
         sp.receiveMsgs();
         ros::spinOnce();
-//        sp.sendInteractiveMsgs(test, 7);
-//        sp.sendInteractiveMsgs(test, 1);
         //循环休眠
         loop.sleep();
     }
