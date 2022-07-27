@@ -5,7 +5,6 @@
 #include <radar_msgs/points.h>
 #include <radar_msgs/point.h>
 #include <radar_msgs/dist_points.h>
-#include <radar_msgs/world_point.h>
 #include <bitset>
 
 using namespace std;
@@ -15,8 +14,9 @@ int field_width = 28, field_height = 15;
 double imgCols = 1280.0, imgRows = 1024.0;
 ros::Publisher worldPointPub;
 ros::Publisher GuardPub;
+ros::Publisher HeroPub;
 int red_or_blue = 0;//0 is red, 1 is blue
-
+int outpost_calc_flag = 0;
 vector<cv::Point3d> far_objectPoints(4);
 vector<cv::Point2d> far_imagePoints(4);
 cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
@@ -39,8 +39,12 @@ radar_msgs::points close_points;
 radar_msgs::points result_points;
 radar_msgs::points relative_coordinates;
 radar_msgs::points guard_relative;
+radar_msgs::dist_point outpost_dist;
 Point3f our_guard;
 Point3f enemy_guard;
+Point3f our_hero;
+Point2f outpost_2d_armour;
+Point3f outpost_3d_armour;
 int X_shift = 0;
 int Y_shift = 0;
 vector<Point> our_R1 = {Point(0, 395), Point(0, 562), Point(33, 562), Point(33, 395)};
@@ -72,6 +76,8 @@ void far_distPointCallback(const radar_msgs::dist_points &input);
 void close_calibration(const radar_msgs::points &msg);//相机标定
 void close_distPointCallback(const radar_msgs::dist_points &input);
 
+void outpost_Callback(const radar_msgs::dist_point &msg);
+
 void draw_point_on_map(const radar_msgs::point &point, Mat &image);
 
 void remove_duplicate();
@@ -90,6 +96,8 @@ int main(int argc, char **argv) {
     enemy_guard.y = 22666.56;
     our_guard.z = 1300.0;
     enemy_guard.z = 1300.0;
+    our_hero = Point3f(0, 0, 0);
+    outpost_3d_armour.x=0;outpost_3d_armour.y=0;outpost_3d_armour.z=0;
     /*预警区域多边形角点初始化*/
     our_warn_regions.emplace_back(our_R1);
     our_warn_regions.emplace_back(our_R2);
@@ -177,6 +185,8 @@ int main(int argc, char **argv) {
     ros::Subscriber far_distPointSub = n.subscribe("/sensor_far/distance_point", 1, &far_distPointCallback);
     ros::Subscriber close_imageSub = n.subscribe("/sensor_close/calibration", 1, &close_calibration);
     ros::Subscriber close_distPointSub = n.subscribe("/sensor_close/distance_point", 1, &close_distPointCallback);
+    ros::Subscriber outpost_distPointSub = n.subscribe("/sensor_far/outpost", 1, &outpost_Callback);
+    HeroPub=n.advertise<radar_msgs::point>("/hero_pub",1);
     worldPointPub = n.advertise<radar_msgs::points>("/world_point", 10);
     GuardPub = n.advertise<radar_msgs::points>("/guard_pub", 10);
     ros::Rate loop_rate(20);
@@ -205,23 +215,20 @@ int main(int argc, char **argv) {
             Point2f ab;
             ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
             ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840 - Y_shift;
-            cout<<(int)in_our_base_cnt<<endl;
-            if(pointPolygonTest(guidao_houbian, ab, false)>=0)
-            {
+            cout << (int) in_our_base_cnt << endl;
+            if (pointPolygonTest(guidao_houbian, ab, false) >= 0) {
                 in_our_base_cnt++;
-                if(in_our_base_cnt>10){
-                    in_our_base_cnt=10;
+                if (in_our_base_cnt > 10) {
+                    in_our_base_cnt = 10;
                     GuardPub.publish(guard_relative);
                 }
-                circle(small_map_copy, ab, 10,Scalar(255, 255, 255), -1, LINE_8, 0);
-            }
-            else if (pointPolygonTest(guard_forbidden_zone, ab, false)<=0) {
-                in_our_base_cnt=0;
+                circle(small_map_copy, ab, 10, Scalar(255, 255, 255), -1, LINE_8, 0);
+            } else if (pointPolygonTest(guard_forbidden_zone, ab, false) <= 0) {
+                in_our_base_cnt = 0;
                 GuardPub.publish(guard_relative);
-                circle(small_map_copy, ab, 10,Scalar(255, 255, 255), -1, LINE_8, 0);
-            }
-            else {
-                circle(small_map_copy, ab, 10,Scalar(0, 255, 255), -1, LINE_8, 0);
+                circle(small_map_copy, ab, 10, Scalar(255, 255, 255), -1, LINE_8, 0);
+            } else {
+                circle(small_map_copy, ab, 10, Scalar(0, 255, 255), -1, LINE_8, 0);
             }
         } else {
             radar_msgs::point abc;
@@ -229,6 +236,17 @@ int main(int argc, char **argv) {
             abc.y = 30000;
             guard_relative.data.emplace_back(abc);
             GuardPub.publish(guard_relative);
+        }
+        if(outpost_3d_armour.x>0&&our_hero.x>0){
+            float h_o_dist = sqrt(pow(outpost_3d_armour.x - our_hero.x, 2) + pow(outpost_3d_armour.y - our_hero.y, 2)+ pow(outpost_3d_armour.z-our_hero.z,2));
+            radar_msgs::point hero;
+            hero.x=h_o_dist;
+            HeroPub.publish(hero);
+        }
+        else {
+            radar_msgs::point hero;
+            hero.x=30000;
+            HeroPub.publish(hero);
         }
         imshow("small_map", small_map_copy);
         waitKey(1);
@@ -423,6 +441,12 @@ void warn_on_map(const radar_msgs::points &points, Mat &image) {
 //    cout<<bitset<8>(guard_relative.text[1])<<bitset<8>(guard_relative.text[0])<<endl;
 }
 
+void outpost_Callback(const radar_msgs::dist_point &msg) {
+    outpost_dist.dist = msg.dist;
+    outpost_dist.x = msg.x;
+    outpost_dist.y = msg.y;
+}
+
 radar_msgs::point calculate_relative_codi(const Point3f &guard, const radar_msgs::point &enemy, uint8_t priority_id) {
     radar_msgs::point re_codi;
     re_codi.x = enemy.x * 15000 - guard.x;
@@ -515,6 +539,11 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                         point.y = 0.80952;
                         enemy_guard.x = x * 15000;
                     }
+                    if (input.data[i].id == 0) {
+                        our_hero.x = point.x * 15000;
+                        our_hero.y = point.y * 28000;
+                        our_hero.z = point.z * 1000;
+                    }
                 } else {
                     if (input.data[i].id == 11) {
                         point.y = 0.19048;
@@ -524,10 +553,25 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                         point.y = 0.80952;
                         enemy_guard.x = x * 15000;
                     }
+                    if (input.data[i].id == 6) {
+                        our_hero.x = point.x * 15000;
+                        our_hero.y = point.y * 28000;
+                        our_hero.z = point.z * 1000;
+                    }
                 }
                 point.id = input.data[i].id;
                 far_points.data.push_back(point);
             }
+        }
+        if (outpost_dist.dist > 0) {
+            Mat x8_pixel;
+            x8_pixel.at<double>(0, 0) = outpost_dist.x;
+            x8_pixel.at<double>(1, 0) = outpost_dist.y;
+            x8_pixel *= (1000 * outpost_dist.dist);
+            Mat calcWorld = invR * (invM * x8_pixel - far_T);//2D-3D变换
+            outpost_3d_armour.x = calcWorld.at<double>(0, 0);
+            outpost_3d_armour.y = calcWorld.at<double>(1, 0);
+            outpost_3d_armour.z = calcWorld.at<double>(2, 0);
         }
     }
 }
@@ -540,6 +584,8 @@ void far_calibration(const radar_msgs::points &msg) {
         cout << far_imagePoints[point.id] << endl;
     }
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
+    outpost_2d_armour.x = far_imagePoints[0].x;
+    outpost_2d_armour.y = far_imagePoints[0].y + 38;
     cv::Mat inlier;
     int suc = cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_, far_Rjacob,
                                  far_T,
@@ -583,6 +629,11 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                         point.y = 0.80952;
                         enemy_guard.x = x * 15000;
                     }
+                    if (input.data[i].id == 0) {
+                        our_hero.x = point.x * 15000;
+                        our_hero.y = point.y * 28000;
+                        our_hero.z = point.z * 1000;
+                    }
                 } else {
                     if (input.data[i].id == 11) {
                         point.y = 0.19048;
@@ -591,6 +642,11 @@ void close_distPointCallback(const radar_msgs::dist_points &input) {
                     if (input.data[i].id == 5) {
                         point.y = 0.80952;
                         enemy_guard.x = x * 15000;
+                    }
+                    if (input.data[i].id == 6) {
+                        our_hero.x = point.x * 15000;
+                        our_hero.y = point.y * 28000;
+                        our_hero.z = point.z * 1000;
                     }
                 }
                 point.id = input.data[i].id;

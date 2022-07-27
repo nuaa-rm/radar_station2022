@@ -13,17 +13,21 @@
 #include <radar_msgs/dist_point.h>
 #include <radar_msgs/dist_points.h>
 #include <radar_msgs/yolo_points.h>
+#include <radar_msgs/points.h>
 
 using namespace std;
 using namespace cv;
 
 int imgRows = 1024, imgCols = 1280;
 int length_of_cloud_queue = 5;//default length is 5
-
+int post_pub_flag=0;
+Point2f outpost_point;
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
+ros::Publisher outpost_distancePointPub;
 radar_msgs::dist_points far_distance_it;
 radar_msgs::dist_points close_distance_it;
+radar_msgs::dist_point outpost_distance_it;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 vector<Mat> far_depth_queue;
 Mat far_camera_matrix = Mat_<float>(3, 3);//相机内参矩阵
@@ -43,6 +47,8 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input);
 
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//Convert PointCloud to Mat
+
+void outpost_Callback(const radar_msgs::points &outpost);
 
 void
 MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
@@ -100,6 +106,14 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             putText(far_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
+            if(post_pub_flag==1){
+                outpost_distance_it.x = outpost_point.x-6;
+                outpost_distance_it.y = outpost_point.y-6;
+                outpost_distance_it.dist = getDepthInRect(Rect(outpost_distance_it.x, outpost_point.y, 12, 12),far_depth_queue,0);
+                outpost_distance_it.color = 3;
+                outpost_distance_it.id = 14;
+                outpost_distancePointPub.publish(outpost_distance_it);
+            }
         }
     }
     far_distancePointPub.publish(far_distance_it);
@@ -151,6 +165,12 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
+}
+
+void outpost_Callback(const radar_msgs::points &outpost){
+    post_pub_flag=1;
+    outpost_point.x=outpost.data[0].x;
+    outpost_point.y=outpost.data[0].y;
 }
 
 float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
@@ -271,8 +291,10 @@ int main(int argc, char **argv) {
     far_yolo_sub = n.subscribe("/far_rectangles", 1, &far_yoloCallback);
     ros::Subscriber close_yolo_sub;
     close_yolo_sub = n.subscribe("/close_rectangles", 1, &close_yoloCallback);
+    ros::Subscriber outpost_Sub=n.subscribe("/sensor_far/calibration",1,outpost_Callback);
     far_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_far/distance_point", 1);
     close_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_close/distance_point", 1);
+    outpost_distancePointPub=n.advertise<radar_msgs::dist_point>("/sensor_far/outpost",1);
     ros::Rate loop_rate(30);
     while (ros::ok()) {
         ros::spinOnce();
