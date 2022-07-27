@@ -11,7 +11,7 @@ void QLabel_with_painter::paintEvent(QPaintEvent * event)
     QBrush brush;
     pen.setColor(Qt::red);
     pen.setWidth(3);
-    painter.setPen(pen); 
+    painter.setPen(pen);
     font.setPointSize(15);
     painter.setFont(font);
     if(tim)

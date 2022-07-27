@@ -37,10 +37,10 @@
 <!--           type="livox_ros_driver_node" required="true" -->
 <!--           output="screen" args="$(arg cmdline_arg)"/> -->
 
-  <node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" respawn="true"/>
+<!--   <node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" respawn="true"/> -->
   <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/>
   <node name="get_depth_node" pkg="get_depth" type="get_depth_node" respawn="true"/>
-<!--   <node pkg="small_map" type="small_map" name="small_map" output="screen" respawn="true"/> -->
+  <node pkg="small_map" type="small_map" name="small_map" output="screen" respawn="true"/>
 <!--   <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
 
 <!--   <node name="hp_limit_helper" pkg="hp_limit_helper" type="hp_limit_helper_node" /> -->
