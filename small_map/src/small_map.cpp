@@ -215,6 +215,7 @@ int main(int argc, char **argv) {
             Point2f ab;
             ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
             ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840 - Y_shift;
+
             cout << (int) in_our_base_cnt << endl;
             if (pointPolygonTest(guidao_houbian, ab, false) >= 0) {
                 in_our_base_cnt++;
@@ -225,6 +226,9 @@ int main(int argc, char **argv) {
                 circle(small_map_copy, ab, 10, Scalar(255, 255, 255), -1, LINE_8, 0);
             } else if (pointPolygonTest(guard_forbidden_zone, ab, false) <= 0) {
                 in_our_base_cnt = 0;
+                guard_relative.data[0].x+=300;
+                guard_relative.data[0].y+=250;
+                guard_relative.data[0].z-=300;
                 GuardPub.publish(guard_relative);
                 circle(small_map_copy, ab, 10, Scalar(255, 255, 255), -1, LINE_8, 0);
             } else {
@@ -445,6 +449,7 @@ void outpost_Callback(const radar_msgs::dist_point &msg) {
     outpost_dist.dist = msg.dist;
     outpost_dist.x = msg.x;
     outpost_dist.y = msg.y;
+    outpost_calc_flag=1;
 }
 
 radar_msgs::point calculate_relative_codi(const Point3f &guard, const radar_msgs::point &enemy, uint8_t priority_id) {
@@ -563,10 +568,9 @@ void far_distPointCallback(const radar_msgs::dist_points &input) {
                 far_points.data.push_back(point);
             }
         }
-        if (outpost_dist.dist > 0) {
+        if (outpost_calc_flag==1 && outpost_dist.dist>0 &&outpost_dist.dist<24) {
             Mat x8_pixel;
-            x8_pixel.at<double>(0, 0) = outpost_dist.x;
-            x8_pixel.at<double>(1, 0) = outpost_dist.y;
+            x8_pixel = (Mat_<double>(3, 1) << (double) outpost_dist.x, (double) outpost_dist.y, 1);
             x8_pixel *= (1000 * outpost_dist.dist);
             Mat calcWorld = invR * (invM * x8_pixel - far_T);//2D-3D变换
             outpost_3d_armour.x = calcWorld.at<double>(0, 0);
@@ -585,7 +589,7 @@ void far_calibration(const radar_msgs::points &msg) {
     }
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
     outpost_2d_armour.x = far_imagePoints[0].x;
-    outpost_2d_armour.y = far_imagePoints[0].y + 38;
+    outpost_2d_armour.y = far_imagePoints[0].y;
     cv::Mat inlier;
     int suc = cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_, far_Rjacob,
                                  far_T,

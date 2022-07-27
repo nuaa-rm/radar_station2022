@@ -109,17 +109,23 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             if(post_pub_flag==1){
                 outpost_distance_it.x = outpost_point.x-6;
                 outpost_distance_it.y = outpost_point.y-6;
-                outpost_distance_it.dist = getDepthInRect(Rect(outpost_distance_it.x, outpost_point.y, 12, 12),far_depth_queue,0);
+                outpost_distance_it.dist = getDepthInRect(Rect((int)outpost_distance_it.x, (int)outpost_point.y, 12, 12),far_depth_queue,0);
                 outpost_distance_it.color = 3;
                 outpost_distance_it.id = 14;
                 outpost_distancePointPub.publish(outpost_distance_it);
+                rectangle(far_depth_show,
+                          Rect((int)outpost_distance_it.x, (int)outpost_point.y, 12, 12),
+                          Scalar(255, 255, 255), 1);
+                putText(far_depth_show, std::to_string(outpost_distance_it.dist), Point(outpost_distance_it.x, outpost_distance_it.y),
+                        FONT_HERSHEY_COMPLEX_SMALL, 1,
+                        Scalar(255, 255, 255), 1, 8, 0);
             }
         }
     }
     far_distancePointPub.publish(far_distance_it);
     resize(far_depth_show, far_depth_show, Size(960, 768));
-    //imshow("far_depth_show", far_depth_show);
-    //waitKey(1);
+//    imshow("far_depth_show", far_depth_show);
+//    waitKey(1);
 }
 
 //update the car_rects
@@ -157,8 +163,8 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     }
     close_distancePointPub.publish(close_distance_it);
     resize(close_depth_show, close_depth_show, Size(960, 768));
-    //imshow("close_depth_show", close_depth_show);
-    //waitKey(1);
+//    imshow("close_depth_show", close_depth_show);
+//    waitKey(1);
 }
 
 //update the dethes_img by pointcloud
@@ -169,8 +175,8 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
 
 void outpost_Callback(const radar_msgs::points &outpost){
     post_pub_flag=1;
-    outpost_point.x=outpost.data[0].x;
-    outpost_point.y=outpost.data[0].y;
+    outpost_point.x=outpost.data[0].x*1280;
+    outpost_point.y=outpost.data[0].y*1024;
 }
 
 float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
