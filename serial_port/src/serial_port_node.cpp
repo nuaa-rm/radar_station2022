@@ -611,6 +611,7 @@ int main(int argc, char **argv) {
         count++;
         if (count >= 10) {
             sp.sendInteractiveMsgs(7);
+            sp.sendHeroMsgs();
             if (!worldPoints.empty()) {
                 if (worldPoints[0].color) {
                     sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);

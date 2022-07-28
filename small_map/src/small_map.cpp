@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
             GuardPub.publish(guard_relative);
         }
         if(outpost_3d_armour.x>0&&our_hero.x>0){
-            float h_o_dist = sqrt(pow(outpost_3d_armour.x - our_hero.x, 2) + pow(outpost_3d_armour.y - our_hero.y, 2)+ pow(outpost_3d_armour.z-our_hero.z,2));
+            float h_o_dist = 500+sqrt(pow(outpost_3d_armour.x - our_hero.x, 2) + pow(outpost_3d_armour.y - our_hero.y, 2)+ pow(outpost_3d_armour.z-our_hero.z,2));
             radar_msgs::point hero;
             hero.x=h_o_dist;
             HeroPub.publish(hero);
@@ -302,25 +302,27 @@ void remove_duplicate() {
     radar_msgs::points blue_no_id_cars;
     radar_msgs::points left_may_overlap_points;
     radar_msgs::points right_may_overlap_points;
-    vector<Point2f> left_region = {Point(0, 0), Point(0, 840), Point(200, 840), Point(200, 0)};
-    vector<Point2f> right_region = {Point(255, 0), Point(255, 840), Point(450, 840), Point(450, 0)};
+    vector<Point2f> left_region = {Point(0, 0), Point(0, 840), Point(168, 840), Point(278, 0)};
+    vector<Point2f> right_region = {Point(278, 0), Point(168, 840), Point(450, 840), Point(450, 0)};
     for (auto &i: far_points.data) {
         int test = pointPolygonTest(left_region, calculate_pixel_codi(i), false);
+        int test2=pointPolygonTest(right_region, calculate_pixel_codi(i), false);
         if (test > 0) {
             result_points.data.emplace_back(i);
         } else if (test == 0 && i.x != 200) {
             result_points.data.emplace_back(i);
-        } else if (-pointPolygonTest(right_region, calculate_pixel_codi(i), false)) {
+        } else if (pointPolygonTest(right_region, calculate_pixel_codi(i), false)<=0) {
             left_may_overlap_points.data.emplace_back(i);
         }
     }
     for (auto &i: close_points.data) {
         int test = pointPolygonTest(right_region, calculate_pixel_codi(i), false);
+        int test2=pointPolygonTest(left_region, calculate_pixel_codi(i), false);
         if (test > 0) {
             result_points.data.emplace_back(i);
         } else if (test == 0 && i.x != 255) {
             result_points.data.emplace_back(i);
-        } else if (-pointPolygonTest(left_region, calculate_pixel_codi(i), false)) {
+        } else if (pointPolygonTest(left_region, calculate_pixel_codi(i), false)<=0) {
             right_may_overlap_points.data.emplace_back(i);
         }
     }
