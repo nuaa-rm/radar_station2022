@@ -232,9 +232,11 @@ void MainWindow::initUI()
 
     ui.openGLWidget_mainWindow->setMinimumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
     ui.openGLWidget_mainWindow->setMaximumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
+    ui.openGLWidget_mainWindow->setPicture(qnode.showMainWindowWidth, qnode.showMainWindowHeight);
 
     ui.openGLWidget_secondWindow->setMinimumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
     ui.openGLWidget_secondWindow->setMaximumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
+    ui.openGLWidget_mainWindow->setPicture(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight);
 }
 
 void MainWindow::updateLogcamera()
@@ -362,6 +364,7 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
 void MainWindow::displayCamera(const QImage &image)
 {
     qimage_mutex_.lock();
+    ui.openGLWidget_mainWindow->updatePicture(image);
 //    //ui.openGLWidget_mainWindow->imageToShow = qnode.image.copy();
 //    ui.openGLWidget_mainWindow->setImageData(qnode.image.bits(), qnode.showMainWindowWidth, qnode.showMainWindowHeight);
 //    ui.openGLWidget_mainWindow->update();
