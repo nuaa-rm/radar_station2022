@@ -242,7 +242,8 @@ int main(int argc, char **argv) {
             GuardPub.publish(guard_relative);
         }
         if(outpost_3d_armour.x>0&&our_hero.x>0){
-            float h_o_dist = 500+sqrt(pow(outpost_3d_armour.x - our_hero.x, 2) + pow(outpost_3d_armour.y - our_hero.y, 2)+ pow(outpost_3d_armour.z-our_hero.z,2));
+            float h_o_dist = sqrt(pow(outpost_3d_armour.x - our_hero.x, 2) + pow(outpost_3d_armour.y - our_hero.y, 2)+ pow(outpost_3d_armour.z-our_hero.z,2));
+            h_o_dist-=609;
             radar_msgs::point hero;
             hero.x=h_o_dist;
             HeroPub.publish(hero);

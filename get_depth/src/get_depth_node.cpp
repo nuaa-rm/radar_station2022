@@ -14,19 +14,24 @@
 #include <radar_msgs/dist_points.h>
 #include <radar_msgs/yolo_points.h>
 #include <radar_msgs/points.h>
+#include <fstream>
 
 using namespace std;
 using namespace cv;
-
+uint16_t times = 0;
+vector<int> cnt;
+vector<float> dists;
 int imgRows = 1024, imgCols = 1280;
 int length_of_cloud_queue = 5;//default length is 5
-int post_pub_flag=0;
+int post_pub_flag = 0;
 Point2f outpost_point;
 ros::Publisher far_distancePointPub;
 ros::Publisher close_distancePointPub;
 ros::Publisher outpost_distancePointPub;
 radar_msgs::dist_points far_distance_it;
 radar_msgs::dist_points close_distance_it;
+radar_msgs::dist_points last_far_distance_it;
+radar_msgs::dist_points last_close_distance_it;
 radar_msgs::dist_point outpost_distance_it;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 vector<Mat> far_depth_queue;
@@ -53,6 +58,47 @@ void outpost_Callback(const radar_msgs::points &outpost);
 void
 MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
            Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
+typedef struct {
+    float Last_P;//上次估算协方差 不可以为0 ! ! ! ! !
+    float Now_P;//当前估算协方差
+    float out;//卡尔曼滤波器输出
+    float Kg;//卡尔曼增益
+    float Q;//过程噪声协方差
+    float R;//观测噪声协方差
+} Kalman;
+Kalman kfp;
+
+void Kalman_Init() {
+    kfp.Last_P = 1;
+    kfp.Now_P = 0;
+    kfp.out = 0;
+    kfp.Kg = 0;
+    kfp.Q = 0;
+    kfp.R = 0.01;
+}
+
+float my_KalmanFilter(Kalman *kfp, float input) {
+    //预测协方差方程：k时刻系统估算协方差 = k-1时刻的系统协方差 + 过程噪声协方差
+    kfp->Now_P = kfp->Last_P + kfp->Q;
+    //卡尔曼增益方程：卡尔曼增益 = k时刻系统估算协方差 / （k时刻系统估算协方差 + 观测噪声协方差）
+    kfp->Kg = kfp->Now_P / (kfp->Now_P + kfp->R);
+    //更新最优值方程：k时刻状态变量的最优值 = 状态变量的预测值 + 卡尔曼增益 * （测量值 - 状态变量的预测值）
+    kfp->out = kfp->out + kfp->Kg * (input - kfp->out);//因为这一次的预测值就是上一次的输出值
+    //更新协方差方程: 本次的系统协方差付给 kfp->LastP 威下一次运算准备。
+    kfp->Last_P = (1 - kfp->Kg) * kfp->Now_P;
+    return kfp->out;
+}
+
+void write_csv(std::string filename, vector<float> vals) {
+    // Create an output filestream object
+    ofstream myFile(filename);
+    // Send data to the stream
+    for (float val: vals) {
+        myFile << val << "\n";
+    }
+    // Close the file
+    myFile.close();
+}
 
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     Mat res = Mat::zeros(4, (int) input->size(), CV_32F);
@@ -72,6 +118,21 @@ void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matri
         if (x >= 0 && x < imgCols && y >= 0 && y < imgRows) {
             input_depth.at<float>(y, x) = res.at<float>(2, i);
         }
+    }
+}
+
+void frame_point_match(const radar_msgs::dist_points &last_frame, radar_msgs::dist_points &this_frame) {
+    uint8_t match_suc_flag = 0;
+    for (int k = 0; k < this_frame.data.size(); k++) {
+        for (auto &i: last_frame.data) {
+            if ((i.x - this_frame.data[k].x > -50 && i.x - this_frame.data[k].x < 50) &&
+                (i.y - this_frame.data[k].y < 50 && i.y - this_frame.data[k].y > -50)) {
+                this_frame.data[k].last_dist = i.dist;
+                match_suc_flag = 1;
+            }
+        }
+        if (match_suc_flag == 0)this_frame.data[k].last_dist = this_frame.data[k].dist;
+        match_suc_flag = 0;
     }
 }
 
@@ -96,7 +157,7 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.y = (*input).data[j].y + (*input).data[j].height / 2;
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
-                    far_depth_queue,(*input).data[j].id);
+                    far_depth_queue, (*input).data[j].id);
             point_it.color = (*input).data[j].color;
             point_it.id = (*input).data[j].id;
             far_distance_it.data.push_back(point_it);
@@ -106,17 +167,19 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             putText(far_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
-            if(post_pub_flag==1){
-                outpost_distance_it.x = outpost_point.x-6;
-                outpost_distance_it.y = outpost_point.y-6;
-                outpost_distance_it.dist = getDepthInRect(Rect((int)outpost_distance_it.x, (int)outpost_point.y, 12, 12),far_depth_queue,0);
+            if (post_pub_flag == 1) {
+                outpost_distance_it.x = outpost_point.x - 6;
+                outpost_distance_it.y = outpost_point.y - 6;
+                outpost_distance_it.dist = getDepthInRect(
+                        Rect((int) outpost_distance_it.x, (int) outpost_point.y, 12, 12), far_depth_queue, 0);
                 outpost_distance_it.color = 3;
                 outpost_distance_it.id = 14;
                 outpost_distancePointPub.publish(outpost_distance_it);
                 rectangle(far_depth_show,
-                          Rect((int)outpost_distance_it.x, (int)outpost_point.y, 12, 12),
+                          Rect((int) outpost_distance_it.x, (int) outpost_point.y, 12, 12),
                           Scalar(255, 255, 255), 1);
-                putText(far_depth_show, std::to_string(outpost_distance_it.dist), Point(outpost_distance_it.x, outpost_distance_it.y),
+                putText(far_depth_show, std::to_string(outpost_distance_it.dist),
+                        Point(outpost_distance_it.x, outpost_distance_it.y),
                         FONT_HERSHEY_COMPLEX_SMALL, 1,
                         Scalar(255, 255, 255), 1, 8, 0);
             }
@@ -132,6 +195,10 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
 void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     Mat close_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
     Mat close_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
+    std::vector<radar_msgs::dist_point>().swap(last_close_distance_it.data);
+    for (auto &i: close_distance_it.data) {
+        last_close_distance_it.data.emplace_back(i);
+    }
     std::vector<radar_msgs::dist_point>().swap(close_distance_it.data);
     if (cloud) {
         Mat close_MatCloud = Cloud2Mat(cloud);
@@ -150,6 +217,22 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             point_it.dist = getDepthInRect(
                     Rect((*input).data[j].x, (*input).data[j].y, (*input).data[j].width, (*input).data[j].height),
                     close_depth_queue, (*input).data[j].id);
+//            if((*input).data[j].id==10&&(*input).data[j].x>320)
+//            {
+//                times++;
+//                if(times<18)
+//                {
+//                    point_it.dist= my_KalmanFilter(&kfp,point_it.dist);
+//                    float a=my_KalmanFilter(&kfp,point_it.dist);
+//                    dists.emplace_back(a);
+//                }
+//                if(times==18)
+//                {
+//                    write_csv("dist_kalman.csv",dists);
+//                    std::vector<float>().swap(dists);
+//                    times=0;
+//                }
+//            }
             point_it.color = (*input).data[j].color;
             point_it.id = (*input).data[j].id;
             close_distance_it.data.push_back(point_it);
@@ -160,11 +243,20 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
         }
+        frame_point_match(last_close_distance_it, close_distance_it);
+        for (auto &i: close_distance_it.data) {
+            if (i.id == 10 && i.x > 320) {
+                if (i.dist - i.last_dist > 0.3 || i.dist - i.last_dist < -0.3) {
+                    i.dist = i.last_dist;
+                } else
+                    i.dist = i.dist * 0.8 + i.last_dist * 0.2;
+            }
+        }
     }
     close_distancePointPub.publish(close_distance_it);
     resize(close_depth_show, close_depth_show, Size(960, 768));
-//    imshow("close_depth_show", close_depth_show);
-//    waitKey(1);
+    imshow("close_depth_show", close_depth_show);
+    waitKey(1);
 }
 
 //update the dethes_img by pointcloud
@@ -173,10 +265,10 @@ void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
     pcl::fromROSMsg(*input, *cloud);
 }
 
-void outpost_Callback(const radar_msgs::points &outpost){
-    post_pub_flag=1;
-    outpost_point.x=outpost.data[0].x*1280;
-    outpost_point.y=outpost.data[0].y*1024;
+void outpost_Callback(const radar_msgs::points &outpost) {
+    post_pub_flag = 1;
+    outpost_point.x = outpost.data[0].x * 1280;
+    outpost_point.y = outpost.data[0].y * 1024;
 }
 
 float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
@@ -200,25 +292,28 @@ float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point
         return 0;
     } else {
         float mean_distance;
-        float sum=0;
+        float sum = 0;
         if (id != 12 && id != 13) {
-            for(float distance : distances){
-                sum+=distance;
+            for (float distance: distances) {
+                sum += distance;
             }
-            mean_distance = sum/distances.size();
+            mean_distance = sum / distances.size();
             return mean_distance;
         } else {
             sort(distances.begin(), distances.end());
-            if (distances.size() >= 5){
-                for(uint8_t j=0;j<5;j++){
-                    sum+=distances[j];
-                }
-                mean_distance=sum/5;
-                return mean_distance;
-            }
-            else {
-                return distances[0];
-            }
+            return distances[distances.size() / 2];
+//            if (distances.size() >= 5){
+//                for(uint8_t j=0;j<5;j++){
+//                    sum+=distances[j];
+//                }
+//                mean_distance=sum/5;
+            //return mean_distance;
+//                return distances[distances.size()/2];
+//            }
+//            else {
+//                return distances[0];
+//                return distances[distances.size()/2];
+//            }
         }
     }
 }
@@ -226,7 +321,6 @@ float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point
 int main(int argc, char **argv) {
     ros::init(argc, argv, "get_depth_node");
     ros::NodeHandle n;
-
     ros::param::get("/length_of_cloud_queue", length_of_cloud_queue);
     ros::param::get("/image_width", imgCols);
     ros::param::get("/image_height", imgRows);
@@ -290,17 +384,17 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_close/uni_matrix/twotwo", close_uni_matrix.at<float>(2, 2));
     ros::param::get("/sensor_close/uni_matrix/twothree", close_uni_matrix.at<float>(2, 3));
     cout << "close Uni matrix load done!" << close_uni_matrix << endl;
-
+    Kalman_Init();
     ros::Subscriber cloud_sub;
     cloud_sub = n.subscribe("/livox/lidar", 1, &pointCloudCallback);
     ros::Subscriber far_yolo_sub;
     far_yolo_sub = n.subscribe("/far_rectangles", 1, &far_yoloCallback);
     ros::Subscriber close_yolo_sub;
     close_yolo_sub = n.subscribe("/close_rectangles", 1, &close_yoloCallback);
-    ros::Subscriber outpost_Sub=n.subscribe("/sensor_far/calibration",1,outpost_Callback);
+    ros::Subscriber outpost_Sub = n.subscribe("/sensor_far/calibration", 1, outpost_Callback);
     far_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_far/distance_point", 1);
     close_distancePointPub = n.advertise<radar_msgs::dist_points>("/sensor_close/distance_point", 1);
-    outpost_distancePointPub=n.advertise<radar_msgs::dist_point>("/sensor_far/outpost",1);
+    outpost_distancePointPub = n.advertise<radar_msgs::dist_point>("/sensor_far/outpost", 1);
     ros::Rate loop_rate(30);
     while (ros::ok()) {
         ros::spinOnce();
