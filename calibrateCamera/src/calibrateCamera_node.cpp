@@ -18,6 +18,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/Dense>
 #include <sensor_msgs/Image.h>
+#include <boost/thread/thread.hpp>
 #define POINTS_COUNT 6
 using namespace std;
 using namespace cv;
