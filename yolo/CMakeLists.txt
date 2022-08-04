@@ -31,7 +31,7 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 message('OPENCV FOUND:${OpenCV_FOUND}')
 # cuda
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.2)
+#set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.2)
 find_package(CUDA REQUIRED)
 message('CUDA FOUND:${CUDA_FOUND}')
 ## Specify additional locations of header files
