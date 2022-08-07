@@ -23,8 +23,8 @@ include_directories(
  ${catkin_INCLUDE_DIRS}
 )
 MESSAGE( STATUS "catkin_INCLUDE_DIRS = ${catkin_INCLUDE_DIRS}.")
-set(ROS_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Release)
+set(ROS_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 
 add_executable(${PROJECT_NAME}_node
     src/MVCamera_node.cpp

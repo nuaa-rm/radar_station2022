@@ -320,6 +320,7 @@ int MVCamera::Set_fps(int fps_mode)
 
   }
   CameraGetCapability(hCamera,&tCapability);
+
 }
 ///
 /// \brief MVCamera::GetFrame_B
