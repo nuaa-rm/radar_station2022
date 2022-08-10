@@ -58,6 +58,7 @@ public:
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         ros::param::get("deviceID", deviceID);
         ros::param::get("exp_time", exposure_);
+
         node_.param("image_width", image_width_, 640);
         if(large_resolution_)
         {
@@ -76,10 +77,13 @@ public:
         //init camera param
         mv_driver=new MVCamera;
         init_suc=mv_driver->Init(deviceID);
+
         image_pub_ = it.advertise("image_raw", 1);
+
         mv_driver->SetExposureTime(autoexposure_, exposure_);
         mv_driver->SetLargeResolution(large_resolution_);
         mv_driver->Set_fps(fps_mode);
+
         mv_driver->Play();
     }
     ~MVCamNode()

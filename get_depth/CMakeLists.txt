@@ -19,7 +19,7 @@ catkin_package(
 string(REGEX REPLACE "(.+)\\src/get_depth.*" "\\1" PROJECT_INIT_PATH ${PROJECT_SOURCE_DIR})
 add_subdirectory(src/project)
 include_directories(
-#         include
+        #         include
         ${catkin_INCLUDE_DIRS}
         OpenCV_INCLUDE_DIRS
         ${PCL_INCLUDE_DIRS}
@@ -33,4 +33,3 @@ target_link_libraries(${PROJECT_NAME}_node
         ${PCL_LIBRARIES}
         project_lib
         )
-message("{PCL_INCLUDE_DIRS}: ${PCL_INCLUDE_DIRS}")

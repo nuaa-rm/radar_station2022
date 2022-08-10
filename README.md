@@ -1,10 +1,8 @@
 # 雷达站开机：
 
-`yarn start`
-
 `roslaunch radar_msg radar.launch`
 
-标定UI中拖点，并点save
+标定UI中拖点，并点calibrate
 
 # 节点内部通信id定义：
 0 ：红方英雄

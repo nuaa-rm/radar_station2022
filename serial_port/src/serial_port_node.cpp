@@ -242,8 +242,6 @@ class serial_port {
 public:
     serial::Serial ser;
     map_msg mapMsg;
-    client_ui_msgs ui_Msgs;
-    client_ui_delete_msgs ui_delete_Msgs;
     robot_interactive_msgs robotInteractiveMsgs;
     robot_interactive_msgs HeroMsgs;
     robot_interactive_control_msgs robotInteractiveControlMsgs;
@@ -343,31 +341,6 @@ public:
         ser.write((uint8_t *) &HeroMsgs, sizeof(HeroMsgs));
         cout << "Send one Hero msg " << endl;
         std::cout << HeroMsgs.data.receiver_id << std::endl;
-        return true;
-    }
-    bool sendCtrlMsgs() {
-        //构造头
-        robotInteractiveControlMsgs.head.SOF = 0xA5;
-        robotInteractiveControlMsgs.head.data_length = sizeof(robot_interactive_control_data);
-        robotInteractiveControlMsgs.head.seq = robotInteractiveControlMsgs.head.seq+1;
-        robotInteractiveControlMsgs.head.crc = get_CRC8_check_sum((uint8_t *) &robotInteractiveControlMsgs,
-                                                           (sizeof(robotInteractiveControlMsgs.head) -
-                                                            sizeof(robotInteractiveControlMsgs.head.crc)), 0xff);
-        robotInteractiveControlMsgs.data.content[0]=0x00;
-        robotInteractiveControlMsgs.data.content[1]=0x01;
-        robotInteractiveControlMsgs.data.content[2]=0x02;
-        robotInteractiveControlMsgs.data.content[3]=0x03;
-        robotInteractiveControlMsgs.data.content[4]=0x04;
-        robotInteractiveControlMsgs.data.content[5]=0x05;
-        robotInteractiveControlMsgs.data.content[6]=0x06;
-        robotInteractiveControlMsgs.data.content[7]=0x07;
-        robotInteractiveControlMsgs.data.content[8]=0x08;
-        robotInteractiveControlMsgs.crc = get_CRC16_check_sum((uint8_t *) &robotInteractiveControlMsgs,
-                                                       (sizeof(robotInteractiveControlMsgs) -
-                                                        sizeof(robotInteractiveControlMsgs.crc)), 0xffff);
-        ser.write((uint8_t *) &robotInteractiveControlMsgs, sizeof(robotInteractiveControlMsgs));
-        cout << "Send one robot ControlMsgs msg " << endl;
-        cout << robotInteractiveControlMsgs.data.content[0] <<  endl;
         return true;
     }
 
@@ -600,7 +573,12 @@ void GuardCallback(const radar_msgs::points &msg) {
     sp.robotInteractiveMsgs.data.content[11]=(int16_t)msg.data[1].z;
     sp.robotInteractiveMsgs.data.content[12]=(int16_t)msg.data[1].z>>8;
 }
-
+void HeroCallback(const radar_msgs::point &msg) {
+    sp.HeroMsgs.data.content[0]=0xbb;
+    sp.HeroMsgs.data.content[1]=(int16_t)msg.x;
+    sp.HeroMsgs.data.content[2]=((int16_t)msg.x)>>8;
+    sp.HeroMsgs.data.content[3]=(uint8_t)(100*(msg.x-(int16_t)msg.x));
+}
 int main(int argc, char **argv) {
     //初始化节点
     ros::init(argc, argv, "serial_port_node");
@@ -625,6 +603,7 @@ int main(int argc, char **argv) {
     }
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
+    ros::Subscriber HeroSub = nh.subscribe("/hero_pub", 1, &HeroCallback);
     ros::Rate loop(100);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
@@ -632,6 +611,7 @@ int main(int argc, char **argv) {
         count++;
         if (count >= 10) {
             sp.sendInteractiveMsgs(7);
+            sp.sendHeroMsgs();
             if (!worldPoints.empty()) {
                 if (worldPoints[0].color) {
                     sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
