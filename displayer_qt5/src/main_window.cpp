@@ -77,21 +77,6 @@ void MainWindow::initUI()
     ui.labelCalibrateCameraMainWindow->sensorFarImgRaw = qnode.sensorFarImgRaw;
     ui.labelCalibrateCameraMainWindow->sensorCloseImgRaw = qnode.sensorCloseImgRaw;
 
-    qimage_mutex_.lock();
-    ui.labelSmallMap->setPixmap(QPixmap::fromImage(qnode.imageSmallMap));
-    ui.labelSmallMap->resize(ui.labelSmallMap->pixmap()->size());
-    qimage_mutex_.unlock();
-
-    qimage_mutex_.lock();
-    ui.labelLogo->setPixmap(QPixmap::fromImage(qnode.imageLogo));
-    ui.labelLogo->resize(ui.labelLogo->pixmap()->size());
-    qimage_mutex_.unlock();
-
-    qimage_mutex_.lock();
-    ui.label_camera2->setPixmap(QPixmap::fromImage(qnode.imageShowSecondWindow));
-    ui.label_camera2->resize(ui.label_camera2->pixmap()->size());
-    qimage_mutex_.unlock();
-
     QFile file_red(":/qss/qss/progressBarRed.qss");
     QFile file_blue(":/qss/qss/progressBarBlue.qss");
     file_red.open(QFile::ReadOnly);
@@ -245,6 +230,13 @@ void MainWindow::initUI()
     connect(fTimer, SIGNAL(timeout()), this, SLOT(on_timer_timeout()));
     fTimer->start();
 
+    ui.openGLWidget_mainWindow->setMinimumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
+    ui.openGLWidget_mainWindow->setMaximumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
+    ui.openGLWidget_mainWindow->setPicture(qnode.showMainWindowWidth, qnode.showMainWindowHeight);
+
+    ui.openGLWidget_secondWindow->setMinimumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
+    ui.openGLWidget_secondWindow->setMaximumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
+    ui.openGLWidget_mainWindow->setPicture(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight);
 }
 
 void MainWindow::updateLogcamera()
@@ -372,9 +364,10 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
 void MainWindow::displayCamera(const QImage &image)
 {
     qimage_mutex_.lock();
-    qimage_ = image.copy();
-    ui.label_camera->setPixmap(QPixmap::fromImage(qimage_));
-    ui.label_camera->resize(ui.label_camera->pixmap()->size());
+    ui.openGLWidget_mainWindow->updatePicture(image);
+//    //ui.openGLWidget_mainWindow->imageToShow = qnode.image.copy();
+//    ui.openGLWidget_mainWindow->setImageData(qnode.image.bits(), qnode.showMainWindowWidth, qnode.showMainWindowHeight);
+//    ui.openGLWidget_mainWindow->update();
     qimage_mutex_.unlock();
 
 }
@@ -399,11 +392,10 @@ void MainWindow::displayCameraCalibrateSecondWindow(const QImage &image)
 
 void MainWindow::displayCameraSecondWindow(const QImage &image)
 {
-    qimage_mutex_.lock();
-    qimage_second_window_ = image.copy();
-    ui.label_camera2->setPixmap(QPixmap::fromImage(qimage_second_window_));
-    ui.label_camera2->resize(ui.label_camera2->pixmap()->size());
-    qimage_mutex_.unlock();
+//    qimage_mutex_.lock();
+//    ui.openGLWidget_secondWindow->imageToShow = qnode.imageShowSecondWindow.copy();
+//    ui.openGLWidget_secondWindow->update();
+//    qimage_mutex_.unlock();
 }
 
 void MainWindow::updateLoggingView() {

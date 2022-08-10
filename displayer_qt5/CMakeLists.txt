@@ -18,10 +18,15 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     )
 find_package(OpenCV 4 REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(GLUT REQUIRED)
 find_package(Qt5 REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Widgets)
 include_directories(
     ${catkin_INCLUDE_DIRS}
+    ${OpenGL_INCLUDE_DIRS}
+    ${GLUT_INCLUDE_DIRS}
     include
     ../../../devel/include
     ../../devel/include
@@ -66,7 +71,7 @@ file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINK
 ##############################################################################
 
 add_executable(displayer_qt5 ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-target_link_libraries(displayer_qt5 ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(displayer_qt5 ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${OpenGL_LIBRARIES} ${GLUT_LIBRARIES})
 install(TARGETS displayer_qt5 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 target_link_libraries(displayer_qt5

@@ -191,8 +191,8 @@ int main(int argc, char **argv) {
     GuardPub = n.advertise<radar_msgs::points>("/guard_pub", 10);
     ros::Rate loop_rate(20);
     Mat small_map;
-    if (red_or_blue == 0)small_map = imread("/home/chris/radar_station2022/src/small_map/src/red_minimap.png");
-    else small_map = imread("/home/chris/radar_station2022/src/small_map/src/blue_minimap.png");
+    if (red_or_blue == 0)small_map = imread("/home/dovejh/project/radar_station/src/radar_station2022/displayer_qt5/resources/images/red_minimap.png");
+    else small_map = imread("/home/dovejh/project/radar_station/src/radar_station2022/displayer_qt5/resources/images/blue_minimap.png");
     resize(small_map, small_map, Size(450, 840));
     Mat small_map_copy;
     small_map.copyTo(small_map_copy);
