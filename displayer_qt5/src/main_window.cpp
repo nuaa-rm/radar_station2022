@@ -245,6 +245,8 @@ void MainWindow::initUI()
     connect(fTimer, SIGNAL(timeout()), this, SLOT(on_timer_timeout()));
     fTimer->start();
 
+    ui.labelCalibrateCameraMainWindow->calibrateMainWindowHeight = qnode.calibrateMainWindowHeight;
+    ui.labelCalibrateCameraMainWindow->calibrateMainWindowWidth = qnode.calibrateMainWindowWidth;
 }
 
 void MainWindow::updateLogcamera()
@@ -340,6 +342,7 @@ void MainWindow::updateLogcameraCalibrateSecondWindow()
                 cv::circle(m, center, 5 * qnode.calibrateRate, cv::Scalar(255, 255, 255), 2);
                 cv::circle(m, center, 2, cv::Scalar(255, 0, 0), 2);
             }
+
         }
         else if(qnode.cameraCelibrating == qnode.sensorCloseImgRaw)
         {
@@ -456,7 +459,6 @@ void MainWindow::updateLoggingView() {
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-
 	QMainWindow::closeEvent(event);
 }
 
