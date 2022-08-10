@@ -1,7 +1,8 @@
 camera:
   list:
     realsense:
-      topic: "/sensor_far/image_raw"
+      #topic: "/sensor_far/image_raw"
+      topic: "/camera/color/image_raw"
     farCam:    # 可添加多个同时显示的相机(此处自定义相机名称，注意不能重复)
       topic: "/sensor_far/image_raw"                           # 相机图像topic
       shapeTopic: "/sensor_far/shape"              # 发送形状的topic
