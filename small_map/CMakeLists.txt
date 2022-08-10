@@ -31,3 +31,4 @@ target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
         ${OpenCV_LIBRARIES}
         )
+add_definitions(-DPACK_PATH="${PROJECT_SOURCE_DIR}")

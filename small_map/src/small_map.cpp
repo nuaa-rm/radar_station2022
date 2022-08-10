@@ -24,8 +24,6 @@ cv::Mat far_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat far_Rjacob = Mat::zeros(3, 1, CV_64FC1);
 Mat far_R = Mat::eye(3, 3, CV_64FC1);
 Mat far_T = Mat::zeros(3, 1, CV_64FC1);
-int far_calc_flag = 0;
-
 vector<cv::Point3d> close_objectPoints(4);
 vector<cv::Point2d> close_imagePoints(4);
 cv::Mat close_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
@@ -33,7 +31,6 @@ cv::Mat close_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat close_Rjacob = Mat::zeros(3, 1, CV_64FC1);
 Mat close_R = Mat::eye(3, 3, CV_64FC1);
 Mat close_T = Mat::zeros(3, 1, CV_64FC1);
-int close_calc_flag = 0;
 radar_msgs::points far_points;
 radar_msgs::points close_points;
 radar_msgs::points result_points;
@@ -181,6 +178,74 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_close/distortion_coefficient/four", close_distCoeffs_.at<double>(4, 0));
     cout << close_distCoeffs_ << endl;
 
+    //dovejh 读取默认pnp四点的坐标，防止意外重启造成pnp数据丢失。
+    float x = 0, y = 0;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point1/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point1/y", y);
+    close_imagePoints[0] = cv::Point2d(x, y);
+    close_imagePoints[0].x *= imgCols;
+    close_imagePoints[0].y *= imgRows;
+    cout << close_imagePoints[0] << endl;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point2/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point2/y", y);
+    close_imagePoints[1] = cv::Point2d(x, y);
+    close_imagePoints[1].x *= imgCols;
+    close_imagePoints[1].y *= imgRows;
+    cout << close_imagePoints[1] << endl;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point3/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point3/y", y);
+    close_imagePoints[2] = cv::Point2d(x, y);
+    close_imagePoints[2].x *= imgCols;
+    close_imagePoints[2].y *= imgRows;
+    cout << close_imagePoints[2] << endl;
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point4/x", x);
+    ros::param::get("/camera/list/closeCam/calibrationDefault/point4/y", y);
+    close_imagePoints[3] = cv::Point2d(x, y);
+    close_imagePoints[3].x *= imgCols;
+    close_imagePoints[3].y *= imgRows;
+    cout << close_imagePoints[3] << endl;
+
+    cout << "已读取到closeCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
+    cout << "close obj points:" << close_objectPoints << endl;
+    cv::solvePnPRansac(close_objectPoints, close_imagePoints, close_CamMatrix_, close_distCoeffs_,
+                       close_Rjacob, close_T,cv::SOLVEPNP_AP3P);
+    Rodrigues(close_Rjacob, close_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
+    cout << "旋转矩阵:" << close_R << endl;
+    cout << "平移矩阵" << close_T << endl;
+
+    ros::param::get("/camera/list/farCam/calibrationDefault/point1/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point1/y", y);
+    far_imagePoints[0] = cv::Point2d(x, y);
+    far_imagePoints[0].x *= imgCols;
+    far_imagePoints[0].y *= imgRows;
+    cout << far_imagePoints[0] << endl;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point2/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point2/y", y);
+    far_imagePoints[1] = cv::Point2d(x, y);
+    far_imagePoints[1].x *= imgCols;
+    far_imagePoints[1].y *= imgRows;
+    cout << far_imagePoints[1] << endl;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point3/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point3/y", y);
+    far_imagePoints[2] = cv::Point2d(x, y);
+    far_imagePoints[2].x *= imgCols;
+    far_imagePoints[2].y *= imgRows;
+    cout << far_imagePoints[2] << endl;
+    ros::param::get("/camera/list/farCam/calibrationDefault/point4/x", x);
+    ros::param::get("/camera/list/farCam/calibrationDefault/point4/y", y);
+    far_imagePoints[3] = cv::Point2d(x, y);
+    far_imagePoints[3].x *= imgCols;
+    far_imagePoints[3].y *= imgRows;
+    cout << far_imagePoints[3] << endl;
+
+    cout << "已读取到farCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
+    cout << "far obj points:" << far_objectPoints << endl;
+    cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_,
+                       far_Rjacob, far_T, cv::SOLVEPNP_AP3P);
+    Rodrigues(far_Rjacob, far_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
+    cout << "旋转矩阵:" << far_R << endl;
+    cout << "平移矩阵" << far_T << endl;
+
     ros::Subscriber far_imageSub = n.subscribe("/sensor_far/calibration", 1, &far_calibration);
     ros::Subscriber far_distPointSub = n.subscribe("/sensor_far/distance_point", 1, &far_distPointCallback);
     ros::Subscriber close_imageSub = n.subscribe("/sensor_close/calibration", 1, &close_calibration);
@@ -191,8 +256,16 @@ int main(int argc, char **argv) {
     GuardPub = n.advertise<radar_msgs::points>("/guard_pub", 10);
     ros::Rate loop_rate(20);
     Mat small_map;
-    if (red_or_blue == 0)small_map = imread("/home/chris/radar_station2022/src/small_map/src/red_minimap.png");
-    else small_map = imread("/home/chris/radar_station2022/src/small_map/src/blue_minimap.png");
+    if (red_or_blue == 0)
+    {
+        std::string small_map_png = std::string(PACK_PATH) + "/src/red_minimap.png";
+        small_map = imread(small_map_png);
+    }
+    else
+    {
+        std::string small_map_png = std::string(PACK_PATH) + "/src/blue_minimap.png";
+        small_map = imread(small_map_png);
+    }
     resize(small_map, small_map, Size(450, 840));
     Mat small_map_copy;
     small_map.copyTo(small_map_copy);
@@ -203,14 +276,12 @@ int main(int argc, char **argv) {
         small_map.copyTo(small_map_copy);
         draw_warn_region(small_map_copy, our_warn_regions, enemy_warn_regions);
         warn_on_map(result_points, small_map_copy);
-        if (close_calc_flag && far_calc_flag) {
-            remove_duplicate();
-            warn_on_map(result_points, small_map_copy);
-            for (auto &i: result_points.data) {
-                draw_point_on_map(i, small_map_copy);
-            }
-            worldPointPub.publish(result_points);
+        remove_duplicate();
+        warn_on_map(result_points, small_map_copy);
+        for (auto &i: result_points.data) {
+            draw_point_on_map(i, small_map_copy);
         }
+            worldPointPub.publish(result_points);
         if (!guard_relative.data.empty()) {
             Point2f ab;
             ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
@@ -517,69 +588,67 @@ draw_warn_region(Mat &image, const vector<vector<Point>> &our_regions, const vec
 
 
 void far_distPointCallback(const radar_msgs::dist_points &input) {
-    if (far_calc_flag == 1) {
-        Mat invR;
-        Mat invM;
-        invert(far_CamMatrix_, invM);
-        invert(far_R, invR);
-        std::vector<radar_msgs::point>().swap(far_points.data);
-        for (int i = 0; i < input.data.size(); i++) {
-            if (input.data[i].dist > 0) {
-                Mat x8_pixel;
-                x8_pixel = (Mat_<double>(3, 1) << (double) input.data[i].x, (double) input.data[i].y, 1);
-                x8_pixel *= (1000 * input.data[i].dist);
-                Mat calcWorld = invR * (invM * x8_pixel - far_T);//2D-3D变换
-                calcWorld /= 1000;
-                double x = calcWorld.at<double>(0, 0);
-                double y = calcWorld.at<double>(1, 0);
-                x /= field_height;
-                y /= field_width;
-                radar_msgs::point point;
-                point.x = x;
-                point.y = y;
-                point.z = calcWorld.at<double>(2, 0);
-                if (red_or_blue == 0) {
-                    if (input.data[i].id == 5) {
-                        point.y = 0.19048;
-                        our_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 11) {
-                        point.y = 0.80952;
-                        enemy_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 0) {
-                        our_hero.x = point.x * 15000;
-                        our_hero.y = point.y * 28000;
-                        our_hero.z = point.z * 1000;
-                    }
-                } else {
-                    if (input.data[i].id == 11) {
-                        point.y = 0.19048;
-                        our_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 5) {
-                        point.y = 0.80952;
-                        enemy_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 6) {
-                        our_hero.x = point.x * 15000;
-                        our_hero.y = point.y * 28000;
-                        our_hero.z = point.z * 1000;
-                    }
-                }
-                point.id = input.data[i].id;
-                far_points.data.push_back(point);
-            }
-        }
-        if (outpost_calc_flag==1 && outpost_dist.dist>0 &&outpost_dist.dist<24) {
+    Mat invR;
+    Mat invM;
+    invert(far_CamMatrix_, invM);
+    invert(far_R, invR);
+    std::vector<radar_msgs::point>().swap(far_points.data);
+    for (int i = 0; i < input.data.size(); i++) {
+        if (input.data[i].dist > 0) {
             Mat x8_pixel;
-            x8_pixel = (Mat_<double>(3, 1) << (double) outpost_dist.x, (double) outpost_dist.y, 1);
-            x8_pixel *= (1000 * outpost_dist.dist);
+            x8_pixel = (Mat_<double>(3, 1) << (double) input.data[i].x, (double) input.data[i].y, 1);
+            x8_pixel *= (1000 * input.data[i].dist);
             Mat calcWorld = invR * (invM * x8_pixel - far_T);//2D-3D变换
-            outpost_3d_armour.x = calcWorld.at<double>(0, 0);
-            outpost_3d_armour.y = calcWorld.at<double>(1, 0);
-            outpost_3d_armour.z = calcWorld.at<double>(2, 0);
+            calcWorld /= 1000;
+            double x = calcWorld.at<double>(0, 0);
+            double y = calcWorld.at<double>(1, 0);
+            x /= field_height;
+            y /= field_width;
+            radar_msgs::point point;
+            point.x = x;
+            point.y = y;
+            point.z = calcWorld.at<double>(2, 0);
+            if (red_or_blue == 0) {
+                if (input.data[i].id == 5) {
+                    point.y = 0.19048;
+                    our_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 11) {
+                    point.y = 0.80952;
+                    enemy_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 0) {
+                    our_hero.x = point.x * 15000;
+                    our_hero.y = point.y * 28000;
+                    our_hero.z = point.z * 1000;
+                }
+            } else {
+                if (input.data[i].id == 11) {
+                    point.y = 0.19048;
+                    our_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 5) {
+                    point.y = 0.80952;
+                    enemy_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 6) {
+                    our_hero.x = point.x * 15000;
+                    our_hero.y = point.y * 28000;
+                    our_hero.z = point.z * 1000;
+                }
+            }
+            point.id = input.data[i].id;
+            far_points.data.push_back(point);
         }
+    }
+    if (outpost_calc_flag==1 && outpost_dist.dist>0 &&outpost_dist.dist<24) {
+        Mat x8_pixel;
+        x8_pixel = (Mat_<double>(3, 1) << (double) outpost_dist.x, (double) outpost_dist.y, 1);
+        x8_pixel *= (1000 * outpost_dist.dist);
+        Mat calcWorld = invR * (invM * x8_pixel - far_T);//2D-3D变换
+        outpost_3d_armour.x = calcWorld.at<double>(0, 0);
+        outpost_3d_armour.y = calcWorld.at<double>(1, 0);
+        outpost_3d_armour.z = calcWorld.at<double>(2, 0);
     }
 }
 
@@ -602,63 +671,60 @@ void far_calibration(const radar_msgs::points &msg) {
     cout << "suc:" << suc << endl;
     cout << "旋转矩阵:" << far_R << endl;
     cout << "平移矩阵" << far_T << endl;
-    far_calc_flag = 1;
 }
 
 void close_distPointCallback(const radar_msgs::dist_points &input) {
-    if (close_calc_flag == 1) {
-        Mat invR;
-        Mat invM;
-        invert(close_CamMatrix_, invM);
-        invert(close_R, invR);
-        std::vector<radar_msgs::point>().swap(close_points.data);
-        for (int i = 0; i < input.data.size(); i++) {
-            if (input.data[i].dist > 0) {
-                Mat x8_pixel;
-                x8_pixel = (Mat_<double>(3, 1) << (double) input.data[i].x, (double) input.data[i].y, 1);
-                x8_pixel *= (1000 * input.data[i].dist);
-                Mat calcWorld = invR * (invM * x8_pixel - close_T);//2D-3D变换
-                calcWorld /= 1000;
-                double x = calcWorld.at<double>(0, 0);
-                double y = calcWorld.at<double>(1, 0);
-                x /= field_height;
-                y /= field_width;
-                radar_msgs::point point;
-                point.x = x;
-                point.y = y;
-                point.z = calcWorld.at<double>(2, 0);
-                if (red_or_blue == 0) {
-                    if (input.data[i].id == 5) {
-                        point.y = 0.19048;
-                        our_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 11) {
-                        point.y = 0.80952;
-                        enemy_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 0) {
-                        our_hero.x = point.x * 15000;
-                        our_hero.y = point.y * 28000;
-                        our_hero.z = point.z * 1000;
-                    }
-                } else {
-                    if (input.data[i].id == 11) {
-                        point.y = 0.19048;
-                        our_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 5) {
-                        point.y = 0.80952;
-                        enemy_guard.x = x * 15000;
-                    }
-                    if (input.data[i].id == 6) {
-                        our_hero.x = point.x * 15000;
-                        our_hero.y = point.y * 28000;
-                        our_hero.z = point.z * 1000;
-                    }
+    Mat invR;
+    Mat invM;
+    invert(close_CamMatrix_, invM);
+    invert(close_R, invR);
+    std::vector<radar_msgs::point>().swap(close_points.data);
+    for (int i = 0; i < input.data.size(); i++) {
+        if (input.data[i].dist > 0) {
+            Mat x8_pixel;
+            x8_pixel = (Mat_<double>(3, 1) << (double) input.data[i].x, (double) input.data[i].y, 1);
+            x8_pixel *= (1000 * input.data[i].dist);
+            Mat calcWorld = invR * (invM * x8_pixel - close_T);//2D-3D变换
+            calcWorld /= 1000;
+            double x = calcWorld.at<double>(0, 0);
+            double y = calcWorld.at<double>(1, 0);
+            x /= field_height;
+            y /= field_width;
+            radar_msgs::point point;
+            point.x = x;
+            point.y = y;
+            point.z = calcWorld.at<double>(2, 0);
+            if (red_or_blue == 0) {
+                if (input.data[i].id == 5) {
+                    point.y = 0.19048;
+                    our_guard.x = x * 15000;
                 }
-                point.id = input.data[i].id;
-                close_points.data.push_back(point);
+                if (input.data[i].id == 11) {
+                    point.y = 0.80952;
+                    enemy_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 0) {
+                    our_hero.x = point.x * 15000;
+                    our_hero.y = point.y * 28000;
+                    our_hero.z = point.z * 1000;
+                }
+            } else {
+                if (input.data[i].id == 11) {
+                    point.y = 0.19048;
+                    our_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 5) {
+                    point.y = 0.80952;
+                    enemy_guard.x = x * 15000;
+                }
+                if (input.data[i].id == 6) {
+                    our_hero.x = point.x * 15000;
+                    our_hero.y = point.y * 28000;
+                    our_hero.z = point.z * 1000;
+                }
             }
+            point.id = input.data[i].id;
+            close_points.data.push_back(point);
         }
     }
 }
@@ -680,7 +746,6 @@ void close_calibration(const radar_msgs::points &msg) {
     cout << "suc:" << suc << endl;
     cout << "旋转矩阵:" << close_R << endl;
     cout << "平移矩阵" << close_T << endl;
-    close_calc_flag = 1;
 }
 
 //            Mat Points(far_points.data.size(),1,CV_32FC2);
