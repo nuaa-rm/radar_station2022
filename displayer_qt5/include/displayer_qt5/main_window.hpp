@@ -21,7 +21,8 @@
 #include <QTimer>
 #include <QTime>
 #include <QApplication>
-
+#define LOG_LIMIT_TIMER_COUNT 11
+#define LOG_TIME 5
 /*****************************************************************************
 ** Namespace
 *****************************************************************************/
@@ -81,6 +82,7 @@ private:
     QImage qimage_second_window_;
     mutable QMutex qimage_mutex_;
     QTimer *fTimer;
+    unsigned int log_limit_timer[LOG_LIMIT_TIMER_COUNT];
 };
 
 }  // namespace displayer_qt5

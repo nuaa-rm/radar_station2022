@@ -13,6 +13,12 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
         {   if(if_point_being_selected)
             {
                 sensor_far_points[min_i] = point;
+                std::string str("/camera/list/farCam/calibrationDefault/point"), str2;
+                str += std::to_string(min_i + 1);
+                str2 = str + "/x";
+                ros::param::set(str2, point.x() * 1.0 / calibrateMainWindowWidth);
+                str2 = str + "/y";
+                ros::param::set(str2, point.y() * 1.0 / calibrateMainWindowHeight);
             }
             else
             {
@@ -26,6 +32,12 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
                     }
                 }
                 sensor_far_points[min_i] = point;
+                std::string str("/camera/list/farCam/calibrationDefault/point"), str2;
+                str += std::to_string(min_i + 1);
+                str2 = str + "/x";
+                ros::param::set(str2, point.x() * 1.0 / calibrateMainWindowWidth);
+                str2 = str + "/y";
+                ros::param::set(str2, point.y() * 1.0 / calibrateMainWindowHeight);
                 if_point_being_selected = true;
             }
         }
@@ -34,6 +46,12 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
             if(if_point_being_selected)
             {
                 sensor_close_points[min_i] = point;
+                std::string str("/camera/list/closeCam/calibrationDefault/point"), str2;
+                str += std::to_string(min_i + 1);
+                str2 = str + "/x";
+                ros::param::set(str2, point.x() * 1.0 / calibrateMainWindowWidth);
+                str2 = str + "/y";
+                ros::param::set(str2, point.y() * 1.0 / calibrateMainWindowHeight);
             }
             else
             {
@@ -47,6 +65,12 @@ void QLabel_with_mouse_event::mouseMoveEvent(QMouseEvent *event)
                     }
                 }
                 sensor_close_points[min_i] = point;
+                std::string str("/camera/list/closeCam/calibrationDefault/point"), str2;
+                str += std::to_string(min_i + 1);
+                str2 = str + "/x";
+                ros::param::set(str2, point.x() * 1.0 / calibrateMainWindowWidth);
+                str2 = str + "/y";
+                ros::param::set(str2, point.y() * 1.0 / calibrateMainWindowHeight);
                 if_point_being_selected = true;
             }
         }

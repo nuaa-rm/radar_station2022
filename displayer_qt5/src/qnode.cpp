@@ -74,73 +74,73 @@ void QNode::imgShowSecondWindowCallback(const sensor_msgs::ImageConstPtr &msg)
             cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::RGB8);
             if(!cv_ptr->image.empty())
             {
-              if(recorder_fps <= 1e-5)
-              {
-                  static ros::Time begin;
-                  static ros::Time end;
-                  if(i == 0)
-                  {
-                      begin = ros::Time::now();
-                  }
-                  else if(i == 10)
-                  {
-                      end = ros::Time::now();
-                      recorder_fps = 10 / (end - begin).toSec();
-                  }
-                  i++;
-              }
-              else if(i == 11)
-              {
-                  int codec = cv::VideoWriter::fourcc('D', 'I', 'V', '3');
-                  path += "/recorded.avi";
-                  recorder.open(path, codec, recorder_fps, cv_ptr->image.size(), true);
-                  i++;
-              }
+//              if(recorder_fps <= 1e-5)
+//              {
+//                  static ros::Time begin;
+//                  static ros::Time end;
+//                  if(i == 0)
+//                  {
+//                      begin = ros::Time::now();
+//                  }
+//                  else if(i == 10)
+//                  {
+//                      end = ros::Time::now();
+//                      recorder_fps = 10 / (end - begin).toSec();
+//                  }
+//                  i++;
+//              }
+//              else if(i == 11)
+//              {
+//                  int codec = cv::VideoWriter::fourcc('D', 'I', 'V', '3');
+//                  path += "/recorded.avi";
+//                  recorder.open(path, codec, recorder_fps, cv_ptr->image.size(), true);
+//                  i++;
+//              }
               imgShowSecondWindow = cv_ptr->image;
-              if(ifBeginToRecord)
-              {
-                  ifRecordDone = false;
-                  recorder << imgShowSecondWindow;
-              }
-              if(ifRecordDone)
-              {
-                  recorder.release();
-                  replayer.open(path);
-                  log(Info, std::string("我方飞镖闸门关闭，开始回放！"));
-              }
-              static int i = 0;
-              if(ifBeginToReplay)
-              {
-                  ifRecordDone = false;
-                  cv::Mat m;
-                  replayer >> m;
-                  if(!m.empty())
-                  {
-                      cv::Rect re(0, 0, m.cols / 2, m.rows / 2);
-                      m(re).copyTo(imgShowSecondWindow);
-
-                  }
-                  else
-                  {
-                      if(i == 2)
-                      {
-                          ifReplayDone = true;
-                          ifBeginToReplay = false;
-                          i = 0;
-                          log(Info, std::string("第3次回放结束！"));
-                      }
-                      else
-                      {
-                          i++;
-                          replayer.open(path);
-                          log(Info, std::string("第") + std::to_string(i) + std::string("次回放结束！"));
-                      }
-                  }
-              }
-              if(ifReplayDone)
-              {
-                  replayer.release();
-              }
+//              if(ifBeginToRecord)
+//              {
+//                  ifRecordDone = false;
+//                  recorder << imgShowSecondWindow;
+//              }
+//              if(ifRecordDone)
+//              {
+//                  recorder.release();
+//                  replayer.open(path);
+//                  log(Info, std::string("我方飞镖闸门关闭，开始回放！"));
+//              }
+//              static int i = 0;
+//              if(ifBeginToReplay)
+//              {
+//                  ifRecordDone = false;
+//                  cv::Mat m;
+//                  replayer >> m;
+//                  if(!m.empty())
+//                  {
+//                      cv::Rect re(0, 0, m.cols / 2, m.rows / 2);
+//                      m(re).copyTo(imgShowSecondWindow);
+//
+//                  }
+//                  else
+//                  {
+//                      if(i == 2)
+//                      {
+//                          ifReplayDone = true;
+//                          ifBeginToReplay = false;
+//                          i = 0;
+//                          log(Info, std::string("第3次回放结束！"));
+//                      }
+//                      else
+//                      {
+//                          i++;
+//                          replayer.open(path);
+//                          log(Info, std::string("第") + std::to_string(i) + std::string("次回放结束！"));
+//                      }
+//                  }
+//              }
+//              if(ifReplayDone)
+//              {
+//                  replayer.release();
+//              }
 
               cv::resize(imgShowSecondWindow, imgShowSecondWindow, cv::Size(showSecondWindowWidth, showSecondWindowHeight));
               imageShowSecondWindow = QImage(imgShowSecondWindow.data,imgShowSecondWindow.cols,imgShowSecondWindow.rows,imgShowSecondWindow.step[0],QImage::Format_RGB888);//change  to QImage format
