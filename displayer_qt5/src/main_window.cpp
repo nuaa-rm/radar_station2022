@@ -248,6 +248,19 @@ void MainWindow::initUI()
     ui.labelCalibrateCameraMainWindow->calibrateMainWindowHeight = qnode.calibrateMainWindowHeight;
     ui.labelCalibrateCameraMainWindow->calibrateMainWindowWidth = qnode.calibrateMainWindowWidth;
 
+    ui.label_camera->setMaximumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
+    ui.label_camera->setMinimumSize(QSize(qnode.showMainWindowWidth, qnode.showMainWindowHeight));
+    ui.label_camera2->setMaximumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
+    ui.label_camera2->setMinimumSize(QSize(qnode.showSecondWindowWidth, qnode.showSecondWindowHeight));
+    ui.labelSmallMap->setMaximumSize(QSize(qnode.smallMapWidth, qnode.smallMapHeight));
+    ui.labelSmallMap->setMinimumSize(QSize(qnode.smallMapWidth, qnode.smallMapHeight));
+    ui.labelLogo->setMaximumSize(QSize(qnode.logoWidth, qnode.logoHeight));
+    ui.labelLogo->setMinimumSize(QSize(qnode.logoWidth, qnode.logoHeight));
+    ui.labelCalibrateCameraMainWindow->setMaximumSize(QSize(qnode.calibrateMainWindowWidth, qnode.calibrateMainWindowHeight));
+    ui.labelCalibrateCameraMainWindow->setMinimumSize(QSize(qnode.calibrateMainWindowWidth, qnode.calibrateMainWindowHeight));
+    ui.labelCalibrateCameraSecondWindow->setMaximumSize(QSize(qnode.calibrateSecondWindowWidth, qnode.calibrateSecondWindowHeight));
+    ui.labelCalibrateCameraSecondWindow->setMinimumSize(QSize(qnode.calibrateSecondWindowWidth, qnode.calibrateSecondWindowHeight));
+
     for(size_t i = 0; i < LOG_LIMIT_TIMER_COUNT; i++)
     {
         log_limit_timer[i] = 0;
