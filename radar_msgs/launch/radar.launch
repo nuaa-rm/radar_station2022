@@ -1,16 +1,13 @@
 <launch>
   <rosparam command="load" file="$(find radar_msgs)/yaml/radar.yaml" />
   <rosparam command="load" file="$(find displayer_qt5)/yaml/displayer_qt5.yaml" />
-
 <!--  <include file="$(find livox_ros_driver)/launch/livox_lidar.launch" />-->
   <node pkg="realsense_ros_driver" type="realsense_ros_driver_node" name="realsense_ros_driver_node" output="screen" respawn="true" />
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_far" output="screen" respawn="true" ns="sensor_far" /> -->
 <!--   <node pkg="mv_driver" type="mv_driver_node" name="sensor_close" output="screen" respawn="true" ns="sensor_close" /> -->
-  <node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" />
+  <node name="displayer_qt5" pkg="displayer_qt5" type="displayer_qt5" respawn="true"/>
   <node name="yolo_with_two_layers" pkg="yolo_with_two_layers" type="yolo_with_two_layers_node" respawn="true"/>
   <node name="get_depth_node" pkg="get_depth" type="get_depth_node" respawn="true"/>
   <node pkg="small_map" type="small_map" name="small_map" output="screen" respawn="true"/>
-
 <!--   <node pkg="serial_port" type="serial_port_node"  name="serial_port" output="screen" respawn="true" /> -->
-
 </launch>

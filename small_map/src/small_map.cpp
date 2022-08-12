@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
             ab.x = (guard_relative.data[0].x + our_guard.x) / 15000 * 450 - X_shift;
             ab.y = 840 - (guard_relative.data[0].y + our_guard.y) / 28000 * 840 - Y_shift;
 
-            cout << (int) in_our_base_cnt << endl;
+            //cout << (int) in_our_base_cnt << endl;
             if (pointPolygonTest(guidao_houbian, ab, false) >= 0) {
                 in_our_base_cnt++;
                 if (in_our_base_cnt > 10) {

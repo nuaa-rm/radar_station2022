@@ -247,6 +247,11 @@ void MainWindow::initUI()
 
     ui.labelCalibrateCameraMainWindow->calibrateMainWindowHeight = qnode.calibrateMainWindowHeight;
     ui.labelCalibrateCameraMainWindow->calibrateMainWindowWidth = qnode.calibrateMainWindowWidth;
+
+    for(size_t i = 0; i < LOG_LIMIT_TIMER_COUNT; i++)
+    {
+        log_limit_timer[i] = 0;
+    }
 }
 
 void MainWindow::updateLogcamera()
@@ -511,49 +516,60 @@ void displayer_qt5::MainWindow::updateSmallMap()
     ui.labelSmallMap->drawROI(&i);
     if(i)
     {
-        if(i & 0x01)
+        if((i & 0x01) && log_limit_timer[0] >= LOG_TIME)
         {
             qnode.log(Fatal, std::string("敌方飞坡！敌方飞坡！敌方飞坡！"));
+            log_limit_timer[0] = 0;
         }
-        if(i & 0x02)
+        if((i & 0x02) && log_limit_timer[1] >= LOG_TIME)
         {
             qnode.log(Warn, std::string("敌方登上能量机关激活点。"));
+            log_limit_timer[1] = 0;
         }
-        if(i & 0x04)
+        if((i & 0x04) && log_limit_timer[2] >= LOG_TIME)
         {
             //qnode.log(Info, std::string("敌方登上能量机关激活点。"));
+            log_limit_timer[2] = 0;
         }
-        if(i & 0x08)
+        if((i & 0x08) && log_limit_timer[3] >= LOG_TIME)
         {
             qnode.log(Warn, std::string("敌方位于英雄快乐点。"));
+            log_limit_timer[3] = 0;
         }
-        if(i & 16)
+        if((i & 16) && log_limit_timer[4] >= LOG_TIME)
         {
             qnode.log(Warn, std::string("敌方位于狙击点。"));
+            log_limit_timer[4] = 0;
         }
-        if(i & 32)
+        if((i & 32) && log_limit_timer[5] >= LOG_TIME)
         {
             qnode.log(Error, std::string("敌方位于我方公路区。"));
+            log_limit_timer[5] = 0;
         }
-        if(i & 64)
+        if((i & 64) && log_limit_timer[6] >= LOG_TIME)
         {
             qnode.log(Fatal, std::string("敌方位于我方环高，注意保护哨兵。"));
+            log_limit_timer[6] = 0;
         }
-        if(i & 128)
+        if((i & 128) && log_limit_timer[7] >= LOG_TIME)
         {
             qnode.log(Error, std::string("敌方位于我方狙击点。"));
+            log_limit_timer[7] = 0;
         }
-        if(i & 256)
+        if((i & 256) && log_limit_timer[8] >= LOG_TIME)
         {
             qnode.log(Error, std::string("敌方位于我方能量机关激活点。"));
+            log_limit_timer[8] = 0;
         }
-        if(i & 512)
+        if((i & 512) && log_limit_timer[9] >= LOG_TIME)
         {
             qnode.log(Error, std::string("敌方位于我方飞坡点。"));
+            log_limit_timer[9] = 0;
         }
-        if(i & 1024)
+        if((i & 1024) && log_limit_timer[10] >= LOG_TIME)
         {
             qnode.log(Error, std::string("敌方位于我方前哨站处。"));
+            log_limit_timer[10] = 0;
         }
     }
 }
@@ -562,6 +578,10 @@ void displayer_qt5::MainWindow::on_timer_timeout()
 {
     ui.labelSmallMap->tim = !ui.labelSmallMap->tim;
     ui.labelSmallMap->update();
+    for(size_t i = 0; i < LOG_LIMIT_TIMER_COUNT; i++)
+    {
+        log_limit_timer[i] ++;
+    }
 }
 
 void displayer_qt5::MainWindow::updateGameState()
