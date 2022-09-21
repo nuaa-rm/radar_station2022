@@ -1,4 +1,6 @@
-﻿# 长空御风雷达站
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E6%97%A0%E8%83%8C%E6%99%AF2.png)
+
+# 长空御风雷达站
 
 基于工业相机和Livox激光雷达的RoboMaster雷达站项目
 南京航空航天大学长空御风战队开源
@@ -76,3 +78,5 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 ## 项目负责人
 
 ## 开源协议
+
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E9%9B%B7%E8%BE%BE%E7%BB%84%E6%A0%87(1).png)
