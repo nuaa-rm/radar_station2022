@@ -83,6 +83,8 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 ## How It Works
 ![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/gongneng.png)
 
+[更为详细的原理讲解](https://github.com/DoveJH/readme_source/raw/main/2020radar_station/%E5%BC%80%E6%BA%90%E6%8A%A5%E5%91%8A.pdf)
+
 ## 项目结构
 
 ├── radar_station2022  
