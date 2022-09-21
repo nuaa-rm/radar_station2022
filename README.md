@@ -244,6 +244,26 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 │       └── yolov5s_number.engine 用于识别数字的engine文件  
 └── tree.md
 
+## 内部通信中的ID定义
+
+ID|兵种
+----|----
+0 |红方英雄  
+1 |红方工程  
+2 |红方3号步兵  
+3 |红方4号步兵  
+4 |红方5号步兵  
+5 |红方哨兵  
+6 |蓝方英雄  
+7 |蓝方工程  
+8 |蓝方3号步兵  
+9 |蓝方4号步兵  
+10|蓝方5号步兵  
+11|蓝方哨兵  
+12|红方未知  
+13|蓝方未知  
+
+
 ## 主要开发者
 [@DoveJH](https://github.com/DoveJH)
 [@Christopher](https://github.com/Christopher-bit)
