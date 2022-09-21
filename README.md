@@ -1,4 +1,4 @@
-![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E6%97%A0%E8%83%8C%E6%99%AF2.png)
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E9%9B%B7%E8%BE%BE%E7%BB%84%E6%A0%87%E6%A8%AA.png)
 
 # 长空御风雷达站
 
@@ -8,7 +8,12 @@
 ## 项目介绍
 本项目为南京航空航天大学长空御风战队的RoboMaster2022雷达站开源项目。
 ![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/liucheng.png)
-//机器人参数
+
+传感器 | 型号
+----|----
+上相机 *(不参与运算，仅提供视野)* | Realsense D435i
+左右相机 | MV-SUA134GC-T 8mm 1:2.0 1/1.8”
+激光雷达 | Livox Mid70
 
 ## 系统架构
 
@@ -70,19 +75,20 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
     source devel/setup.bash
     roslaunch radar_msgs radar.launch
 如果你获得如下效果，即为成功运行。
-！[image]（https://github.com/DoveJH/readme_source/blob/main/2020radar_station/2022-09-17%2012-25-24%20%E7%9A%84%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png）
+
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/2022-09-17%2012-25-24%20%E7%9A%84%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png)
 
 ## How It Works
 ![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/gongneng.png)
 
 ## 项目结构
 
-├── radar_station2022
+├── radar_station2022  
 │   ├── calibrateCamera 相机标定测试包，已废弃  
-│   ├── CMakeLists.txt
+│   ├── CMakeLists.txt  
 │   ├── dart_detect 一个未完成的飞镖检测节点  
 │   ├── detect_mineral 一个未完成的落矿检测节点  
-│   ├── displayer_app 旧的UI节点
+│   ├── displayer_app 旧的UI节点  
 │   ├── displayer_qt5 目前使用的UI  
 │   │   ├── CMakeLists.txt  
 │   │   ├── include  
@@ -246,4 +252,4 @@ E-mail: 1358446393@qq.com  1134643765@qq.com
 
 [MIT](LICENSE) © 刘建航
 
-![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E9%9B%B7%E8%BE%BE%E7%BB%84%E6%A0%87%E6%A8%AA.png)
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E6%97%A0%E8%83%8C%E6%99%AF2.png)
