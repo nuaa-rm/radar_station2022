@@ -43,8 +43,8 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 
 ### 配置工作
 
- - 根据https://github.com/ultralytics/yolov5下的引导完成神经网络的训练。
- - 根据https://github.com/wang-xinyu/tensorrtx下的指示生成.engine文件。
+ - 根据https://github.com/ultralytics/yolov5 下的引导完成神经网络的训练。
+ - 根据https://github.com/wang-xinyu/tensorrtx 下的指示生成.engine文件。
  - 将用于识别车辆和装甲板的engine文件分别命名为yolov5s_car.engine和yolov5s_number.engine，并放入yolo_with_two_layers包目录下。
  - **根据你使用tensorrtx生成engine时的配置，修改yolo_with_two_layers包中相应文件参数**，两套配置已通过变量命名的后缀指出。
  - 如果你使用的不是迈德威视工业相机，请启动你的相机节点。并将相机发布的话题修改为/sensor_close/image_raw和/sensor_far/image_raw
@@ -70,7 +70,9 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
     catkin_make -DCATKIN_WHITELIST_PACKAGE=""
 
 ### 运行
+
 连接相机和激光雷达
+
     cd [workspace]
     source devel/setup.bash
     roslaunch radar_msgs radar.launch
@@ -253,3 +255,7 @@ E-mail: 1358446393@qq.com  1134643765@qq.com
 [MIT](LICENSE) © 刘建航
 
 ![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/%E6%97%A0%E8%83%8C%E6%99%AF2.png)
+
+<p align="center">
+南京航空航天大学 长空御风
+</p>
