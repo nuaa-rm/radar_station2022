@@ -3,11 +3,9 @@
 基于工业相机和Livox激光雷达的RoboMaster雷达站项目
 南京航空航天大学长空御风战队开源
 
-[ TOC ]
-
 ## 项目介绍
 本项目为南京航空航天大学长空御风战队的RoboMaster2022雷达站开源项目。
-//机器人功能定义
+![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/liucheng.png)
 //机器人参数
 //项目机构图
 
@@ -49,17 +47,17 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 下载工程至你的工作空间下
 
     git clone https://github.com/nuaa-rm/radar_station2022.git
-    
+
 进入你的工作空间下
 
 项目运行时，需要启动livox_ros_driver，为了以后无需额外source livox_ros_driver工程，需要在**编译前**执行以下步骤。如果已经编译，则可以删除编译生成文件，从新执行下述命令，并进行编译。
 
     source [你的livox_ros_driver工作空间]/devel/setup.bash
-    
+
 由于radar_msgs包和hp_limit_helper包中自定义了ROS的message类型，需要先行编译，否则会导致报错。
 
     catkin_make -DCATKIN_WHITELIST_PACKAGE="radar_msgs;hp_limit_helper"
-    
+
 然后编译其余包：
 
     catkin_make -DCATKIN_WHITELIST_PACKAGE=""
@@ -78,5 +76,3 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 ## 项目负责人
 
 ## 开源协议
-
-
