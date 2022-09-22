@@ -55,8 +55,7 @@ Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input);//Convert PointC
 
 void outpost_Callback(const radar_msgs::points &outpost);
 
-void
-MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
+void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix,
            Mat &Uni_matrix);//Convert world to uv by Matrix_Calculation
 typedef struct {
     float Last_P;//上次估算协方差 不可以为0 ! ! ! ! !
@@ -100,6 +99,11 @@ void write_csv(std::string filename, vector<float> vals) {
     myFile.close();
 }
 
+/**
+ * 将点云合并成矩阵，方便一同运算
+ * @param input 输入点云
+ * @return 输出矩阵
+ */
 Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     Mat res = Mat::zeros(4, (int) input->size(), CV_32F);
     for (int k = 0; k < res.cols; k++) {
@@ -110,6 +114,13 @@ Mat Cloud2Mat(const pcl::PointCloud<pcl::PointXYZ>::Ptr &input) {
     return res;
 }
 
+/**
+ * 用于将点云拼成的矩阵变换至像素坐标
+ * @param input_depth 输入的点云矩阵
+ * @param input_uv 输出
+ * @param Cam_matrix 相机内参
+ * @param Uni_matrix 相机外参
+ */
 void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matrix) {
     Mat res = Cam_matrix * Uni_matrix * input_uv;
     for (int i = 0; i < res.cols; i++) {
@@ -121,6 +132,11 @@ void MatProject(Mat &input_depth, Mat &input_uv, Mat &Cam_matrix, Mat &Uni_matri
     }
 }
 
+/**
+ * 用于在两帧图像中匹配同一目标，防止z值突变的情况发生
+ * @param last_frame 上一帧图像中目标的坐标
+ * @param this_frame 这一帧中目标的坐标
+ */
 void frame_point_match(const radar_msgs::dist_points &last_frame, radar_msgs::dist_points &this_frame) {
     uint8_t match_suc_flag = 0;
     for (int k = 0; k < this_frame.data.size(); k++) {
@@ -138,14 +154,14 @@ void frame_point_match(const radar_msgs::dist_points &last_frame, radar_msgs::di
 
 //update the car_rects
 void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
-    Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img
-    Mat far_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1);
+    Mat far_depthes = Mat::zeros(imgRows, imgCols, CV_32FC1);//initialize the depth img 用于运算的深度图
+    Mat far_depth_show = Mat::zeros(imgRows, imgCols, CV_32FC1); //用于显示的深度图
     std::vector<radar_msgs::dist_point>().swap(far_distance_it.data);
     if (cloud) {
         Mat far_MatCloud = Cloud2Mat(cloud);
         MatProject(far_depthes, far_MatCloud, far_camera_matrix, far_uni_matrix);
         far_depthes.copyTo(far_depth_show);
-        far_depth_queue.push_back(far_depthes);
+        far_depth_queue.push_back(far_depthes); //调整队列
         if (far_depth_queue.size() == length_of_cloud_queue) {
             far_depth_queue.erase(far_depth_queue.begin());
         }
@@ -167,6 +183,8 @@ void far_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
             putText(far_depth_show, std::to_string(point_it.dist), Point(point_it.x, point_it.y),
                     FONT_HERSHEY_COMPLEX_SMALL, 1,
                     Scalar(255, 255, 255), 1, 8, 0);
+
+            //下面用来辅助英雄测距
             if (post_pub_flag == 1) {
                 outpost_distance_it.x = outpost_point.x - 6;
                 outpost_distance_it.y = outpost_point.y - 6;
@@ -259,20 +277,34 @@ void close_yoloCallback(const radar_msgs::yolo_points::ConstPtr &input) {
     waitKey(1);
 }
 
-//update the dethes_img by pointcloud
+/**
+ * 将受到的点云消息转换成点云
+ * @param input 收到的消息
+ */
 void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &input) {
     cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
 }
-
+/**
+ * 用于接收前哨站位置消息
+ * @param outpost 前哨站位置
+ */
 void outpost_Callback(const radar_msgs::points &outpost) {
     post_pub_flag = 1;
     outpost_point.x = outpost.data[0].x * 1280;
     outpost_point.y = outpost.data[0].y * 1024;
 }
 
+/**
+ * 从深度图中获取ROI的深度
+ * @param rect ROI
+ * @param depth_queue 深度图队列
+ * @param id 车辆ID
+ * @return 深度值
+ */
 float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point::_id_type id) {
     vector<float> distances;
+    //从新到旧遍历深度图队列，直到ROI深度不为0
     for (int i = rect.y; i < (rect.y + rect.height); i++) {
         for (int j = rect.x; j < (rect.x + rect.width); j++) {
             for (uint8_t k = 0; k < depth_queue.size(); k++) {
@@ -293,6 +325,7 @@ float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point
     } else {
         float mean_distance;
         float sum = 0;
+        //根据不同的策略获取深度
         if (id != 12 && id != 13) {
             for (float distance: distances) {
                 sum += distance;
@@ -321,9 +354,10 @@ float getDepthInRect(Rect rect, vector<Mat> &depth_queue, radar_msgs::yolo_point
 int main(int argc, char **argv) {
     ros::init(argc, argv, "get_depth_node");
     ros::NodeHandle n;
-    ros::param::get("/length_of_cloud_queue", length_of_cloud_queue);
+    ros::param::get("/length_of_cloud_queue", length_of_cloud_queue);//点云队列长度
     ros::param::get("/image_width", imgCols);
     ros::param::get("/image_height", imgRows);
+    //相机内参
     ros::param::get("/sensor_far/camera_matrix/zerozero", far_camera_matrix.at<float>(0, 0));
     ros::param::get("/sensor_far/camera_matrix/zerotwo", far_camera_matrix.at<float>(0, 2));
     ros::param::get("/sensor_far/camera_matrix/oneone", far_camera_matrix.at<float>(1, 1));
@@ -340,6 +374,7 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_far/distortion_coefficient/three", far_distortion_coefficient.at<float>(3, 0));
     ros::param::get("/sensor_far/distortion_coefficient/four", far_distortion_coefficient.at<float>(4, 0));
     cout << "far_Distortion coefficient load done!" << far_distortion_coefficient << endl;
+    //相机外参默认值
     ros::param::get("/sensor_far/uni_matrix/zerozero", far_uni_matrix.at<float>(0, 0));
     ros::param::get("/sensor_far/uni_matrix/zeroone", far_uni_matrix.at<float>(0, 1));
     ros::param::get("/sensor_far/uni_matrix/zerotwo", far_uni_matrix.at<float>(0, 2));
@@ -354,7 +389,7 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_far/uni_matrix/twothree", far_uni_matrix.at<float>(2, 3));
     cout << "far Uni matrix load done!" << far_uni_matrix << endl;
 
-
+    //相机内参
     ros::param::get("/sensor_close/camera_matrix/zerozero", close_camera_matrix.at<float>(0, 0));
     ros::param::get("/sensor_close/camera_matrix/zerotwo", close_camera_matrix.at<float>(0, 2));
     ros::param::get("/sensor_close/camera_matrix/oneone", close_camera_matrix.at<float>(1, 1));
@@ -371,6 +406,7 @@ int main(int argc, char **argv) {
     ros::param::get("/sensor_close/distortion_coefficient/three", close_distortion_coefficient.at<float>(3, 0));
     ros::param::get("/sensor_close/distortion_coefficient/four", close_distortion_coefficient.at<float>(4, 0));
     cout << "close_Distortion coefficient load done!" << close_distortion_coefficient << endl;
+    //相机外参默认值
     ros::param::get("/sensor_close/uni_matrix/zerozero", close_uni_matrix.at<float>(0, 0));
     ros::param::get("/sensor_close/uni_matrix/zeroone", close_uni_matrix.at<float>(0, 1));
     ros::param::get("/sensor_close/uni_matrix/zerotwo", close_uni_matrix.at<float>(0, 2));
