@@ -15,7 +15,8 @@
 using namespace std;
 using namespace cv;
 
-struct frame_header//消息头
+//消息头
+struct frame_header
 {
     uint8_t SOF = 0xA5;//固定值
     uint16_t data_length = 10;//data的长度
@@ -23,7 +24,8 @@ struct frame_header//消息头
     uint8_t crc; //帧头crc8
 } __attribute__((packed));
 
-struct map_data//小地图消息数据 10hz 发送
+//小地图消息数据 10hz 发送
+struct map_data
 {
     uint16_t target_robot_id;
     float target_position_x;
@@ -36,6 +38,7 @@ struct map_msg {
     uint16_t crc;
 } __attribute__((packed));
 
+//车间通讯
 struct robot_interactive_data//最大10HZ 发送和接收
 {
     uint16_t cmd_id;
@@ -99,6 +102,7 @@ struct robot_interactive_msgs {
     uint16_t crc;
 } __attribute__((packed));
 
+//自定义控制消息
 struct robot_interactive_control_data //30HZ 发送和接收
 {
     uint8_t content[30];
@@ -110,6 +114,7 @@ struct robot_interactive_control_msgs {
     uint16_t crc;
 } __attribute__((packed));
 
+//车辆血量消息
 struct robot_health_data //1hz 接收
 {
     uint16_t red_1_robot_HP = 0;
@@ -138,6 +143,7 @@ struct robot_health_msgs //1HZ
     uint16_t crc;
 } __attribute__((packed));
 
+//比赛状态信息
 struct game_status_data //1hz 接收
 {
     uint8_t game_type: 4; //1：机甲大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
@@ -153,6 +159,7 @@ struct game_status_msgs {
     uint16_t crc;
 } __attribute__((packed));
 
+//比赛结果
 struct game_result_data//比赛结束发送 接收
 {
     uint8_t winner; //0平局 1红方胜利 2蓝方胜利
@@ -164,6 +171,7 @@ struct game_result_msg {
     uint16_t crc;
 } __attribute__((packed));
 
+//飞镖交互消息
 struct dart_interactivate_msg_data {
     uint8_t dart_launch_opening_status; //fei biao fa she kou zhuang tai 1 guan bi 2 zheng zai huo dong 0 yi jing kai qi
     uint8_t dart_attack_target; //飞镖的打击目标,默认为前哨站;0:前哨站; 1:基地。
@@ -171,6 +179,7 @@ struct dart_interactivate_msg_data {
     uint16_t operate_launch_cmd_time; //最近一次操作手确定发射指令时的比赛剩余时间,单位秒, 初始值为 0。
 } __attribute__((packed));
 
+//场地机关占领消息
 struct site_event_data //1hz 接收
 {
     uint32_t event_type;
@@ -195,6 +204,7 @@ struct site_event_msgs {
     uint16_t crc;
 } __attribute__((packed));
 
+//补给站消息
 struct supply_projectile_action_data //触发时发送 接收
 {
     uint8_t supply_projectile_id; //补给站口ID 1一号补给口 2二号补给口
@@ -209,6 +219,7 @@ struct supply_projectile_action_msg {
     uint16_t crc;
 } __attribute__((packed));
 
+//裁判判罚消息
 struct referee_warning_data //触发时发送 接收
 {
     uint8_t level; //1黄牌 2红牌 3判负
@@ -221,6 +232,7 @@ struct referee_warning_msg {
     uint16_t crc;
 } __attribute__((packed));
 
+//飞镖闸门关闭倒计时
 struct dart_remaining_time_data //1hz 接收
 {
     uint8_t dart_remaining_time; //15s倒计时
@@ -238,6 +250,9 @@ struct car_point {
 };
 uint8_t warn_state;
 
+/**
+ * 串口通讯类
+ */
 class serial_port {
 public:
     serial::Serial ser;
@@ -261,6 +276,10 @@ public:
     uint8_t receiveData[1024];
     bool is_enemy_red = false;
 
+    /**
+     * 串口初始化
+     * @return
+     */
     int serial_port_init() {
         ser.setPort("/dev/ttyUSB0");
         ser.setBaudrate(115200);
@@ -273,6 +292,13 @@ public:
         serial_port_init();
     }
 
+    /**
+     * 发送小地图消息
+     * @param id 车辆ID
+     * @param x x坐标
+     * @param y y坐标
+     * @return 是否成功发送
+     */
     bool sendMapMsgs(uint16_t id, float x, float y) {
         mapMsg.head.SOF = 0xA5;
         mapMsg.head.data_length = 10;
@@ -290,6 +316,11 @@ public:
         return true;
     }
 
+    /**
+     * 发送车间交互消息
+     * @param receiver_id 在当接受者为红方时的ID
+     * @return 是否成功发送
+     */
     bool sendInteractiveMsgs(uint16_t receiver_id)//接受者ID以红方为准
     {
         //构造头
@@ -301,6 +332,7 @@ public:
                                                             sizeof(robotInteractiveMsgs.head.crc)), 0xff);
         robotInteractiveMsgs.cmd_id = 0x0301;
         robotInteractiveMsgs.data.cmd_id = 0x0201;
+        //根据阵营自动调整ID
         if (is_enemy_red) {
             robotInteractiveMsgs.data.sender_id = 109;
             robotInteractiveMsgs.data.receiver_id = 100 + receiver_id;
@@ -317,6 +349,10 @@ public:
         std::cout << robotInteractiveMsgs.data.receiver_id << std::endl;
         return true;
     }
+    /**
+     * 发送与英雄交互的消息
+     * @return 是否成功发送
+     */
     bool sendHeroMsgs(){
         //构造头
         HeroMsgs.head.SOF = 0xA5;
@@ -344,10 +380,15 @@ public:
         return true;
     }
 
+    /**
+     * 接收消息
+     * @return 是否成功接收
+     */
     bool receiveMsgs() {
         if (ser.available()) {
             bool if_pub = false;
             ser.read(receiveData, ser.available());
+            //使用所有消息类型进行匹配，若CRC校验通过，则匹配成功
             gameStatusMsgs = (*(game_status_msgs *) receiveData);
             dartRemainingTimeMsg = (*(dart_remaining_time_msg *) receiveData);
             robotHealthMsgs = (*(robot_health_msgs *) receiveData);
@@ -481,6 +522,10 @@ public:
 serial_port sp;
 vector<car_point> worldPoints;
 
+/**
+ * 目标世界坐标回调函数
+ * @param msg 收到的消息
+ */
 void worldPointsCallback(const radar_msgs::points &msg) {
     warn_state = msg.id;
     static int pubCount = 0;
@@ -557,7 +602,10 @@ void worldPointsCallback(const radar_msgs::points &msg) {
         }
     }
 }
-
+/**
+ * 哨兵相关预警消息的接受
+ * @param msg
+ */
 void GuardCallback(const radar_msgs::points &msg) {
     sp.robotInteractiveMsgs.data.content[0]=0xcc;
     sp.robotInteractiveMsgs.data.content[1]=(int16_t)msg.data[0].x;
@@ -573,6 +621,7 @@ void GuardCallback(const radar_msgs::points &msg) {
     sp.robotInteractiveMsgs.data.content[11]=(int16_t)msg.data[1].z;
     sp.robotInteractiveMsgs.data.content[12]=(int16_t)msg.data[1].z>>8;
 }
+//英雄相关预警消息的接收
 void HeroCallback(const radar_msgs::point &msg) {
     sp.HeroMsgs.data.content[0]=0xbb;
     sp.HeroMsgs.data.content[1]=(int16_t)msg.x;
@@ -594,6 +643,7 @@ int main(int argc, char **argv) {
     } else {
         ROS_INFO_STREAM("Serial Port initialized! ");
     }
+    //读取我方阵营参数
     string exchange;
     ros::param::get("battle_state/battle_color", exchange);
     if (exchange == "red") {
@@ -604,14 +654,17 @@ int main(int argc, char **argv) {
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
     ros::Subscriber HeroSub = nh.subscribe("/hero_pub", 1, &HeroCallback);
+    以100hz定频循环
     ros::Rate loop(100);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;
     while (ros::ok()) {
         count++;
+        //分频为10hz，实现10hz定频发送
         if (count >= 10) {
             sp.sendInteractiveMsgs(7);
             sp.sendHeroMsgs();
+            //逐一发送小地图目标点，当等待发布的点为空时接收一次新的消息
             if (!worldPoints.empty()) {
                 if (worldPoints[0].color) {
                     sp.sendMapMsgs(100 + worldPoints[0].id, worldPoints[0].point.x, worldPoints[0].point.y);
@@ -621,17 +674,17 @@ int main(int argc, char **argv) {
                 worldPoints.erase(worldPoints.begin());
             } else {
                 ros::spinOnce();
-                for (int i = 0; i < 10; i++) {
-                    car_point carPoint;
-                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
-                    carPoint.id = 6;
-                    if (i < 5) {
-                        carPoint.color = true;
-                    } else {
-                        carPoint.color = false;
-                    }
-                    worldPoints.push_back(carPoint);
-                }
+//                for (int i = 0; i < 10; i++) {
+//                    car_point carPoint;
+//                    carPoint.point = Point2f(1.4 * i, 2.8 * i);
+//                    carPoint.id = 6;
+//                    if (i < 5) {
+//                        carPoint.color = true;
+//                    } else {
+//                        carPoint.color = false;
+//                    }
+//                    worldPoints.push_back(carPoint);
+//                }
                 //测试用
             }
             count = 0;
