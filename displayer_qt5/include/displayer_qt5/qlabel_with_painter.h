@@ -15,6 +15,7 @@ class QLabel_with_painter : public QLabel
 protected:
     void  paintEvent(QPaintEvent* );
 private:
+    //敏感roi角点
     QPoint placeRB1_te[4];
     QPoint placeRB2_te[7];
     QPoint placeRB3_te[5];
@@ -27,8 +28,8 @@ private:
     QPoint placeLeap_en[4];
     QPoint placeHitWindMill_en[4];
     QPoint placeOutpose_en[4];
-    std::vector<world_point> worldPoints;
-    unsigned short roiWarnState;
+    std::vector<world_point> worldPoints;//收到的点
+    unsigned short roiWarnState;//每一个roi的警告情况
 public:
     explicit QLabel_with_painter(QWidget *parent = nullptr);
     void drawSmallMap(std::vector<world_point>& );

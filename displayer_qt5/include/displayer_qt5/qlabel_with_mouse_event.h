@@ -25,18 +25,18 @@ protected:
     void  mouseReleaseEvent(QMouseEvent *event);
     void  paintEvent(QPaintEvent* );
 private:
-    bool if_point_being_selected;
+    bool if_point_being_selected;//是否有点被选中
 public:
     explicit QLabel_with_mouse_event(QWidget *parent = nullptr);
-    QPoint selectedPoint;
-    QString cameraCelibrating;
-    QString sensorFarImgRaw;
-    QString sensorCloseImgRaw;
-    QPoint* sensor_far_points;
-    QPoint* sensor_close_points;
-    bool if_is_dragging;
-    int calibrateMainWindowHeight;
-    int calibrateMainWindowWidth;
+    QPoint selectedPoint;//选中的点
+    QString cameraCelibrating;//正在标定的相机
+    QString sensorFarImgRaw;//左相机话题名
+    QString sensorCloseImgRaw;//右相机话题名
+    QPoint* sensor_far_points;//左相机中的四点位置
+    QPoint* sensor_close_points;//右相机中的四点位置
+    bool if_is_dragging;//是否正在拖拽
+    int calibrateMainWindowHeight;//主窗口高度
+    int calibrateMainWindowWidth;//主窗口宽度
 signals:
     void mouseMovePoint(QPoint point);
     void mouseClicked(QPoint point);

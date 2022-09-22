@@ -331,6 +331,14 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * 鼠标操作
+ * @param event 事件
+ * @param x 鼠标x坐标
+ * @param y 鼠标y坐标
+ * @param flags
+ * @param userdata
+ */
 void onMouse(int event, int x, int y, int flags, void *userdata)//event鼠标事件代号，x,y鼠标坐标，flags拖拽和键盘操作的代号
 {
     if (event == cv::EVENT_LBUTTONDOWN)//左键按下，读取初始坐标，并在图像上该点处划圆
@@ -346,16 +354,27 @@ void onMouse(int event, int x, int y, int flags, void *userdata)//event鼠标事
     }
 }
 
+
 double Point2PointDist(const radar_msgs::point &a, const Point3f &b) {
     double res = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
     return res;
 }
 
+/**
+ * 计算二维点和二维点之间的距离
+ * @param a 点a
+ * @param b 点b
+ * @return 距离
+ */
 double calculate_dist(const radar_msgs::point &a, const radar_msgs::point &b) {
     double res = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
     return res;
 }
-
+/**
+ * 判断是否为敌方车辆
+ * @param id 车辆ID
+ * @return 是否为敌方车辆
+ */
 bool is_enemy_car(uint8_t id) {
     if (red_or_blue == 0) {
         if ((id >= 6 && id <= 11) || id == 13)
@@ -368,6 +387,9 @@ bool is_enemy_car(uint8_t id) {
     }
 }
 
+/**
+ * 去重算法，去除双相机中重复的部分
+ */
 void remove_duplicate() {
     vector<radar_msgs::point>().swap(result_points.data);
     radar_msgs::points red_no_id_cars;

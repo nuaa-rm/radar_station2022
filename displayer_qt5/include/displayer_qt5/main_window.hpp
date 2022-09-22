@@ -54,6 +54,7 @@ public Q_SLOTS:
     /******************************************
     ** Manual connections
     *******************************************/
+    //画面显示函数
     void updateLogcamera();
     void updateLogcameraSecondWindow();
     void updateLogcameraCalibrateMainWindow();
@@ -76,13 +77,13 @@ private slots:
 private:
 	Ui::MainWindowDesign ui;
     QNode qnode;
-    QImage qimage_;
-    QImage qimage_calibrate_main_window_;
-    QImage qimage_calibrate_second_window_;
-    QImage qimage_second_window_;
-    mutable QMutex qimage_mutex_;
-    QTimer *fTimer;
-    unsigned int log_limit_timer[LOG_LIMIT_TIMER_COUNT];
+    QImage qimage_;//主窗口画面
+    QImage qimage_calibrate_main_window_;//标定主窗口画面
+    QImage qimage_calibrate_second_window_;//标定小窗口画面
+    QImage qimage_second_window_;//小窗口画面
+    mutable QMutex qimage_mutex_;//锁
+    QTimer *fTimer;//定时器
+    unsigned int log_limit_timer[LOG_LIMIT_TIMER_COUNT];//用来限制警告的频率
 };
 
 }  // namespace displayer_qt5

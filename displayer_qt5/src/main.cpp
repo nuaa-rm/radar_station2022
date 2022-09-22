@@ -26,6 +26,6 @@ int main(int argc, char **argv) {
     displayer_qt5::MainWindow w(argc,argv);
     w.show();
     int result = app.exec();
-    std::cout << w.size().width() << '\t' << w.size().height() << std::endl;
+    std::cout << w.size().width() << '\t' << w.size().height() << std::endl; //输出窗口大小，用于测试
 	return result;
 }

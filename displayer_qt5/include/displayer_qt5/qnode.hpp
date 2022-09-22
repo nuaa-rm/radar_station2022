@@ -50,6 +50,9 @@ namespace displayer_qt5 {
 /*****************************************************************************
 ** Class
 *****************************************************************************/
+/**
+ * 警告的等级
+ */
 enum LogLevel
 {
          Debug,
@@ -58,11 +61,17 @@ enum LogLevel
          Error,
          Fatal
 };
+/**
+ * 日志的信息
+ */
 struct log_information
 {
          LogLevel level;
          QString qstring;
 };
+/**
+ * 机器人的最高血量及当前血量
+ */
 struct robot
 {
     int hpCurrent;
