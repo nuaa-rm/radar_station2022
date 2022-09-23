@@ -30,6 +30,8 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 
 ## 部署
 
+如果需要使用旧UI，清遵循[该链接](https://github.com/bismarckkk/RadarDisplayer)的指示。
+
 ### 安装依赖项
 
  - ROS *（仅在Melodic和Noetic版本上进行过测试）*
@@ -72,6 +74,7 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 ### 运行
 
 连接相机和激光雷达
+根据你的需要，调整[radar_msgs]/launch/radar.launch 中需要启动的节点。
 
     cd [workspace]
     source devel/setup.bash
@@ -81,9 +84,16 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 ![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/2022-09-17%2012-25-24%20%E7%9A%84%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png)
 
 ## How It Works
-![image](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/gongneng.png)
+![程序运行流程图](https://github.com/DoveJH/readme_source/blob/main/2020radar_station/gongneng.png)
 
 [更为详细的原理讲解](https://github.com/DoveJH/readme_source/raw/main/2020radar_station/%E5%BC%80%E6%BA%90%E6%8A%A5%E5%91%8A.pdf)
+
+## RoadMap
+- 提高神经网络的识别效果和识别效率。当前数据集缺失、神经网络识别效果差是制约我们雷达表现效果的一大问题，神经网络相关知识水平也需要提高。
+- 优化深度获取逻辑。目前在目标深度获取时，z值突变（由于车体镂空和被地形遮挡）的情况时有发生。这是造成雷达定位精度损失的主要原因。通过优化深度获取逻辑，可以大幅提高雷达的定位精度。
+- 更好的显示效果和更低的性能开销。由于Qt学习的时间非常短，UI写的也十分匆忙，导致UI有些功能的实现并不是十分优雅。在下个赛季，我们会对UI进行重新梳理，实现更加流畅、美观的显示效果，降低UI的性能开销。
+- 积极探索雷达站兵种上限，努力赋能全兵种。雷达这个兵种目前的处境相当尴尬。官方对雷达的期望很高，但是大部分学校的雷达只能当作摄像头使用。我个人认为雷达的上限距离我们做到的还很远。雷达的用法相当灵活，完全可以起到提高所有兵种感知能力、出奇制胜的效果。今年我们也在这一方面进行了一些探索，但是时间有限，还有很多地方需要完善。
+
 
 ## 项目结构
 
