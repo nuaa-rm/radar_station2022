@@ -654,7 +654,7 @@ int main(int argc, char **argv) {
     ros::Subscriber worldPointSub = nh.subscribe("/world_point", 1, &worldPointsCallback);
     ros::Subscriber GuardSub = nh.subscribe("/guard_pub", 1, &GuardCallback);
     ros::Subscriber HeroSub = nh.subscribe("/hero_pub", 1, &HeroCallback);
-    以100hz定频循环
+    //以100hz定频循环
     ros::Rate loop(100);
     ROS_INFO_STREAM("Looping! ");
     int count = 0;

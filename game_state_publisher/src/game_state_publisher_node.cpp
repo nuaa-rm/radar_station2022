@@ -133,7 +133,7 @@ int main(int argc, char **argv)
          one_point_msg.y = 0.09 * i;
          one_point_msg.id = 13;
          world_points_msg.data.push_back(one_point_msg);
-         world_point_pub.publish(world_points_msg);
+//         world_point_pub.publish(world_points_msg);
          if(i < 0)
          {
              i = 100;
