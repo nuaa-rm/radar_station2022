@@ -68,11 +68,11 @@ Ubuntu20.04(操作系统), CLion(软件开发环境)
 
 由于radar_msgs包和hp_limit_helper包中自定义了ROS的message类型，需要先行编译，否则会导致报错。
 
-    catkin_make -DCATKIN_WHITELIST_PACKAGE="radar_msgs;hp_limit_helper"
+    catkin_make -DCATKIN_WHITELISTS_PACKAGE="radar_msgs;hp_limit_helper"
 
 然后编译其余包：
 
-    catkin_make -DCATKIN_WHITELIST_PACKAGE=""
+    catkin_make -DCATKIN_WHITELISTS_PACKAGE=""
 
 ### 运行
 
