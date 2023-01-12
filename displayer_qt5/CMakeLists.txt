@@ -17,23 +17,18 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs
     )
+find_package(radar_msgs)
 find_package(OpenCV 4 REQUIRED)
 find_package(Qt5 REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Widgets)
 include_directories(
     ${catkin_INCLUDE_DIRS}
     include
-    ../../../devel/include
-    ../../devel/include
     )
 # Use this to define what the package will export (e.g. libs, headers).
 # Since the default here is to produce only a binary, we don't worry about
 # exporting anything. 
-catkin_package(
-      INCLUDE_DIRS include
-      LIBRARIES get_depth
-      CATKIN_DEPENDS roscpp std_msgs
-      DEPENDS system_lib)
+catkin_package()
 
 ##############################################################################
 # Qt Environment
@@ -66,6 +61,7 @@ file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINK
 ##############################################################################
 
 add_executable(displayer_qt5 ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+add_dependencies(displayer_qt5 radar_msgs_generate_messages)
 target_link_libraries(displayer_qt5 ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 install(TARGETS displayer_qt5 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

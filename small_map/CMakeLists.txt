@@ -16,7 +16,6 @@ catkin_package(
 
 include_directories(
         ${catkin_INCLUDE_DIRS}
-        "${CATKIN_DEVEL_PREFIX}/include"
 #        "/usr/include/opencv2"
 )
 message("include dirs:${catkin_INCLUDE_DIRS}")

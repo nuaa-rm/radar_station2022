@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         cv_bridge
         sensor_msgs
+        radar_msgs
         tf
         )
 find_package(PCL 1.2 REQUIRED)
@@ -23,10 +24,10 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         OpenCV_INCLUDE_DIRS
         ${PCL_INCLUDE_DIRS}
-        "${CATKIN_DEVEL_PREFIX}/include"
 )
 link_directories(${PCL_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME}_node src/get_depth_node.cpp)
+add_dependencies(${PROJECT_NAME}_node radar_msgs_generate_messages)
 target_link_libraries(${PROJECT_NAME}_node
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}

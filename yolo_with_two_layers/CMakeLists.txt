@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
         image_transport
         cv_bridge
         std_msgs
+        radar_msgs
         )
 catkin_package(
         DEPENDS
@@ -33,7 +34,6 @@ include_directories(
         include
         ${catkin_INCLUDE_DIRS}
         "/usr/include/eigen3"
-        "${CATKIN_DEVEL_PREFIX}/include"
 )# include and link dirs of cuda and tensorrt, you need adapt them if yours are different
 
 include_directories(${CUDA_INCLUDE_DIRS})
@@ -54,7 +54,7 @@ target_link_libraries(myplugins2 nvinfer cudart)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 cuda_add_executable(yolo_with_two_layers_node src/calibrator.cpp src/yolov5.cpp src/preprocess.cu)
-add_dependencies(yolo_with_two_layers_node mv_driver_node)
+add_dependencies(yolo_with_two_layers_node mv_driver_node radar_msgs_generate_messages)
 target_link_libraries(yolo_with_two_layers_node nvinfer)
 target_link_libraries(yolo_with_two_layers_node cudart)
 target_link_libraries(yolo_with_two_layers_node myplugins2)

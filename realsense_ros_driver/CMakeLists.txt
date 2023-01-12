@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   roscpp
   rospy
+  radar_msgs
   std_msgs
 )
 find_package(realsense2 REQUIRED)
@@ -139,6 +140,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(${PROJECT_NAME}_node src/realsense_ros_driver_node.cpp)
+add_dependencies(${PROJECT_NAME}_node radar_msgs_generate_messages)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
