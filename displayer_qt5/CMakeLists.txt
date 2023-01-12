@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
     image_transport
     sensor_msgs
     std_msgs
+    radar_msgs
     )
-find_package(radar_msgs)
 find_package(OpenCV 4 REQUIRED)
 find_package(Qt5 REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Widgets)
